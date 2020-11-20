@@ -17,6 +17,9 @@ function validateEnv() {
     POW_RPC_PORT: num(),
     POW_RPC_USER: str(),
     POW_RPC_PWD: str(),
+
+    // server
+    PORT: num(),
   });
 }
 
