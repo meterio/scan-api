@@ -1,15 +1,19 @@
 require('./utils/validateEnv');
 
 import App from './app';
-import HomeController from './controllers/home.controller';
-import BlockController from './controllers/block.controller';
-import TxController from './controllers/tx.controller';
 import AccountController from './controllers/account.controller';
+import BlockController from './controllers/block.controller';
+import HomeController from './controllers/home.controller';
+import MetricController from './controllers/metric.controller';
 import PowController from './controllers/pow.controller';
+import SearchController from './controllers/search.controller';
 import TransferController from './controllers/transfer.controller';
+import TxController from './controllers/tx.controller';
 
 const app = new App([
   new HomeController(),
+  new SearchController(),
+  new MetricController(),
   new BlockController(),
   new TxController(),
   new AccountController(),

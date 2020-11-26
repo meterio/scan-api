@@ -12,13 +12,17 @@ class HomeController implements Controller {
   }
 
   private initializeRoutes() {
-    this.router.get(
-      ``,
-      try$(async (req: Request, res: Response) => {
-        return res.json({ 'scan-api': 'ok' });
-      })
-    );
+    this.router.get(`${this.path}`, try$(this.getHome));
+    this.router.get(`${this.path}/api/dashboard/metric`, try$(this.getMetric));
   }
+
+  private getHome = async (req: Request, res: Response) => {
+    return res.json({ 'scan-api': 'ok' });
+  };
+
+  private getMetric = async (req, res) => {
+    return res.json({});
+  };
 }
 
 export default HomeController;
