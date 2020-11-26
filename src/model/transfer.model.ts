@@ -16,7 +16,7 @@ const transferSchema = new mongoose.Schema(
       set: (enumValue: Token) => Token[enumValue],
       required: true,
     },
-    address: { type: String, required: false },
+    tokenAddress: { type: String, required: false },
 
     block: blockConciseSchema,
     txHash: { type: String, required: true },
@@ -33,7 +33,10 @@ const transferSchema = new mongoose.Schema(
   }
 );
 
-transferSchema.index({ txHash: 1, clauseIndex: 1 }, { unique: true });
+transferSchema.index({ txHash: 1, clauseIndex: 1, logIndex: 1 }, { unique: true });
+transferSchema.index({ from: 1 });
+transferSchema.index({ to: 1 });
+transferSchema.index({ token: 1, tokenAddress: 1 });
 
 transferSchema.set('toJSON', {
   virtuals: false,

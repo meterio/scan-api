@@ -27,9 +27,7 @@ export class TxRepo {
       limit = RECENT_WINDOW;
     }
     return this.tx
-      .find({
-        $or: [{ origin: addr }, { clauses: { $elemMatch: { to: addr } } }],
-      })
+      .find({ origin: addr })
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip(limit * page);
