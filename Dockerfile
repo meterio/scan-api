@@ -1,4 +1,4 @@
-FROM keymetrics/pm2:latest-jessie	
+FROM keymetrics/pm2:10-jessie
 
 # Bundle APP files
 COPY src src/

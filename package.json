@@ -10,10 +10,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/simonzg/powergrid-sync.git"
+    "url": "https://github.com/meterio/scan-api.git"
   },
   "bugs": {
-    "url": "https://github.com/typeorm/powergrid-sync/issues"
+    "url": "https://github.com/meterio/scan-api/issues"
   },
   "tags": [
     "typescript",

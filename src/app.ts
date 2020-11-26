@@ -1,13 +1,13 @@
 import * as path from 'path';
 
-import bodyParser from 'body-parser';
-import cookieParser from 'cookie-parser';
-import cors from 'cors';
-import express from 'express';
-import mongoose from 'mongoose';
-
 import Controller from './interfaces/controller.interface';
 import errorMiddleware from './middleware/error.middleware';
+
+import mongoose = require('mongoose');
+import express = require('express');
+import cors = require('cors');
+import cookieParser = require('cookie-parser');
+import bodyParser = require('body-parser');
 
 function loggerMiddleware(
   request: express.Request,

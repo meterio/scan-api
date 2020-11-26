@@ -1,9 +1,9 @@
 {
   "apps": [
     {
-      "name": "scan-sync",
+      "name": "scan-api",
       "instances": "1",
-      "script": "./src/main.ts",
+      "script": "./src/server.ts",
       "interpreter": "ts-node",
       "env": {
         "NODE_ENV": "production"
