@@ -4,6 +4,8 @@ API service of Meter next generation Scan.
 
 ## API
 
+- `GET /api/metric/all` - Get all metrics for meter network
+- `GET /api/search/:hash` - Search for tx/block/account
 - `GET /api/accounts/:addr` - Get account summary
 - `GET /api/account/:addr/txs` - Get transactions of account <sup>i</sup>
 - `GET /api/account/:addr/transfers` - Get Token transfers of account <sup>i</sup>
@@ -17,6 +19,48 @@ API service of Meter next generation Scan.
 <b>i</b> : List API have the functionality of pagination, just specify `limit` and `offset` as the URL parameter.
 
 ## Sample Returns:
+
+### GET /api/metrics/all
+
+```javascript
+{
+  "mtrg": {
+    "price": "0.44",
+    "priceChange": "+4.3%",
+    "avgDailyReward": "235000000000000000000", // Wei
+    "totalStaked": "12345000000000000000000" // Wei
+  },
+  "mtr": {
+    "price": "0.34",
+    "priceChange": "+10.3%"
+  },
+  "pos": {
+    "best": 32758,
+    "kblock": 32758,
+    "validators": 274,
+    "onlineNodes": 123,
+    "totalNodes": 222
+  },
+  "pow": {
+    "best": 67821,
+    "difficulty": 1,
+    "hashrate": "32145819829283719" // Hash/Sec
+  }
+}
+```
+
+### GET /api/search/:hash
+
+```javascript
+{
+  "type": "block", // could be block/tx/account
+  "data": {
+    // block data
+    // if type is tx, then this includes tx data
+    // otherwise if type is account, this includes account data
+  }
+}
+```
 
 ### GET /api/accounts/:addr
 
