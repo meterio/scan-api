@@ -1,11 +1,12 @@
 import { Request, Response, Router } from 'express';
-import { try$, HttpError } from 'express-toolbox';
-import { Block } from '../model/block.interface';
-import Controller from '../interfaces/controller.interface';
-import BlockRepo from '../repo/block.repo';
-import { isHexBytes, isUInt } from '../utils/validator';
+import { HttpError, try$ } from 'express-toolbox';
 import { Document } from 'mongoose';
+
+import Controller from '../interfaces/controller.interface';
+import { Block } from '../model/block.interface';
+import BlockRepo from '../repo/block.repo';
 import TxRepo from '../repo/tx.repo';
+import { isHexBytes, isUInt } from '../utils/validator';
 
 class BlockController implements Controller {
   public path = '/api/blocks';
@@ -43,7 +44,15 @@ class BlockController implements Controller {
     if (!blk) {
       return res.json({ block: null, prev: null, next: null });
     }
-    return res.json({ block: blk.toJSON() });
+    let txs = [];
+    if (blk.txHashs && blk.txHashs.length > 0) {
+      txs = await this.txRepo.findByHashs(blk.txHashs);
+    }
+    let ans = blk.toSummary();
+    ans.txSummaries = txs.map((tx) => tx.toSummary());
+
+    delete ans.txHashs;
+    return res.json({ block: ans });
   };
 
   private getBlockTxs = async (req, res) => {

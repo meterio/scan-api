@@ -1,5 +1,6 @@
-import { Token } from '../const';
 import BigNumber from 'bignumber.js';
+
+import { Token } from '../const';
 import { BlockConcise } from './blockConcise.interface';
 
 export interface PosEvent {
@@ -53,4 +54,6 @@ export interface Tx {
   reward: BigNumber;
   reverted: boolean;
   outputs: TxOutput[];
+
+  toSummary(): object;
 }

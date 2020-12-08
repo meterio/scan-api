@@ -1,4 +1,5 @@
 import { Document } from 'mongoose';
+
 import { Block } from '../model/block.interface';
 import blockModel from '../model/block.model';
 import { RECENT_WINDOW } from './const';
@@ -23,7 +24,7 @@ export class BlockRepo {
     });
   }
 
-  public async findFutureBlocks(num: number): Promise<(Block & Document)[]> {
+  public async findFutureBlocks(num: number) {
     return this.block.find({ number: { $gt: num } });
   }
 

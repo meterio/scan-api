@@ -29,7 +29,7 @@ class TxController implements Controller {
     if (!tx) {
       return res.json({ tx: {} });
     }
-    return res.json({ tx });
+    return res.json({ summary: tx.toSummary(), tx });
   };
 }
 

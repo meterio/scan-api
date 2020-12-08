@@ -40,9 +40,9 @@ class MetricController implements Controller {
       pos: {
         best: Number(map[MetricName.POS_BEST]),
         kblock: Number(map[MetricName.KBLOCK]),
-        validators: 274,
-        onlineNodes: 123,
-        totalNodes: 222,
+        validators: 11,
+        onlineNodes: 11,
+        totalNodes: 11,
       },
       pow: {
         best: Number(map[MetricName.POW_BEST]),

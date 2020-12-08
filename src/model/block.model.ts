@@ -57,7 +57,8 @@ const blockSchema = new mongoose.Schema(
     blockType: {
       type: String,
       enum: enumKeys(BlockType),
-      get: (enumValue: string) => BlockType[enumValue as keyof typeof BlockType],
+      get: (enumValue: string) =>
+        BlockType[enumValue as keyof typeof BlockType],
       set: (enumValue: BlockType) => BlockType[enumValue],
       required: true,
     },
@@ -72,8 +73,6 @@ const blockSchema = new mongoose.Schema(
   }
 );
 
-const blockModel = mongoose.model<Block & mongoose.Document>('block', blockSchema);
-
 blockSchema.set('toJSON', {
   transform: (doc, ret, options) => {
     delete ret.__v;
@@ -81,5 +80,27 @@ blockSchema.set('toJSON', {
     return ret;
   },
 });
+
+blockSchema.methods.toSummary = function () {
+  return {
+    number: this.number,
+    hash: this.hash,
+    parentID: this.parentID,
+    timestamp: this.timestamp,
+    txHashs: this.txHashs,
+    lastKBlockHeight: this.lastKBlockHeight,
+    epoch: this.qc.epochID,
+    qcHeight: this.qc.qcHeight,
+    blockType: this.blockType,
+    gasUsed: this.gasUsed,
+    txCount: this.txCount,
+    signer: this.signer,
+  };
+};
+
+const blockModel = mongoose.model<Block & mongoose.Document>(
+  'block',
+  blockSchema
+);
 
 export default blockModel;
