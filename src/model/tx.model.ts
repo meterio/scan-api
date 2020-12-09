@@ -146,13 +146,13 @@ txSchema.methods.getAmountStr = function () {
     }
   }
   if (mtr.isGreaterThan(0)) {
-    amountStr = `${mtr.dividedBy(1e18)} MTR`;
+    amountStr = `${mtr.dividedBy(1e18).toFixed()} MTR`;
   }
   if (mtrg.isGreaterThan(0)) {
     if (amountStr) {
       amountStr += ' & ';
     }
-    amountStr += `${mtrg.dividedBy(1e18)} MTRG`;
+    amountStr += `${mtrg.dividedBy(1e18).toFixed()} MTRG`;
   }
   console.log(amountStr);
   if (!amountStr) {
