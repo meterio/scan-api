@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js';
 import * as mongoose from 'mongoose';
 
 import { Token, enumKeys } from '../const';
@@ -8,7 +9,12 @@ const transferSchema = new mongoose.Schema(
   {
     from: { type: String, required: true },
     to: { type: String, required: true },
-    amount: { type: String, required: true },
+    amount: {
+      type: String,
+      get: (num: string) => new BigNumber(num),
+      set: (bnum: BigNumber) => bnum.toFixed(0),
+      required: true,
+    },
     token: {
       type: String,
       enum: enumKeys(Token),
@@ -33,7 +39,10 @@ const transferSchema = new mongoose.Schema(
   }
 );
 
-transferSchema.index({ txHash: 1, clauseIndex: 1, logIndex: 1 }, { unique: true });
+transferSchema.index(
+  { txHash: 1, clauseIndex: 1, logIndex: 1 },
+  { unique: true }
+);
 transferSchema.index({ from: 1 });
 transferSchema.index({ to: 1 });
 transferSchema.index({ token: 1, tokenAddress: 1 });
@@ -47,6 +56,9 @@ transferSchema.set('toJSON', {
   },
 });
 
-const transferModel = mongoose.model<Transfer & mongoose.Document>('Transfer', transferSchema);
+const transferModel = mongoose.model<Transfer & mongoose.Document>(
+  'Transfer',
+  transferSchema
+);
 
 export default transferModel;
