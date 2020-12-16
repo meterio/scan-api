@@ -7,14 +7,15 @@ API service of Meter next generation Scan.
 - `GET /api/metric/all` - Get all metrics for meter network
 - `GET /api/search/:hash` - Search for tx/block/account
 - `GET /api/accounts/:addr` - Get account summary
-- `GET /api/account/:addr/txs` - Get transactions of account <sup>i</sup>
-- `GET /api/account/:addr/transfers` - Get Token transfers of account <sup>i</sup>
+- `GET /api/account/:addr/txs?page=1&limit=10` - Get transactions of account <sup>i</sup>
+- `GET /api/account/:addr/transfers?page=1&limit=10` - Get Token transfers of account <sup>i</sup>
 - `GET /api/blocks/:revision` - Get block, revision can be `best`, `block number` or `block ID`
 - `GET /api/blocks/:blockid/txs` - Get block transactions
 - `GET /api/blocks/recent` - Get recent blocks
 - `GET /api/txs/:txid` - Get transaction
 - `GET /api/txs/recent` - Get recent transactions
 - `GET /api/transfers/recent` - Get recent transfers
+- `GET /api/validators/all` - Get validators information
 
 <b>i</b> : List API have the functionality of pagination, just specify `limit` and `offset` as the URL parameter.
 
@@ -25,26 +26,31 @@ API service of Meter next generation Scan.
 ```javascript
 {
   "mtrg": {
-    "price": "0.44",
-    "priceChange": "+4.3%",
-    "avgDailyReward": "235000000000000000000", // Wei
-    "totalStaked": "12345000000000000000000" // Wei
+    "price": "0.345471",
+    "priceChange": "2.92%",
+    "avgDailyReward": "235 MTRG"
   },
   "mtr": {
-    "price": "0.34",
-    "priceChange": "+10.3%"
+    "price": "0.405225",
+    "priceChange": "-0.12%"
   },
   "pos": {
-    "best": 32758,
-    "kblock": 32758,
-    "validators": 274,
-    "onlineNodes": 123,
-    "totalNodes": 222
+    "best": 2859866,
+    "kblock": 823695
+  },
+  "staking": {
+    "buckets": 1,
+    "candidates": 1,
+    "validators": 1,
+    "delegates": 0,
+    "onlineNodes": 0,
+    "totalNodes": 0,
+    "totalStaked": "400 MTRG"
   },
   "pow": {
-    "best": 67821,
-    "difficulty": 1,
-    "hashrate": "32145819829283719" // Hash/Sec
+    "best": 208309,
+    "difficulty": "1.567148118035296",
+    "hashrate": "104380250.4994091"
   }
 }
 ```
@@ -552,6 +558,29 @@ API service of Meter next generation Scan.
       "updatedAt": "1970-01-19T14:01:49.292Z"
     }
   ]
+}
+```
+
+### GET /api/validators/all
+
+```json
+{
+  "totalStaked": "400 MTRG",
+  "totalDelegateStaked": "0 MTRG",
+  "onlineNode": 0,
+  "totalNode": 0,
+  "delegates": [],
+  "candidates": [
+    {
+      "name": "Simon",
+      "address": "0xbf85ef4216340eb5cd3c57b550aae7a2712d48d2",
+      "netAddr": "18.138.202.36:8670",
+      "pubKey": "BIRP8aFk...ZKX65AE=",
+      "commission%": "10%",
+      "totalVotes": "400 MTRG"
+    }
+  ],
+  "jailed": []
 }
 ```
 
