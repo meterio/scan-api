@@ -39,10 +39,7 @@ const transferSchema = new mongoose.Schema(
   }
 );
 
-transferSchema.index(
-  { txHash: 1, clauseIndex: 1, logIndex: 1 },
-  { unique: true }
-);
+transferSchema.index({ txHash: 1, clauseIndex: 1, logIndex: 1 }, { unique: true });
 transferSchema.index({ from: 1 });
 transferSchema.index({ to: 1 });
 transferSchema.index({ token: 1, tokenAddress: 1 });
@@ -56,9 +53,6 @@ transferSchema.set('toJSON', {
   },
 });
 
-const transferModel = mongoose.model<Transfer & mongoose.Document>(
-  'Transfer',
-  transferSchema
-);
+const model = mongoose.model<Transfer & mongoose.Document>('Transfer', transferSchema);
 
-export default transferModel;
+export default model;

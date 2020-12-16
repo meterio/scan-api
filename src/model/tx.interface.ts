@@ -55,5 +55,5 @@ export interface Tx {
   reverted: boolean;
   outputs: TxOutput[];
 
-  toSummary(): object;
+  toSummary(): Object;
 }

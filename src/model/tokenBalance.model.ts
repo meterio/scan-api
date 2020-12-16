@@ -1,6 +1,7 @@
+import BigNumber from 'bignumber.js';
 import * as mongoose from 'mongoose';
 
-import BigNumber from 'bignumber.js';
+import { blockConciseSchema } from './blockConcise.model';
 import { TokenBalance } from './tokenBalance.interface';
 
 const tokenBalanceSchema = new mongoose.Schema(
@@ -13,6 +14,7 @@ const tokenBalanceSchema = new mongoose.Schema(
       set: (bnum: BigNumber) => bnum.toFixed(0),
       required: true,
     },
+    lastUpdate: blockConciseSchema,
 
     createdAt: { type: Number, index: true },
     updatedAt: { type: Number },
@@ -33,6 +35,6 @@ tokenBalanceSchema.set('toJSON', {
   },
 });
 
-const tokenBalanceModel = mongoose.model<TokenBalance & mongoose.Document>('TokenBalance', tokenBalanceSchema);
+const model = mongoose.model<TokenBalance & mongoose.Document>('TokenBalance', tokenBalanceSchema);
 
-export default tokenBalanceModel;
+export default model;

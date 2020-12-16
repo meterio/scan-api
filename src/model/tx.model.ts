@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 import * as mongoose from 'mongoose';
 
-import { Token, ZeroAddress, enumKeys } from '../const';
+import { Token, UNIT_WEI, ZeroAddress, enumKeys } from '../const';
 import { blockConciseSchema } from './blockConcise.model';
 import { Tx } from './tx.interface';
 
@@ -130,7 +130,7 @@ txSchema.methods.getAmountStr = function () {
   }
   if (this.clauses.length === 1) {
     const c = this.clauses[0];
-    return `${new BigNumber(c.value).dividedBy(1e18)} ${Token[c.token]}`;
+    return `${new BigNumber(c.value).dividedBy(UNIT_WEI)} ${Token[c.token]}`;
   }
   let mtr = new BigNumber(0);
   let mtrg = new BigNumber(0);
@@ -146,13 +146,13 @@ txSchema.methods.getAmountStr = function () {
     }
   }
   if (mtr.isGreaterThan(0)) {
-    amountStr = `${mtr.dividedBy(1e18).toFixed()} MTR`;
+    amountStr = `${mtr.dividedBy(UNIT_WEI).toFixed()} MTR`;
   }
   if (mtrg.isGreaterThan(0)) {
     if (amountStr) {
       amountStr += ' & ';
     }
-    amountStr += `${mtrg.dividedBy(1e18).toFixed()} MTRG`;
+    amountStr += `${mtrg.dividedBy(UNIT_WEI).toFixed()} MTRG`;
   }
   console.log(amountStr);
   if (!amountStr) {
@@ -172,11 +172,11 @@ txSchema.methods.toSummary = function () {
     type: this.getType(),
     paid: this.paid,
     amountStr: a,
-    feeStr: `${new BigNumber(this.paid).dividedBy(1e18)} MTR`,
+    feeStr: `${new BigNumber(this.paid).dividedBy(UNIT_WEI)} MTR`,
     reverted: this.reverted,
   };
 };
 
-const txModel = mongoose.model<Tx & mongoose.Document>('tx', txSchema, 'txs');
+const model = mongoose.model<Tx & mongoose.Document>('tx', txSchema, 'txs');
 
-export default txModel;
+export default model;
