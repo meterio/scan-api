@@ -9,6 +9,7 @@ import PowController from './controllers/pow.controller';
 import SearchController from './controllers/search.controller';
 import TransferController from './controllers/transfer.controller';
 import TxController from './controllers/tx.controller';
+import ValidatorController from './controllers/validator.controller';
 
 const app = new App([
   new HomeController(),
@@ -19,6 +20,7 @@ const app = new App([
   new AccountController(),
   new PowController(),
   new TransferController(),
+  new ValidatorController(),
 ]);
 
 app.listen();
