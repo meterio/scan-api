@@ -4,11 +4,13 @@ API service of Meter next generation Scan.
 
 ## API
 
-- `GET /api/metric/all` - Get all metrics for meter network
+- `GET /api/metrics/all` - Get all metrics for meter network
+- `GET /api/metrics/pos` - Get PoS metrics
+- `GET /api/metrics/pow` - Get PoW metrics
 - `GET /api/search/:hash` - Search for tx/block/account
 - `GET /api/accounts/:addr` - Get account summary
-- `GET /api/account/:addr/txs?page=1&limit=10` - Get transactions of account <sup>i</sup>
-- `GET /api/account/:addr/transfers?page=1&limit=10` - Get Token transfers of account <sup>i</sup>
+- `GET /api/accounts/:addr/txs?page=1&limit=10` - Get transactions of account <sup>i</sup>
+- `GET /api/accounts/:addr/transfers?page=1&limit=10` - Get Token transfers of account <sup>i</sup>
 - `GET /api/blocks/:revision` - Get block, revision can be `best`, `block number` or `block ID`
 - `GET /api/blocks/:blockid/txs` - Get block transactions
 - `GET /api/blocks/recent` - Get recent blocks
@@ -26,17 +28,21 @@ API service of Meter next generation Scan.
 ```javascript
 {
   "mtrg": {
-    "price": "0.345471",
-    "priceChange": "2.92%",
-    "avgDailyReward": "235 MTRG"
+    "price": "0.29549",
+    "priceChange": "-14.01%",
+    "avgDailyReward": "235 MTRG",
+    "circulation": "0"
   },
   "mtr": {
-    "price": "0.405225",
-    "priceChange": "-0.12%"
+    "price": "0.408513",
+    "priceChange": "0.69%",
+    "circulation": "0"
   },
   "pos": {
-    "best": 2859866,
-    "kblock": 823695
+    "best": 5907111,
+    "kblock": 5906742,
+    "epoch": 3491,
+    "seq": 369
   },
   "staking": {
     "buckets": 1,
@@ -48,9 +54,52 @@ API service of Meter next generation Scan.
     "totalStaked": "400 MTRG"
   },
   "pow": {
-    "best": 208309,
-    "difficulty": "1.567148118035296",
-    "hashrate": "104380250.4994091"
+    "best": 209817,
+    "difficulty": "1.645202590751619",
+    "hashrate": "119340470.7453398",
+    "rewardPerDay": "0.12720000000223517424",
+    "costParity": "1.46547677371980849682"
+  }
+}
+```
+
+### Get /api/metrics/pos
+
+```js
+{
+  "pos": {
+    "best": 5907062,
+    "kblock": 5906742,
+    "epoch": 3491,
+    "seq": 320
+  },
+  "staking": {
+    "buckets": 1,
+    "candidates": 1,
+    "validators": 1,
+    "delegates": 0,
+    "onlineNodes": 0,
+    "totalNodes": 0,
+    "totalStaked": "400 MTRG"
+  }
+}
+```
+
+### Get /api/metrics/pow
+
+```js
+{
+  "mtr": {
+    "price": "0.408513",
+    "priceChange": "0.69%",
+    "circulation": "0"
+  },
+  "pow": {
+    "best": 209817,
+    "difficulty": "1.645202590751619",
+    "hashrate": 119340470.7453398,
+    "rewardPerDay": "0.12720000000223517424",
+    "costParity": "1.46547677371980849682"
   }
 }
 ```
