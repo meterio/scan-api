@@ -23,6 +23,8 @@ export enum MetricName {
   KBLOCK = 'kblock',
   POS_BEST = 'pos_best',
   POW_BEST = 'pow_best',
+  COST_PARITY = 'cost_parity',
+  REWARD_PER_DAY = 'reward_per_day',
   MTRG_PRICE = 'mtrg_price',
   MTRG_PRICE_CHANGE = 'mtrg_price_change',
   MTR_PRICE = 'mtr_price',
@@ -37,6 +39,8 @@ export enum MetricName {
   JAILED_COUNT = 'jailed_count',
   STAKEHOLDER_COUNT = 'stakehodler_count',
   STAKEHOLDERS = 'stakeholders',
+  MTR_CIRCULATION = 'mtr_circulation',
+  MTRG_CIRCULATION = 'mtrg_circulation',
 }
 
 export enum ValidatorStatus {
