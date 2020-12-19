@@ -39,13 +39,21 @@ class PowController implements Controller {
       const coinbaseTxHash = kb.txHashs[0];
       const coinbaseTx = await this.txRepo.findByHash(coinbaseTxHash);
       let total = new BigNumber(0);
+      let rewardMap: { [key: string]: BigNumber } = {};
       let details = [];
       if (!!coinbaseTx && coinbaseTx.origin === ZeroAddress) {
         for (const c of coinbaseTx.clauses) {
           total = total.plus(c.value);
+          if (c.to in rewardMap) {
+            rewardMap[c.to] = rewardMap[c.to].plus(c.value);
+          } else {
+            rewardMap[c.to] = new BigNumber(c.value);
+          }
+        }
+        for (const addr in rewardMap) {
           details.push({
-            address: c.to,
-            amount: `${fromWei(c.value)} MTR`,
+            address: addr,
+            amount: `${fromWei(rewardMap[addr])} MTR`,
           });
         }
         rewards.push({
