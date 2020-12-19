@@ -24,8 +24,11 @@ API service of Meter next generation Scan.
 - `GET /api/transfers/recent` - Get recent transfers
 - `GET /api/pow/blocks/recent` - Get recent pow blocks
 - `GET /api/pow/rewards?page=1&limit=10` - Get mining rewards information <sup>i</sup>
+- `GET /api/auctions/present` - Get present auction <sup>\*</sup>
+- `GET /api/auctions/summaries` - Get all past auctions <sup>\*</sup>
 
 <b>i</b> : List API have the functionality of pagination, just specify `limit` and `page` as the URL parameter.
+<b>\*</b> : List API under construction, use at your own risk.
 
 ## Sample Returns:
 
@@ -788,6 +791,69 @@ API service of Meter next generation Scan.
           "address": "0x51c7df367d6f5ad2c8410490443215b35fc35b3e",
           "subTotal": "0.00000031509748014 MTR"
         }
+      ]
+    }
+  ]
+}
+```
+
+### GET /api/auctions/present
+
+```json
+{
+  "present": {
+    "id": "0x.....",
+    "startHeight": 10000,
+    "startEpoch": 100,
+    "endHeight": 20000,
+    "endEpoch": 200,
+    "createTime": 1608300000,
+    "released": "2000 MTRG",
+    "reserved": "1000 MTRG",
+    "reservedPrice": "100000000000000000",
+    "received": "10000 MTR",
+    "auctionTxs": [
+      {
+        "address": "0x....",
+        "amount": "5000 MTR",
+        "count": 1,
+        "nonce": 12345,
+        "timestamp": 1608358989
+      },
+      {
+        "address": "0x....",
+        "amount": "5000 MTR",
+        "count": 1,
+        "nonce": 12345,
+        "timestamp": 1608358123
+      }
+    ]
+  }
+}
+```
+
+### GET /api/auctions/summaries
+
+```json
+{
+  "summaries": [
+    {
+      "id": "0x.....",
+      "startHeight": 10000,
+      "startEpoch": 100,
+      "endHeight": 20000,
+      "endEpoch": 200,
+      "createTime": 1608300000,
+      "released": "2000 MTRG",
+      "reserved": "1000 MTRG",
+      "received": "10000 MTR",
+      "reservedPrice": "100000000000000000",
+      "actualPrice": "10000000000000000",
+      "dist": [
+        { "address": "0x....", "amount": "500 MTRG" },
+        { "address": "0x....", "amount": "400 MTRG" },
+        { "address": "0x....", "amount": "600 MTRG" },
+        { "address": "0x....", "amount": "500 MTRG" }
       ]
     }
   ]

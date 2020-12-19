@@ -57,7 +57,8 @@ class PowController implements Controller {
           });
         }
         rewards.push({
-          number: kb.number,
+          posBlock: kb.number,
+          powBlock: 1274, // FIXME: fake number
           timestamp: kb.timestamp,
           epoch: kb.epoch,
           totalAmount: `${fromWei(total)} MTR`,
