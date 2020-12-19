@@ -1,3 +1,7 @@
+import BigNumber from 'bignumber.js';
+
+import { UNIT_WEI } from '../const';
+
 export const MAX_BLOCK_PROPOSERS = 101;
 export const BLOCK_INTERVAL = 10;
 
@@ -43,6 +47,18 @@ export const hexToBuffer = (val: string) => {
 
 export const isBytes32 = (val: string) => {
   return /^0x[0-9a-fA-f]{64}/i.test(val);
+};
+
+export const isNumString = (val: string) => {
+  return /^\d+$/.test(val);
+};
+
+export const fromWei = (val: string | number | BigNumber) => {
+  return new BigNumber(val).dividedBy(UNIT_WEI).toFixed();
+};
+
+export const toWei = (val: string | number | BigNumber) => {
+  return new BigNumber(val).times(UNIT_WEI).toFixed();
 };
 
 class Metric {

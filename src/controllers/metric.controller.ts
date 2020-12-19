@@ -2,10 +2,11 @@ import BigNumber from 'bignumber.js';
 import { Router } from 'express';
 import { try$ } from 'express-toolbox';
 
-import { MetricName, UNIT_WEI, enumVals } from '../const';
+import { MetricName, enumVals } from '../const';
 import Controller from '../interfaces/controller.interface';
 import HeadRepo from '../repo/head.repo';
 import MetricRepo from '../repo/metric.repo';
+import { fromWei } from '../utils/utils';
 
 class MetricController implements Controller {
   public path = '/api/metrics';
@@ -68,7 +69,7 @@ class MetricController implements Controller {
         delegates: Number(map[MetricName.DELEGATE_COUNT]),
         onlineNodes: 0, // FIXME: fake data
         totalNodes: Number(map[MetricName.DELEGATE_COUNT]),
-        totalStaked: `${totalStaked.dividedBy(UNIT_WEI).toFixed()} MTRG`,
+        totalStaked: `${fromWei(totalStaked)} MTRG`,
       },
       pow: {
         best: Number(map[MetricName.POW_BEST]),
@@ -136,7 +137,7 @@ class MetricController implements Controller {
         delegates: Number(map[MetricName.DELEGATE_COUNT]),
         onlineNodes: 0, // FIXME: fake data
         totalNodes: Number(map[MetricName.DELEGATE_COUNT]),
-        totalStaked: `${totalStaked.dividedBy(UNIT_WEI).toFixed()} MTRG`,
+        totalStaked: `${fromWei(totalStaked)} MTRG`,
       },
     });
   };

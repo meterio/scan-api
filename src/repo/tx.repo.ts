@@ -1,4 +1,4 @@
-import { RECENT_WINDOW } from '../const';
+import { LIMIT_WINDOW, RECENT_WINDOW } from '../const';
 import { Tx } from '../model/tx.interface';
 import txModel from '../model/tx.model';
 
@@ -18,13 +18,14 @@ export class TxRepo {
   }
 
   public async findByAccount(addr: string, page?: number, limit?: number) {
+    // convert page (1..n) to (0..n-1)
     if (!!page && page > 0) {
       page = page - 1;
     } else {
       page = 0;
     }
     if (!limit) {
-      limit = RECENT_WINDOW;
+      limit = LIMIT_WINDOW;
     }
     return this.tx
       .find({ origin: addr })

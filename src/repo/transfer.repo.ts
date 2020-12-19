@@ -1,4 +1,4 @@
-import { Token } from '../const';
+import { LIMIT_WINDOW, Token } from '../const';
 import { RECENT_WINDOW } from '../const';
 import { Transfer } from '../model/transfer.interface';
 import transferModel from '../model/transfer.model';
@@ -28,13 +28,14 @@ export class TransferRepo {
   }
 
   public async findByAccount(addr: string, page?: number, limit?: number) {
+    // convert page (1 .. n) to (0 .. n-1)
     if (!!page && page > 0) {
       page = page - 1;
     } else {
       page = 0;
     }
     if (!limit) {
-      limit = RECENT_WINDOW;
+      limit = LIMIT_WINDOW;
     }
     return this.transfer
       .find({ $or: [{ from: addr }, { to: addr }] })

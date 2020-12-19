@@ -1,10 +1,12 @@
 import { Request, Response, Router } from 'express';
 import { HttpError, try$ } from 'express-toolbox';
 
+import { LIMIT_WINDOW } from '../const';
 import Controller from '../interfaces/controller.interface';
 import AccountRepo from '../repo/account.repo';
 import TransferRepo from '../repo/transfer.repo';
 import TxRepo from '../repo/tx.repo';
+import { isNumString } from '../utils/utils';
 
 class AccountController implements Controller {
   public path = '/api/accounts';
@@ -38,14 +40,24 @@ class AccountController implements Controller {
   private getTxsByAccount = async (req, res) => {
     const { address } = req.params;
     let page = 1,
-      limit = 10;
-    if (typeof req.query.page === 'string') {
-      page = Number(req.query.page);
-      page = page > 1 ? page : 1;
+      limit = LIMIT_WINDOW;
+
+    // try get page param
+    try {
+      const pageParam = Number(req.query.page);
+      page = pageParam > 1 ? pageParam : page;
+    } catch (e) {
+      // ignore
+      console.log('Invalid page param: ', req.query.page);
     }
-    if (typeof req.query.limit === 'string') {
-      limit = Number(req.query.limit);
-      limit = limit > 0 ? limit : 10;
+
+    // try get limit query param
+    try {
+      const limitParam = Number(req.query.limit);
+      limit = limitParam > 0 ? limitParam : limit;
+    } catch (e) {
+      // ignore
+      console.log('Invalid limit param: ', req.query.limit);
     }
     const txs = await this.txRepo.findByAccount(address, page, limit);
 
@@ -57,15 +69,25 @@ class AccountController implements Controller {
 
   private getTransfersByAccount = async (req, res) => {
     const { address } = req.params;
-    let page = 0,
-      limit = 10;
-    if (typeof req.query.page === 'string') {
-      page = Number(req.query.page);
-      page = page > 1 ? page : 1;
+    let page = 1,
+      limit = LIMIT_WINDOW;
+
+    // try get page param
+    try {
+      const pageParam = Number(req.query.page);
+      page = pageParam > 1 ? pageParam : page;
+    } catch (e) {
+      // ignore
+      console.log('Invalid page param: ', req.query.page);
     }
-    if (typeof req.query.limit === 'string') {
-      limit = Number(req.query.limit);
-      limit = limit > 0 ? limit : 10;
+
+    // try get limit query param
+    try {
+      const limitParam = Number(req.query.limit);
+      limit = limitParam > 0 ? limitParam : limit;
+    } catch (e) {
+      // ignore
+      console.log('Invalid limit param: ', req.query.limit);
     }
 
     const transfers = await this.transferRepo.findByAccount(
