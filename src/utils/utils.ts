@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 
-import { UNIT_WEI } from '../const';
+import { LIMIT_WINDOW, UNIT_WEI } from '../const';
 
 export const MAX_BLOCK_PROPOSERS = 101;
 export const BLOCK_INTERVAL = 10;
@@ -93,6 +93,19 @@ export class WaitNextTickError extends Error {
     Object.setPrototypeOf(this, WaitNextTickError.prototype);
   }
 }
+
+export const formalizePageAndLimit = (page?: number, limit?: number) => {
+  // convert page (1 .. n) to (0 .. n-1)
+  if (!!page && page > 0) {
+    page = page - 1;
+  } else {
+    page = 0;
+  }
+  if (!limit) {
+    limit = LIMIT_WINDOW;
+  }
+  return { page, limit };
+};
 
 WaitNextTickError.prototype.name = 'WaitNextTickError';
 InterruptedError.prototype.name = 'InterruptedError';

@@ -2,6 +2,7 @@ import { LIMIT_WINDOW, Token } from '../const';
 import { RECENT_WINDOW } from '../const';
 import { Transfer } from '../model/transfer.interface';
 import transferModel from '../model/transfer.model';
+import { formalizePageAndLimit } from '../utils/utils';
 
 export class TransferRepo {
   private transfer = transferModel;
@@ -27,18 +28,29 @@ export class TransferRepo {
       .sort({ blockNumber: 1 });
   }
 
-  public async findByAccount(addr: string, page?: number, limit?: number) {
-    // convert page (1 .. n) to (0 .. n-1)
-    if (!!page && page > 0) {
-      page = page - 1;
-    } else {
-      page = 0;
-    }
-    if (!limit) {
-      limit = LIMIT_WINDOW;
-    }
+  public async findByAccount(
+    addr: string,
+    pageNum?: number,
+    limitNum?: number
+  ) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.transfer
       .find({ $or: [{ from: addr }, { to: addr }] })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(limit * page);
+  }
+
+  public async findERC20TransferByAccount(
+    addr: string,
+    pageNum?: number,
+    limitNum?: number
+  ) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    return this.transfer
+      .find({
+        $and: [{ token: Token.ERC20 }, { $or: [{ from: addr }, { to: addr }] }],
+      })
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip(limit * page);

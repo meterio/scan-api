@@ -1,6 +1,7 @@
 import { LIMIT_WINDOW, RECENT_WINDOW } from '../const';
 import { Tx } from '../model/tx.interface';
 import txModel from '../model/tx.model';
+import { formalizePageAndLimit } from '../utils/utils';
 
 export class TxRepo {
   private tx = txModel;
@@ -17,18 +18,16 @@ export class TxRepo {
     return this.tx.findOne({ hash });
   }
 
-  public async findByAccount(addr: string, page?: number, limit?: number) {
-    // convert page (1..n) to (0..n-1)
-    if (!!page && page > 0) {
-      page = page - 1;
-    } else {
-      page = 0;
-    }
-    if (!limit) {
-      limit = LIMIT_WINDOW;
-    }
+  public async findByAccount(
+    addr: string,
+    pageNum?: number,
+    limitNum?: number
+  ) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.tx
-      .find({ origin: addr })
+      .find({
+        $or: [{ origin: addr }, { clauses: { $elemMatch: { to: addr } } }],
+      })
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip(limit * page);

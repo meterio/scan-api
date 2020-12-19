@@ -4,36 +4,17 @@ import { ValidatorStatus } from '../const';
 import { LIMIT_WINDOW } from '../const';
 import { Validator } from '../model/validator.interface';
 import validatorModel from '../model/validator.model';
+import { formalizePageAndLimit } from '../utils/utils';
 
 export class ValidatorRepo {
   private model = validatorModel;
 
-  public async findAll(page?: number, limit?: number) {
-    // convert page (1 .. n) to (0 .. n-1)
-    if (!!page && page > 0) {
-      page = page - 1;
-    } else {
-      page = 0;
-    }
-    if (!limit) {
-      limit = LIMIT_WINDOW;
-    }
-    return this.model
-      .find({})
-      .limit(limit)
-      .skip(limit * page);
+  public async findAll(pageNum?: number, limitNum?: number) {
+    return this.model.find({});
   }
 
-  public async findCandidates(page?: number, limit?: number) {
-    // convert page (1 .. n) to (0 .. n-1)
-    if (!!page && page > 0) {
-      page = page - 1;
-    } else {
-      page = 0;
-    }
-    if (!limit) {
-      limit = LIMIT_WINDOW;
-    }
+  public async findCandidates(pageNum?: number, limitNum?: number) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.model
       .find({
         status: { $in: [ValidatorStatus.CANDIDATE, ValidatorStatus.DELEGATE] },
@@ -48,16 +29,8 @@ export class ValidatorRepo {
     });
   }
 
-  public async findDelegate(page?: number, limit?: number) {
-    // convert page (1 .. n) to (0 .. n-1)
-    if (!!page && page > 0) {
-      page = page - 1;
-    } else {
-      page = 0;
-    }
-    if (!limit) {
-      limit = LIMIT_WINDOW;
-    }
+  public async findDelegate(pageNum?: number, limitNum?: number) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.model
       .find({ status: ValidatorStatus.DELEGATE })
       .limit(limit)
@@ -68,16 +41,8 @@ export class ValidatorRepo {
     return this.model.count({ status: ValidatorStatus.DELEGATE });
   }
 
-  public async findJailed(page?: number, limit?: number) {
-    // convert page (1 .. n) to (0 .. n-1)
-    if (!!page && page > 0) {
-      page = page - 1;
-    } else {
-      page = 0;
-    }
-    if (!limit) {
-      limit = LIMIT_WINDOW;
-    }
+  public async findJailed(pageNum?: number, limitNum?: number) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.model
       .find({ status: ValidatorStatus.JAILED })
       .limit(limit)
