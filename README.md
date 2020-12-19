@@ -8,6 +8,10 @@ API service of Meter next generation Scan.
 - `GET /api/metrics/pos` - Get PoS metrics
 - `GET /api/metrics/pow` - Get PoW metrics
 - `GET /api/metrics/head` - Get head metrics
+- `GET /api/validators/count` - Get validators count information
+- `GET /api/validators/delegate?page=1&limit=10` - Get delegate validator information <sup>i</sup>
+- `GET /api/validators/candidate?page=1&limit=10` - Get candidate validator information <sup>i</sup>
+- `GET /api/validators/jailed?page=1&limit=10` - Get jailed validator information <sup>i</sup>
 - `GET /api/search/:hash` - Search for tx/block/account
 - `GET /api/accounts/:addr` - Get account summary
 - `GET /api/accounts/:addr/txs?page=1&limit=10` - Get transactions of account <sup>i</sup>
@@ -18,9 +22,8 @@ API service of Meter next generation Scan.
 - `GET /api/txs/:txid` - Get transaction
 - `GET /api/txs/recent` - Get recent transactions
 - `GET /api/transfers/recent` - Get recent transfers
-- `GET /api/validators/all` - Get validators information
 
-<b>i</b> : List API have the functionality of pagination, just specify `limit` and `offset` as the URL parameter.
+<b>i</b> : List API have the functionality of pagination, just specify `limit` and `page` as the URL parameter.
 
 ## Sample Returns:
 
@@ -115,6 +118,79 @@ API service of Meter next generation Scan.
     "account": 8,
     "erc20": 30
   }
+}
+```
+
+### GET /api/validators/count
+
+```json
+{
+  "totalStaked": "400 MTRG",
+  "totalDelegateStaked": "400 MTRG",
+  "onlineNode": 0,
+  "totalNode": 0,
+  "delegates": 1,
+  "candidates": 1,
+  "jailed": 0
+}
+```
+
+### GET /api/validators/candidate
+
+```json
+{
+  "total": 1,
+  "candidates": [
+    {
+      "name": "Simon",
+      "address": "0xbf85ef4216340eb5cd3c57b550aae7a2712d48d2",
+      "netAddr": "18.138.202.36:8670",
+      "pubKey": "BIRP8aFk7FHq8FTVk0auV0JrhYK8JvWfVITh+Z7GQdSWmXe4ovzUGsSe+pVd7KHtthISK//VnHO9LYGUlLNkREY=:::sjPxaUFgq+4F40NOyIxN5M8Tt8Y/CdLUmjoUyPNGXPmBzAJ+5bQjEQfPUo1zR9PdMOfAHTS2qN8HWWM8ZKX65AE=",
+      "commission%": "10%",
+      "totalVotes": "400 MTRG"
+    }
+  ]
+}
+```
+
+### GET /api/validators/delegate
+
+```json
+{
+  "total": 1,
+  "delegates": [
+    {
+      "name": "Simon",
+      "address": "0xbf85ef4216340eb5cd3c57b550aae7a2712d48d2",
+      "netAddr": "18.138.202.36:8670",
+      "pubKey": "BIRP8aFk7FHq8FTVk0auV0JrhYK8JvWfVITh+Z7GQdSWmXe4ovzUGsSe+pVd7KHtthISK//VnHO9LYGUlLNkREY=:::sjPxaUFgq+4F40NOyIxN5M8Tt8Y/CdLUmjoUyPNGXPmBzAJ+5bQjEQfPUo1zR9PdMOfAHTS2qN8HWWM8ZKX65AE=",
+      "votingPower": "1000 MTRG",
+      "commission%": "10%",
+      "shares": "2.34%",
+      "up48%": "100%",
+      "totalPoints": 1
+    }
+  ]
+}
+```
+
+### GET /api/validators/jailed
+
+```js
+{
+  "total": 1,
+  "jailed": [
+    {
+      "name": "Simon",
+      "address": "0xbf85ef4216340eb5cd3c57b550aae7a2712d48d2",
+      "netAddr": "18.138.202.36:8670",
+      "pubKey": "BIRP8aFk7FHq8FTVk0auV0JrhYK8JvWfVITh+Z7GQdSWmXe4ovzUGsSe+pVd7KHtthISK//VnHO9LYGUlLNkREY=:::sjPxaUFgq+4F40NOyIxN5M8Tt8Y/CdLUmjoUyPNGXPmBzAJ+5bQjEQfPUo1zR9PdMOfAHTS2qN8HWWM8ZKX65AE=",
+      "totalPoints": 10,
+      "bailAmount": "300 MTRG",
+      "jailedTime": 1608360164,
+      "infractions": {...},
+    }
+  ]
 }
 ```
 
@@ -621,29 +697,6 @@ API service of Meter next generation Scan.
       "updatedAt": "1970-01-19T14:01:49.292Z"
     }
   ]
-}
-```
-
-### GET /api/validators/all
-
-```json
-{
-  "totalStaked": "400 MTRG",
-  "totalDelegateStaked": "0 MTRG",
-  "onlineNode": 0,
-  "totalNode": 0,
-  "delegates": [],
-  "candidates": [
-    {
-      "name": "Simon",
-      "address": "0xbf85ef4216340eb5cd3c57b550aae7a2712d48d2",
-      "netAddr": "18.138.202.36:8670",
-      "pubKey": "BIRP8aFk...ZKX65AE=",
-      "commission%": "10%",
-      "totalVotes": "400 MTRG"
-    }
-  ],
-  "jailed": []
 }
 ```
 
