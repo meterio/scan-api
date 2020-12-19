@@ -53,7 +53,7 @@ class PowController implements Controller {
         for (const addr in rewardMap) {
           details.push({
             address: addr,
-            amount: `${fromWei(rewardMap[addr])} MTR`,
+            subTotal: `${fromWei(rewardMap[addr])} MTR`,
           });
         }
         rewards.push({

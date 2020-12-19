@@ -761,7 +761,36 @@ API service of Meter next generation Scan.
 
 ```json
 {
-  "rewards": []
+  "rewards": [
+    {
+      "number": 5981739,
+      "timestamp": 1608362914,
+      "epoch": 3537,
+      "totalAmount": "0.000000420332283327 MTR",
+      "details": [
+        {
+          "address": "0x51c7df367d6f5ad2c8410490443215b35fc35b3e",
+          "subTotal": "0.000000320332283327 MTR"
+        },
+        {
+          "address": "0xfa9c7149416e8cca36994193b0a341e4e72acb88",
+          "subTotal": "0.0000001 MTR"
+        }
+      ]
+    },
+    {
+      "number": 5980013,
+      "timestamp": 1608358989,
+      "epoch": 3536,
+      "totalAmount": "0.00000031509748014 MTR",
+      "details": [
+        {
+          "address": "0x51c7df367d6f5ad2c8410490443215b35fc35b3e",
+          "subTotal": "0.00000031509748014 MTR"
+        }
+      ]
+    }
+  ]
 }
 ```
 
