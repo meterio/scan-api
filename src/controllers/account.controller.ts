@@ -6,7 +6,7 @@ import Controller from '../interfaces/controller.interface';
 import AccountRepo from '../repo/account.repo';
 import TransferRepo from '../repo/transfer.repo';
 import TxRepo from '../repo/tx.repo';
-import { isNumString } from '../utils/utils';
+import { extractPageAndLimitQueryParam } from '../utils/utils';
 
 class AccountController implements Controller {
   public path = '/api/accounts';
@@ -39,26 +39,7 @@ class AccountController implements Controller {
 
   private getTxsByAccount = async (req, res) => {
     const { address } = req.params;
-    let page = 1,
-      limit = LIMIT_WINDOW;
-
-    // try get page param
-    try {
-      const pageParam = Number(req.query.page);
-      page = pageParam > 1 ? pageParam : page;
-    } catch (e) {
-      // ignore
-      console.log('Invalid page param: ', req.query.page);
-    }
-
-    // try get limit query param
-    try {
-      const limitParam = Number(req.query.limit);
-      limit = limitParam > 0 ? limitParam : limit;
-    } catch (e) {
-      // ignore
-      console.log('Invalid limit param: ', req.query.limit);
-    }
+    const { page, limit } = extractPageAndLimitQueryParam(req);
     const txs = await this.txRepo.findByAccount(address, page, limit);
 
     if (!txs) {
@@ -69,26 +50,7 @@ class AccountController implements Controller {
 
   private getTransfersByAccount = async (req, res) => {
     const { address } = req.params;
-    let page = 1,
-      limit = LIMIT_WINDOW;
-
-    // try get page param
-    try {
-      const pageParam = Number(req.query.page);
-      page = pageParam > 1 ? pageParam : page;
-    } catch (e) {
-      // ignore
-      console.log('Invalid page param: ', req.query.page);
-    }
-
-    // try get limit query param
-    try {
-      const limitParam = Number(req.query.limit);
-      limit = limitParam > 0 ? limitParam : limit;
-    } catch (e) {
-      // ignore
-      console.log('Invalid limit param: ', req.query.limit);
-    }
+    const { page, limit } = extractPageAndLimitQueryParam(req);
 
     const transfers = await this.transferRepo.findByAccount(
       address,

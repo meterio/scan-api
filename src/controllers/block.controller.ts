@@ -82,6 +82,9 @@ class BlockController implements Controller {
 
   private getRecentBlocks = async (req, res) => {
     const blocks = await this.blockRepo.findRecent();
+    if (!blocks) {
+      return res.json({ blocks: [] });
+    }
     res.json({ blocks });
   };
 }

@@ -22,6 +22,8 @@ API service of Meter next generation Scan.
 - `GET /api/txs/:txid` - Get transaction
 - `GET /api/txs/recent` - Get recent transactions
 - `GET /api/transfers/recent` - Get recent transfers
+- `GET /api/pow/blocks/recent` - Get recent pow blocks
+- `GET /api/pow/rewards?page=1&limit=10` - Get mining rewards information <sup>i</sup>
 
 <b>i</b> : List API have the functionality of pagination, just specify `limit` and `page` as the URL parameter.
 
@@ -697,6 +699,47 @@ API service of Meter next generation Scan.
       "updatedAt": "1970-01-19T14:01:49.292Z"
     }
   ]
+}
+```
+
+### GET /api/pow/blocks/recent
+
+```json
+{
+  "powBlocks": [
+    {
+      "tx": [
+        "6f415375f44f822a88fe19a5925044b4443033c972532f21f989a979061acdcb"
+      ],
+      "hash": "0000000000047bf65af89ea4b6ef3e076fdd5314de525d44a6dc4667d7790259",
+      "confirmations": 212616,
+      "size": 304,
+      "weight": 1216,
+      "height": 1,
+      "version": 536870912,
+      "versionHex": "20000000",
+      "time": 1593908949,
+      "nonce": "2810162245",
+      "bits": "1d00ffff",
+      "difficulty": "1",
+      "nTx": 1,
+      "medianTime": "1593908949",
+      "strippedSize": 304,
+      "previousBlockHash": "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f",
+      "nextBlockHash": "000000000008998607afdde47f659d3d8c8f4153363842706450b49d85ee80f8",
+      "chainWork": "0000000000000000000000000000000000000000000000000000000200020002",
+      "merkleRoot": "6f415375f44f822a88fe19a5925044b4443033c972532f21f989a979061acdcb",
+      "createdAt": 1608362516
+    }
+  ]
+}
+```
+
+### GET /api/pow/rewards
+
+```json
+{
+  "rewards": []
 }
 ```
 

@@ -5,7 +5,7 @@ import { try$ } from 'express-toolbox';
 import { LIMIT_WINDOW, UNIT_SHANNON } from '../const';
 import Controller from '../interfaces/controller.interface';
 import ValidatorRepo from '../repo/validator.repo';
-import { fromWei } from '../utils/utils';
+import { extractPageAndLimitQueryParam, fromWei } from '../utils/utils';
 
 class ValidatorController implements Controller {
   public path = '/api/validators';
@@ -51,32 +51,8 @@ class ValidatorController implements Controller {
     });
   };
 
-  private getPageAndLimit = (req: Request) => {
-    let page = 1,
-      limit = LIMIT_WINDOW;
-
-    // try get page param
-    try {
-      const pageParam = Number(req.query.page);
-      page = pageParam > 1 ? pageParam : page;
-    } catch (e) {
-      // ignore
-      console.log('Invalid page param: ', req.query.page);
-    }
-
-    // try get limit query param
-    try {
-      const limitParam = Number(req.query.limit);
-      limit = limitParam > 0 ? limitParam : limit;
-    } catch (e) {
-      // ignore
-      console.log('Invalid limit param: ', req.query.limit);
-    }
-    return { page, limit };
-  };
-
   private getCandidates = async (req: Request, res: Response) => {
-    const { page, limit } = this.getPageAndLimit(req);
+    const { page, limit } = extractPageAndLimitQueryParam(req);
     const candidates = await this.validatorRepo.findCandidates(page, limit);
     if (!candidates) {
       return res.json({ total: 0, candidates: [] });
@@ -104,7 +80,7 @@ class ValidatorController implements Controller {
   };
 
   private getDelegates = async (req: Request, res: Response) => {
-    const { page, limit } = this.getPageAndLimit(req);
+    const { page, limit } = extractPageAndLimitQueryParam(req);
     const delegates = await this.validatorRepo.findDelegate(page, limit);
     if (!delegates) {
       return res.json({ total: 0, delegates: [] });
@@ -139,7 +115,7 @@ class ValidatorController implements Controller {
   };
 
   private getJailed = async (req: Request, res: Response) => {
-    const { page, limit } = this.getPageAndLimit(req);
+    const { page, limit } = extractPageAndLimitQueryParam(req);
     const jailed = await this.validatorRepo.findJailed(page, limit);
     if (jailed) {
       return res.json({ total: 0, jailed: [] });

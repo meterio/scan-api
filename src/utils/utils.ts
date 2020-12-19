@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import { Request } from 'express';
 
 import { LIMIT_WINDOW, UNIT_WEI } from '../const';
 
@@ -103,6 +104,30 @@ export const formalizePageAndLimit = (page?: number, limit?: number) => {
   }
   if (!limit) {
     limit = LIMIT_WINDOW;
+  }
+  return { page, limit };
+};
+
+export const extractPageAndLimitQueryParam = (req: Request) => {
+  let page = 1,
+    limit = LIMIT_WINDOW;
+
+  // try get page param
+  try {
+    const pageParam = Number(req.query.page);
+    page = pageParam > 1 ? pageParam : page;
+  } catch (e) {
+    // ignore
+    console.log('Invalid page param: ', req.query.page);
+  }
+
+  // try get limit query param
+  try {
+    const limitParam = Number(req.query.limit);
+    limit = limitParam > 0 ? limitParam : limit;
+  } catch (e) {
+    // ignore
+    console.log('Invalid limit param: ', req.query.limit);
   }
   return { page, limit };
 };
