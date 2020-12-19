@@ -7,6 +7,7 @@ API service of Meter next generation Scan.
 - `GET /api/metrics/all` - Get all metrics for meter network
 - `GET /api/metrics/pos` - Get PoS metrics
 - `GET /api/metrics/pow` - Get PoW metrics
+- `GET /api/metrics/head` - Get head metrics
 - `GET /api/search/:hash` - Search for tx/block/account
 - `GET /api/accounts/:addr` - Get account summary
 - `GET /api/accounts/:addr/txs?page=1&limit=10` - Get transactions of account <sup>i</sup>
@@ -100,6 +101,19 @@ API service of Meter next generation Scan.
     "hashrate": 119340470.7453398,
     "rewardPerDay": "0.12720000000223517424",
     "costParity": "1.46547677371980849682"
+  }
+}
+```
+
+### GET /api/metrics/head
+
+```json
+{
+  "heads": {
+    "pos": 7,
+    "pow": 10,
+    "account": 8,
+    "erc20": 30
   }
 }
 ```

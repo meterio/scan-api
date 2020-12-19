@@ -4,12 +4,14 @@ import { try$ } from 'express-toolbox';
 
 import { MetricName, UNIT_WEI, enumVals } from '../const';
 import Controller from '../interfaces/controller.interface';
+import HeadRepo from '../repo/head.repo';
 import MetricRepo from '../repo/metric.repo';
 
 class MetricController implements Controller {
   public path = '/api/metrics';
   public router = Router();
   private metricRepo = new MetricRepo();
+  private headRepo = new HeadRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -19,6 +21,7 @@ class MetricController implements Controller {
     this.router.get(`${this.path}/all`, try$(this.getAllMetric));
     this.router.get(`${this.path}/pow`, try$(this.getPowMetric));
     this.router.get(`${this.path}/pos`, try$(this.getPosMetric));
+    this.router.get(`${this.path}/head`, try$(this.getHeadMetric));
   }
 
   private getAllMetric = async (req, res) => {
@@ -136,6 +139,20 @@ class MetricController implements Controller {
         totalStaked: `${totalStaked.dividedBy(UNIT_WEI).toFixed()} MTRG`,
       },
     });
+  };
+
+  private getHeadMetric = async (req, res) => {
+    const heads = await this.headRepo.findAll();
+    if (!heads || heads.length <= 0) {
+      return res.json({
+        heads: {},
+      });
+    }
+    let result = {};
+    for (const h of heads) {
+      result[h.key] = h.num;
+    }
+    return res.json({ heads: result });
   };
 }
 

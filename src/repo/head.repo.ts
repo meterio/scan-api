@@ -3,6 +3,10 @@ import headModel from '../model/head.model';
 export class HeadRepo {
   private head = headModel;
 
+  public async findAll() {
+    return this.head.find({});
+  }
+
   public async findByKey(key: string) {
     return this.head.findOne({ key });
   }
