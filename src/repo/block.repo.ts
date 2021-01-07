@@ -1,6 +1,4 @@
-import { Document } from 'mongoose';
-
-import { BlockType, RECENT_WINDOW } from '../const';
+import { BlockType } from '../const';
 import { Block } from '../model/block.interface';
 import blockModel from '../model/block.model';
 import { formalizePageAndLimit } from '../utils/utils';
@@ -15,8 +13,8 @@ export class BlockRepo {
     return this.block.find();
   }
 
-  public async findRecent() {
-    return this.block.find().sort({ createdAt: -1 }).limit(RECENT_WINDOW);
+  public async findRecent(count: number) {
+    return this.block.find().sort({ createdAt: -1 }).limit(count);
   }
 
   public async findKBlocks(pageNum?: number, limitNum?: number) {

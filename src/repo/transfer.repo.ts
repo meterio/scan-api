@@ -11,8 +11,8 @@ export class TransferRepo {
     return this.transfer.find();
   }
 
-  public async findRecent() {
-    return this.transfer.find().sort({ createdAt: -1 }).limit(RECENT_WINDOW);
+  public async findRecent(count: number) {
+    return this.transfer.find().sort({ createdAt: -1 }).limit(count);
   }
 
   public async findByHash(hash: string) {

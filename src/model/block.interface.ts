@@ -46,4 +46,5 @@ export interface Block {
 
   epoch: number;
   kblockData: string[];
+  toSummary(): Object;
 }

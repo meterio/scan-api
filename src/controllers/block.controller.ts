@@ -2,6 +2,7 @@ import { Request, Response, Router } from 'express';
 import { HttpError, try$ } from 'express-toolbox';
 import { Document } from 'mongoose';
 
+import { RECENT_WINDOW } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { Block } from '../model/block.interface';
 import BlockRepo from '../repo/block.repo';
@@ -81,11 +82,20 @@ class BlockController implements Controller {
   };
 
   private getRecentBlocks = async (req, res) => {
-    const blocks = await this.blockRepo.findRecent();
+    let count = RECENT_WINDOW;
+    try {
+      const countParam = Number(req.query.count);
+      count = countParam > 1 ? countParam : count;
+    } catch (e) {
+      // ignore
+      console.log('Invalid count param: ', req.query.count);
+    }
+
+    const blocks = await this.blockRepo.findRecent(count);
     if (!blocks) {
       return res.json({ blocks: [] });
     }
-    res.json({ blocks });
+    res.json({ blocks: blocks.map((b) => b.toSummary()) });
   };
 }
 export default BlockController;

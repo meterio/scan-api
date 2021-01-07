@@ -1,4 +1,3 @@
-import { LIMIT_WINDOW, RECENT_WINDOW } from '../const';
 import { Tx } from '../model/tx.interface';
 import txModel from '../model/tx.model';
 import { formalizePageAndLimit } from '../utils/utils';
@@ -10,8 +9,8 @@ export class TxRepo {
     return this.tx.find();
   }
 
-  public async findRecent() {
-    return this.tx.find().sort({ createdAt: -1 }).limit(RECENT_WINDOW);
+  public async findRecent(count: number) {
+    return this.tx.find().sort({ createdAt: -1 }).limit(count);
   }
 
   public async findByHash(hash: string) {

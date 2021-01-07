@@ -26,6 +26,10 @@ class AccountController implements Controller {
       `${this.path}/:address/transfers`,
       try$(this.getTransfersByAccount)
     );
+    this.router.get(
+      `${this.path}/:address/erc20transfers`,
+      try$(this.getERC20TransfersByAccount)
+    );
   }
 
   private getAccount = async (req: Request, res: Response) => {
@@ -53,6 +57,21 @@ class AccountController implements Controller {
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
     const transfers = await this.transferRepo.findByAccount(
+      address,
+      page,
+      limit
+    );
+    if (!transfers) {
+      return res.json({ transfers: [] });
+    }
+    return res.json({ transfers });
+  };
+
+  private getERC20TransfersByAccount = async (req, res) => {
+    const { address } = req.params;
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+
+    const transfers = await this.transferRepo.findERC20TransferByAccount(
       address,
       page,
       limit
