@@ -12,10 +12,15 @@ API service of Meter next generation Scan.
 - `GET /api/validators/delegate?page=1&limit=10` - Get delegate validator information <sup>i</sup>
 - `GET /api/validators/candidate?page=1&limit=10` - Get candidate validator information <sup>i</sup>
 - `GET /api/validators/jailed?page=1&limit=10` - Get jailed validator information <sup>i</sup>
+- `GET /api/validators/rewards?page=1&limit=10` - Get validator rewards information <sup>i</sup>
 - `GET /api/search/:hash` - Search for tx/block/account
 - `GET /api/accounts/:addr` - Get account summary
 - `GET /api/accounts/:addr/txs?page=1&limit=10` - Get transactions of account <sup>i</sup>
 - `GET /api/accounts/:addr/transfers?page=1&limit=10` - Get Token transfers of account <sup>i</sup>
+- `GET /api/accounts/:addr/erc20txs?page=1&limit=10` - Get ERC20 transactions of account <sup>i</sup>
+- `GET /api/accounts/:addr/buckets?page=1&limit=10` - Get buckets of account <sup>i</sup>
+- `GET /api/accounts/:addr/proposed?page=1&limit=10` - Get proposed blocks of account <sup>i</sup>
+- `GET /api/accounts/:addr/delegators?page=1&limit=10` - Get delegators of account <sup>i</sup>
 - `GET /api/blocks/:revision` - Get block, revision can be `best`, `block number` or `block ID`
 - `GET /api/blocks/:blockid/txs` - Get block transactions
 - `GET /api/blocks/recent` - Get recent blocks
@@ -25,7 +30,7 @@ API service of Meter next generation Scan.
 - `GET /api/pow/blocks/recent` - Get recent pow blocks
 - `GET /api/pow/rewards?page=1&limit=10` - Get mining rewards information <sup>i</sup>
 - `GET /api/auctions/present` - Get present auction <sup>\*</sup>
-- `GET /api/auctions/summaries` - Get all past auctions <sup>\*</sup>
+- `GET /api/auctions/past` - Get all past auctions <sup>\*</sup>
 
 <b>i</b> : List API have the functionality of pagination, just specify `limit` and `page` as the URL parameter.
 <b>\*</b> : List API under construction, use at your own risk.
@@ -152,7 +157,8 @@ API service of Meter next generation Scan.
       "netAddr": "18.138.202.36:8670",
       "pubKey": "BIRP8aFk7FHq8FTVk0auV0JrhYK8JvWfVITh+Z7GQdSWmXe4ovzUGsSe+pVd7KHtthISK//VnHO9LYGUlLNkREY=:::sjPxaUFgq+4F40NOyIxN5M8Tt8Y/CdLUmjoUyPNGXPmBzAJ+5bQjEQfPUo1zR9PdMOfAHTS2qN8HWWM8ZKX65AE=",
       "commission%": "10%",
-      "totalVotes": "400 MTRG"
+      "totalVotes": "400 MTRG",
+      "upTime": "100%"
     }
   ]
 }
@@ -172,7 +178,7 @@ API service of Meter next generation Scan.
       "votingPower": "1000 MTRG",
       "commission%": "10%",
       "shares": "2.34%",
-      "up48%": "100%",
+      "upTime": "100%",
       "totalPoints": 1
     }
   ]
@@ -194,6 +200,30 @@ API service of Meter next generation Scan.
       "bailAmount": "300 MTRG",
       "jailedTime": 1608360164,
       "infractions": {...},
+      "upTime": "100%"
+    }
+  ]
+}
+```
+
+### GET /api/validators/rewards
+
+```json
+{
+  "rewards": [
+    {
+      "epoch": 1,
+      "height": 200,
+      "totalReward": "100000000000000000000",
+      "baseReward": "1000000000000000000000000",
+      "timestamp": 1593909279
+    },
+    {
+      "epoch": 2,
+      "height": 400,
+      "totalReward": "100000000000000000000",
+      "baseReward": "1000000000000000000000000",
+      "timestamp": 1594809279
     }
   ]
 }
@@ -240,70 +270,126 @@ API service of Meter next generation Scan.
 
 ```json
 {
-  "txs": [
+  "txSummaries": [
     {
-      "hash": "0x120b7515abc6fadbb81e93aa8b7ba724ead688e8164840095a8ba8c4a6b418fe",
+      "hash": "0x6cafec49fcf66bf351b7c685391bafe4d5e829ae13745fb8b9a1903129bcf37d",
+      "block": {
+        "number": 4,
+        "hash": "0x0000000404b005404db91b800c070da27b32fdfd6a7ba282398321cf3648ed8a",
+        "timestamp": 1609926175
+      },
+      "origin": "0x0000000000000000000000000000000000000000",
+      "clauseCount": 127,
+      "type": "reward",
+      "paid": "1018500000000000000",
+      "totalAmountStr": "0.000000803039579719 MTR",
+      "feeStr": "1.0185 MTR",
+      "reverted": false,
+      "tos": ["0x0a05c2d862ca051010698b69b54278cbaf945ccb"]
+    },
+    {
+      "hash": "0xa98794607f7d6dfa76c7480b00e21fde431c7e8ed52bf77306ab0bea01a1059a",
+      "block": {
+        "number": 4,
+        "hash": "0x0000000404b005404db91b800c070da27b32fdfd6a7ba282398321cf3648ed8a",
+        "timestamp": 1609926175
+      },
+      "origin": "0x0000000000000000000000000000000000000000",
+      "clauseCount": 200,
+      "type": "reward",
+      "paid": "1602500000000000000",
+      "totalAmountStr": "0.0000012646292594 MTR",
+      "feeStr": "1.6025 MTR",
+      "reverted": false,
+      "tos": ["0x0a05c2d862ca051010698b69b54278cbaf945ccb"]
+    },
+    {
+      "hash": "0x512fac9c04971c3fa1fff473eadb8a807e837d344bc21a8c259176a71ce0ca2f",
+      "block": {
+        "number": 4,
+        "hash": "0x0000000404b005404db91b800c070da27b32fdfd6a7ba282398321cf3648ed8a",
+        "timestamp": 1609926175
+      },
+      "origin": "0x0000000000000000000000000000000000000000",
+      "clauseCount": 1,
+      "type": "call",
+      "paid": "19498000000000000",
+      "totalAmountStr": "0 MTRG",
+      "feeStr": "0.019498 MTR",
+      "reverted": false,
+      "tos": ["0x6163636f756e742d6c6f636b2d61646472657373"]
+    }
+  ]
+}
+```
+
+### GET /api/accounts/:addr/erc20txs
+
+```json
+{
+  "transfers": [
+    {
+      "from": "0x0000000000000000000000000000000000000000",
+      "to": "0xfa9c7149416e8cca36994193b0a341e4e72acb88",
+      "token": "ERC20",
+      "amount": "37338141289626210",
+      "address": "0x......",
+      "txHash": "0x120b7515abc6fadbb81e93aa8b7ba724ead688e8164840095a8ba8c4a6b418fe",
       "block": {
         "number": 1310,
         "hash": "0x0000051ee238e657eaef9dfeeb57bc047b58f0f99031462be25321d3f495b659",
         "timestamp": 1593911333
       },
-      "txIndex": 0,
-      "chainTag": 82,
-      "blockRef": "0x0000051b00000000",
-      "expiration": 720,
-      "gasPriceCoef": 0,
-      "gas": 4200000,
-      "nonce": "0xbc614e",
-      "dependsOn": null,
-      "origin": "0x0000000000000000000000000000000000000000",
-      "clauses": [
-        {
-          "to": "0xfa9c7149416e8cca36994193b0a341e4e72acb88",
-          "value": "66283684122949440",
-          "token": "MTR",
-          "data": "0x"
-        },
-        {
-          "to": "0xfa9c7149416e8cca36994193b0a341e4e72acb88",
-          "value": "37338141289626210",
-          "token": "MTR",
-          "data": "0x"
-        }
-      ],
-      "clauseCount": 60,
-      "size": 1949,
-      "gasUsed": 965000,
-      "gasPayer": "0x0000000000000000000000000000000000000000",
-      "paid": "482500000000000000",
-      "reward": "482500000000000000",
-      "reverted": false,
-      "outputs": [
-        {
-          "events": [],
-          "transfers": [
-            {
-              "sender": "0x0000000000000000000000000000000000000000",
-              "recipient": "0xfa9c7149416e8cca36994193b0a341e4e72acb88",
-              "amount": "0xeb7ca8d68d7740"
-            }
-          ],
-          "contractAddress": null
-        },
-        {
-          "events": [],
-          "transfers": [
-            {
-              "sender": "0x0000000000000000000000000000000000000000",
-              "recipient": "0xfa9c7149416e8cca36994193b0a341e4e72acb88",
-              "amount": "0x84a6d778243a62"
-            }
-          ],
-          "contractAddress": null
-        }
-      ],
-      "createdAt": 1605706563,
-      "updatedAt": "1970-01-19T14:01:46.563Z"
+      "clauseIndex": 59,
+      "logIndex": 0,
+      "createdAt": 1605709292,
+      "updatedAt": "1970-01-19T14:01:49.292Z"
+    },
+    {
+      "from": "0x0000000000000000000000000000000000000000",
+      "to": "0xfa9c7149416e8cca36994193b0a341e4e72acb88",
+      "token": "ERC20",
+      "amount": "55752011887462802",
+      "address": "0x.....",
+      "txHash": "0x120b7515abc6fadbb81e93aa8b7ba724ead688e8164840095a8ba8c4a6b418fe",
+      "block": {
+        "number": 1310,
+        "hash": "0x0000051ee238e657eaef9dfeeb57bc047b58f0f99031462be25321d3f495b659",
+        "timestamp": 1593911333
+      },
+      "clauseIndex": 50,
+      "logIndex": 0,
+      "createdAt": 1605709292,
+      "updatedAt": "1970-01-19T14:01:49.292Z"
+    }
+  ]
+}
+```
+
+### GET /api/accounts/:addr/buckets
+
+```js
+{
+  "buckets": [
+    {
+      "owner": "0x0000000000000000000000000000000000000000",
+      "candidate": "0xfa9c7149416e8cca36994193b0a341e4e72acb88",
+      "token": "MTR",
+      "totalVotes": "37338141289626210",
+      "bonusVotes": "123422122",
+      "bounded": false,
+      "createdTime": 1605709292,
+      ...
+    },
+    {
+      "owner": "0x0000000000000000000000000000000000000000",
+      "candidate": "0xfa9c7149416e8cca36994193b0a341e4e72acb88",
+      "token": "MTR",
+      "totalVotes": "37338141289626210",
+      "bonusVotes": "123422122",
+      "bounded": false,
+      "createdTime": 1605709292,
+      ...
     }
   ]
 }
@@ -347,6 +433,64 @@ API service of Meter next generation Scan.
       "logIndex": 0,
       "createdAt": 1605709292,
       "updatedAt": "1970-01-19T14:01:49.292Z"
+    }
+  ]
+}
+```
+
+### GET /api/accounts/:addr/proposed
+
+```json
+{
+  "proposed": [
+    {
+      "number": 2750,
+      "hash": "0x00000abe29b51019fa3c03c69b9bda59fa0110f7694a8374f399a4a13e56485d",
+      "parentID": "0x00000abdb42de5826f0ee72b2f945b1a1d9936e2d4844f7970487f72dd825a8b",
+      "timestamp": 1609932609,
+      "txHashs": [],
+      "lastKBlockHeight": 4,
+      "epoch": 2,
+      "qcHeight": 2749,
+      "blockType": 0,
+      "gasUsed": 0,
+      "txCount": 0,
+      "signer": "0x7c30d59ac6d36afde7769bf69f3a58a8a7d74fd0"
+    },
+    {
+      "number": 2778,
+      "hash": "0x00000abdb42de5826f0ee72b2f945b1a1d9936e2d4844f7970487f72dd825a8b",
+      "parentID": "0x00000abceb8d420c7f3515559a4630e86be6bec86b2cf8270dc627ef21fc4192",
+      "timestamp": 1609932606,
+      "txHashs": [],
+      "lastKBlockHeight": 4,
+      "epoch": 2,
+      "qcHeight": 2748,
+      "blockType": 0,
+      "gasUsed": 0,
+      "txCount": 0,
+      "signer": "0x7c30d59ac6d36afde7769bf69f3a58a8a7d74fd0"
+    }
+  ]
+}
+```
+
+### GET /api/accounts/:addr/delegators
+
+```json
+{
+  "delegators": [
+    {
+      "address": "0x7c30d59ac6d36afde7769bf69f3a58a8a7d74fd0",
+      "amount": "200000000000"
+    },
+    {
+      "address": "0x903f577c60796bac2bab28c71d1cb1fdc6c4c409",
+      "amount": "300000000000"
+    },
+    {
+      "address": "0x632cb15a35c4265ee043e0db9ccc35ef798b0532",
+      "amount": "400000000000"
     }
   ]
 }
@@ -464,49 +608,46 @@ API service of Meter next generation Scan.
 {
   "blocks": [
     {
+      "number": 2750,
+      "hash": "0x00000abe29b51019fa3c03c69b9bda59fa0110f7694a8374f399a4a13e56485d",
+      "parentID": "0x00000abdb42de5826f0ee72b2f945b1a1d9936e2d4844f7970487f72dd825a8b",
+      "timestamp": 1609932609,
       "txHashs": [],
-      "number": 1570,
-      "size": 441,
-      "parentID": "0x0000062167a7ff8aa1bb162b18fae386698862ce357cd29ef55ab52dd0a81cde",
-      "timestamp": 1593911928,
-      "gasLimit": 200000000,
-      "beneficiary": "0x3256443cf7c7c6c9bf9c874f5f239225e0b3487e",
+      "lastKBlockHeight": 4,
+      "epoch": 2,
+      "qcHeight": 2749,
+      "blockType": 0,
       "gasUsed": 0,
-      "totalScore": 1570,
-      "txsRoot": "0x45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0",
-      "stateRoot": "0x6bb47f2646d26a09b2966558ce4ce80d1f80ca429fec57b0515c9ba73630e796",
-      "receiptsRoot": "0x45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0",
-      "signer": "0xdc704f70d03f5665da5c712d3a815f8b53ae9caa",
-      "hash": "0x00000622fff7d2b520f5764f664fc43151ba5990d0ebf8a399bf0fb0b52f32ed",
-      "reward": "0",
-      "gasChanged": 0,
-      "score": 1,
       "txCount": 0,
-      "blockType": "MBlock",
-      "createdAt": 1605791137
+      "signer": "0x7c30d59ac6d36afde7769bf69f3a58a8a7d74fd0"
     },
-    ...,
     {
+      "number": 2749,
+      "hash": "0x00000abdb42de5826f0ee72b2f945b1a1d9936e2d4844f7970487f72dd825a8b",
+      "parentID": "0x00000abceb8d420c7f3515559a4630e86be6bec86b2cf8270dc627ef21fc4192",
+      "timestamp": 1609932606,
       "txHashs": [],
-      "number": 1561,
-      "size": 440,
-      "parentID": "0x000006187f87f5e5fdab0f07c03c895888757d93f73c29226fc72fa28b4409b9",
-      "timestamp": 1593911908,
-      "gasLimit": 200000000,
-      "beneficiary": "0xe66893147a730ddaf9e0ae42ad7ec8456d1fc50d",
+      "lastKBlockHeight": 4,
+      "epoch": 2,
+      "qcHeight": 2748,
+      "blockType": 0,
       "gasUsed": 0,
-      "totalScore": 1561,
-      "txsRoot": "0x45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0",
-      "stateRoot": "0x6bb47f2646d26a09b2966558ce4ce80d1f80ca429fec57b0515c9ba73630e796",
-      "receiptsRoot": "0x45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0",
-      "signer": "0x74258669ea5c8420c299a713f9d6cd931d1904fb",
-      "hash": "0x00000619402f1057069404ccf644072506faacef95dc1a41b4cabb935ac664df",
-      "reward": "0",
-      "gasChanged": 0,
-      "score": 1,
       "txCount": 0,
-      "blockType": "MBlock",
-      "createdAt": 1605776508
+      "signer": "0x27b28d0fba098fe63539f26c8ebf893fb90967d1"
+    },
+    {
+      "number": 2748,
+      "hash": "0x00000abceb8d420c7f3515559a4630e86be6bec86b2cf8270dc627ef21fc4192",
+      "parentID": "0x00000abb9e3de4de22efa3947d010ab65cf344a0f70cf921fff7f7e1a38eedeb",
+      "timestamp": 1609932604,
+      "txHashs": [],
+      "lastKBlockHeight": 4,
+      "epoch": 2,
+      "qcHeight": 2747,
+      "blockType": 0,
+      "gasUsed": 0,
+      "txCount": 0,
+      "signer": "0xf137fee3e87a92054ca558ae26e827f184901d44"
     }
   ]
 }
@@ -516,16 +657,34 @@ API service of Meter next generation Scan.
 
 ```json
 {
-  "tx": {
-    "hash": "0x120b7515abc6fadbb81e93aa8b7ba724ead688e8164840095a8ba8c4a6b418fe",
+  "summary": {
+    "hash": "0x6cafec49fcf66bf351b7c685391bafe4d5e829ae13745fb8b9a1903129bcf37d",
     "block": {
-      "number": 1310,
-      "hash": "0x0000051ee238e657eaef9dfeeb57bc047b58f0f99031462be25321d3f495b659",
-      "timestamp": 1593911333
+      "number": 4,
+      "hash": "0x0000000404b005404db91b800c070da27b32fdfd6a7ba282398321cf3648ed8a",
+      "timestamp": 1609926175
     },
-    "txIndex": 0,
-    "chainTag": 82,
-    "blockRef": "0x0000051b00000000",
+    "origin": "0x0000000000000000000000000000000000000000",
+    "clauseCount": 127,
+    "type": "reward",
+    "paid": "1018500000000000000",
+    "totalAmountStr": "0.000000803039579719 MTR",
+    "feeStr": "1.0185 MTR",
+    "reverted": false,
+    "tos": [
+      "0x0a05c2d862ca051010698b69b54278cbaf945ccb"
+    ]
+  },
+  "tx": {
+    "hash": "0x6cafec49fcf66bf351b7c685391bafe4d5e829ae13745fb8b9a1903129bcf37d",
+    "block": {
+      "number": 4,
+      "hash": "0x0000000404b005404db91b800c070da27b32fdfd6a7ba282398321cf3648ed8a",
+      "timestamp": 1609926175
+    },
+    "txIndex": 1,
+    "chainTag": 101,
+    "blockRef": "0x0000000100000000",
     "expiration": 720,
     "gasPriceCoef": 0,
     "gas": 4200000,
@@ -534,57 +693,27 @@ API service of Meter next generation Scan.
     "origin": "0x0000000000000000000000000000000000000000",
     "clauses": [
       {
-        "to": "0xfa9c7149416e8cca36994193b0a341e4e72acb88",
-        "value": "66283684122949440",
+        "to": "0x0a05c2d862ca051010698b69b54278cbaf945ccb",
+        "value": "6323146297",
         "token": "MTR",
         "data": "0x"
       },
       ...,
       {
-        "to": "0xfa9c7149416e8cca36994193b0a341e4e72acb88",
-        "value": "37338141289626210",
+        "to": "0x0a05c2d862ca051010698b69b54278cbaf945ccb",
+        "value": "6323146297",
         "token": "MTR",
         "data": "0x"
       }
     ],
-    "clauseCount": 60,
-    "size": 1949,
-    "gasUsed": 965000,
+    "clauseCount": 127,
+    "size": 3838,
+    "gasUsed": 2037000,
     "gasPayer": "0x0000000000000000000000000000000000000000",
-    "paid": "482500000000000000",
-    "reward": "482500000000000000",
+    "paid": "1018500000000000000",
+    "reward": "1018500000000000000",
     "reverted": false,
-    "outputs": [
-      {
-        "events": [
-
-        ],
-        "transfers": [
-          {
-            "sender": "0x0000000000000000000000000000000000000000",
-            "recipient": "0xfa9c7149416e8cca36994193b0a341e4e72acb88",
-            "amount": "0xeb7ca8d68d7740"
-          }
-        ],
-        "contractAddress": null
-      },
-      ...,
-      {
-        "events": [
-
-        ],
-        "transfers": [
-          {
-            "sender": "0x0000000000000000000000000000000000000000",
-            "recipient": "0xfa9c7149416e8cca36994193b0a341e4e72acb88",
-            "amount": "0x84a6d778243a62"
-          }
-        ],
-        "contractAddress": null
-      }
-    ],
-    "createdAt": 1605706563,
-    "updatedAt": "1970-01-19T14:01:46.563Z"
+    "createdAt": 1610431871
   }
 }
 ```
@@ -595,68 +724,52 @@ API service of Meter next generation Scan.
 {
   "txs": [
     {
-      "hash": "0x120b7515abc6fadbb81e93aa8b7ba724ead688e8164840095a8ba8c4a6b418fe",
+      "hash": "0x6cafec49fcf66bf351b7c685391bafe4d5e829ae13745fb8b9a1903129bcf37d",
       "block": {
-        "number": 1310,
-        "hash": "0x0000051ee238e657eaef9dfeeb57bc047b58f0f99031462be25321d3f495b659",
-        "timestamp": 1593911333
+        "number": 4,
+        "hash": "0x0000000404b005404db91b800c070da27b32fdfd6a7ba282398321cf3648ed8a",
+        "timestamp": 1609926175
       },
-      "txIndex": 0,
-      "chainTag": 82,
-      "blockRef": "0x0000051b00000000",
-      "expiration": 720,
-      "gasPriceCoef": 0,
-      "gas": 4200000,
-      "nonce": "0xbc614e",
-      "dependsOn": null,
       "origin": "0x0000000000000000000000000000000000000000",
-      "clauses": [
-        {
-          "to": "0xfa9c7149416e8cca36994193b0a341e4e72acb88",
-          "value": "66283684122949440",
-          "token": "MTR",
-          "data": "0x"
-        },
-        {
-          "to": "0xfa9c7149416e8cca36994193b0a341e4e72acb88",
-          "value": "37338141289626210",
-          "token": "MTR",
-          "data": "0x"
-        }
-      ],
-      "clauseCount": 60,
-      "size": 1949,
-      "gasUsed": 965000,
-      "gasPayer": "0x0000000000000000000000000000000000000000",
-      "paid": "482500000000000000",
-      "reward": "482500000000000000",
+      "clauseCount": 127,
+      "type": "reward",
+      "paid": "1018500000000000000",
+      "totalAmountStr": "0.000000803039579719 MTR",
+      "feeStr": "1.0185 MTR",
       "reverted": false,
-      "outputs": [
-        {
-          "events": [],
-          "transfers": [
-            {
-              "sender": "0x0000000000000000000000000000000000000000",
-              "recipient": "0xfa9c7149416e8cca36994193b0a341e4e72acb88",
-              "amount": "0xeb7ca8d68d7740"
-            }
-          ],
-          "contractAddress": null
-        },
-        {
-          "events": [],
-          "transfers": [
-            {
-              "sender": "0x0000000000000000000000000000000000000000",
-              "recipient": "0xfa9c7149416e8cca36994193b0a341e4e72acb88",
-              "amount": "0x84a6d778243a62"
-            }
-          ],
-          "contractAddress": null
-        }
-      ],
-      "createdAt": 1605706563,
-      "updatedAt": "1970-01-19T14:01:46.563Z"
+      "tos": ["0x0a05c2d862ca051010698b69b54278cbaf945ccb"]
+    },
+    {
+      "hash": "0xa98794607f7d6dfa76c7480b00e21fde431c7e8ed52bf77306ab0bea01a1059a",
+      "block": {
+        "number": 4,
+        "hash": "0x0000000404b005404db91b800c070da27b32fdfd6a7ba282398321cf3648ed8a",
+        "timestamp": 1609926175
+      },
+      "origin": "0x0000000000000000000000000000000000000000",
+      "clauseCount": 200,
+      "type": "reward",
+      "paid": "1602500000000000000",
+      "totalAmountStr": "0.0000012646292594 MTR",
+      "feeStr": "1.6025 MTR",
+      "reverted": false,
+      "tos": ["0x0a05c2d862ca051010698b69b54278cbaf945ccb"]
+    },
+    {
+      "hash": "0x512fac9c04971c3fa1fff473eadb8a807e837d344bc21a8c259176a71ce0ca2f",
+      "block": {
+        "number": 4,
+        "hash": "0x0000000404b005404db91b800c070da27b32fdfd6a7ba282398321cf3648ed8a",
+        "timestamp": 1609926175
+      },
+      "origin": "0x0000000000000000000000000000000000000000",
+      "clauseCount": 1,
+      "type": "call",
+      "paid": "19498000000000000",
+      "totalAmountStr": "0 MTRG",
+      "feeStr": "0.019498 MTR",
+      "reverted": false,
+      "tos": ["0x6163636f756e742d6c6f636b2d61646472657373"]
     }
   ]
 }
@@ -666,40 +779,54 @@ API service of Meter next generation Scan.
 
 ```json
 {
-  "transfers": [
+  "txs": [
     {
-      "from": "0x0000000000000000000000000000000000000000",
-      "to": "0xfa9c7149416e8cca36994193b0a341e4e72acb88",
-      "token": "MTR",
-      "amount": "37338141289626210",
-      "address": "",
-      "txHash": "0x120b7515abc6fadbb81e93aa8b7ba724ead688e8164840095a8ba8c4a6b418fe",
+      "hash": "0x6cafec49fcf66bf351b7c685391bafe4d5e829ae13745fb8b9a1903129bcf37d",
       "block": {
-        "number": 1310,
-        "hash": "0x0000051ee238e657eaef9dfeeb57bc047b58f0f99031462be25321d3f495b659",
-        "timestamp": 1593911333
+        "number": 4,
+        "hash": "0x0000000404b005404db91b800c070da27b32fdfd6a7ba282398321cf3648ed8a",
+        "timestamp": 1609926175
       },
-      "clauseIndex": 59,
-      "logIndex": 0,
-      "createdAt": 1605709292,
-      "updatedAt": "1970-01-19T14:01:49.292Z"
+      "origin": "0x0000000000000000000000000000000000000000",
+      "clauseCount": 127,
+      "type": "reward",
+      "paid": "1018500000000000000",
+      "totalAmountStr": "0.000000803039579719 MTR",
+      "feeStr": "1.0185 MTR",
+      "reverted": false,
+      "tos": ["0x0a05c2d862ca051010698b69b54278cbaf945ccb"]
     },
     {
-      "from": "0x0000000000000000000000000000000000000000",
-      "to": "0xfa9c7149416e8cca36994193b0a341e4e72acb88",
-      "token": "MTR",
-      "amount": "55752011887462802",
-      "address": "",
-      "txHash": "0x120b7515abc6fadbb81e93aa8b7ba724ead688e8164840095a8ba8c4a6b418fe",
+      "hash": "0xa98794607f7d6dfa76c7480b00e21fde431c7e8ed52bf77306ab0bea01a1059a",
       "block": {
-        "number": 1310,
-        "hash": "0x0000051ee238e657eaef9dfeeb57bc047b58f0f99031462be25321d3f495b659",
-        "timestamp": 1593911333
+        "number": 4,
+        "hash": "0x0000000404b005404db91b800c070da27b32fdfd6a7ba282398321cf3648ed8a",
+        "timestamp": 1609926175
       },
-      "clauseIndex": 50,
-      "logIndex": 0,
-      "createdAt": 1605709292,
-      "updatedAt": "1970-01-19T14:01:49.292Z"
+      "origin": "0x0000000000000000000000000000000000000000",
+      "clauseCount": 200,
+      "type": "reward",
+      "paid": "1602500000000000000",
+      "totalAmountStr": "0.0000012646292594 MTR",
+      "feeStr": "1.6025 MTR",
+      "reverted": false,
+      "tos": ["0x0a05c2d862ca051010698b69b54278cbaf945ccb"]
+    },
+    {
+      "hash": "0x512fac9c04971c3fa1fff473eadb8a807e837d344bc21a8c259176a71ce0ca2f",
+      "block": {
+        "number": 4,
+        "hash": "0x0000000404b005404db91b800c070da27b32fdfd6a7ba282398321cf3648ed8a",
+        "timestamp": 1609926175
+      },
+      "origin": "0x0000000000000000000000000000000000000000",
+      "clauseCount": 1,
+      "type": "call",
+      "paid": "19498000000000000",
+      "totalAmountStr": "0 MTRG",
+      "feeStr": "0.019498 MTR",
+      "reverted": false,
+      "tos": ["0x6163636f756e742d6c6f636b2d61646472657373"]
     }
   ]
 }
