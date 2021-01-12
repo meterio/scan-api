@@ -37,11 +37,13 @@ class TxController implements Controller {
 
   private getTxByHash = async (req, res) => {
     const { hash } = req.params;
-    const tx = await this.txRepo.findByHash(hash);
+    let tx = await this.txRepo.findByHash(hash);
     if (!tx) {
       return res.json({ tx: {} });
     }
-    return res.json({ summary: tx.toSummary(), tx });
+    let txObj = tx.toJSON();
+    delete txObj.outputs;
+    return res.json({ summary: tx.toSummary(), tx: txObj });
   };
 }
 

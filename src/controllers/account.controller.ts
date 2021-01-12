@@ -1,9 +1,12 @@
+import BigNumber from 'bignumber.js';
 import { Request, Response, Router } from 'express';
 import { HttpError, try$ } from 'express-toolbox';
 
 import { LIMIT_WINDOW } from '../const';
 import Controller from '../interfaces/controller.interface';
 import AccountRepo from '../repo/account.repo';
+import BlockRepo from '../repo/block.repo';
+import BucketRepo from '../repo/bucket.repo';
 import TransferRepo from '../repo/transfer.repo';
 import TxRepo from '../repo/tx.repo';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
@@ -14,6 +17,8 @@ class AccountController implements Controller {
   private accountRepo = new AccountRepo();
   private txRepo = new TxRepo();
   private transferRepo = new TransferRepo();
+  private bucketRepo = new BucketRepo();
+  private blockRepo = new BlockRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -27,8 +32,20 @@ class AccountController implements Controller {
       try$(this.getTransfersByAccount)
     );
     this.router.get(
-      `${this.path}/:address/erc20transfers`,
+      `${this.path}/:address/erc20txs`,
       try$(this.getERC20TransfersByAccount)
+    );
+    this.router.get(
+      `${this.path}/:address/buckets`,
+      try$(this.getBucketsByAccount)
+    );
+    this.router.get(
+      `${this.path}/:address/proposed`,
+      try$(this.getProposedByAccount)
+    );
+    this.router.get(
+      `${this.path}/:address/delegators`,
+      try$(this.getDelegatorsByAccount)
     );
   }
 
@@ -49,7 +66,7 @@ class AccountController implements Controller {
     if (!txs) {
       return res.json({ txs: [] });
     }
-    return res.json({ txs });
+    return res.json({ txSummaries: txs.map((tx) => tx.toSummary()) });
   };
 
   private getTransfersByAccount = async (req, res) => {
@@ -80,6 +97,63 @@ class AccountController implements Controller {
       return res.json({ transfers: [] });
     }
     return res.json({ transfers });
+  };
+
+  private getBucketsByAccount = async (req, res) => {
+    const { address } = req.params;
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+    const bkts = await this.bucketRepo.findByAddress(address, page, limit);
+    if (!bkts) {
+      return res.json({ buckets: [] });
+    }
+    return res.json({
+      buckets: bkts.map((b) => {
+        return b.toJSON();
+      }),
+    });
+  };
+
+  private getProposedByAccount = async (req, res) => {
+    const { address } = req.params;
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+    const proposed = await this.blockRepo.findBySigner(address, page, limit);
+
+    if (!proposed) {
+      return res.json({ txs: [] });
+    }
+    return res.json({ proposed: proposed.map((b) => b.toSummary()) });
+  };
+
+  private getDelegatorsByAccount = async (req, res) => {
+    const { address } = req.params;
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+    const bkts = await this.bucketRepo.findByAddress(address, page, limit);
+    if (!bkts) {
+      return res.json({ delegators: [] });
+    }
+    let dMap: { [key: string]: BigNumber } = {};
+    for (const b of bkts) {
+      if (b.owner in dMap) {
+        dMap[b.owner] = b.totalVotes.plus(dMap[b.owner]);
+      } else {
+        dMap[b.owner] = b.totalVotes;
+      }
+    }
+    const delegators = Object.entries(dMap)
+      .sort((a, b) => {
+        return a[1].isGreaterThan(b[1]) ? 1 : -1;
+      })
+      .map((item) => {
+        return { address: item[0], amount: item[1].toFixed() };
+      });
+
+    if (delegators.length >= (page - 1) * limit) {
+      return res.json({
+        delegators: delegators.slice((page - 1) * limit, page * limit),
+      });
+    } else {
+      return res.json({ delegators: [] });
+    }
   };
 }
 export default AccountController;

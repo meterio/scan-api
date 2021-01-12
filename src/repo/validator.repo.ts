@@ -1,7 +1,6 @@
 import BigNumber from 'bignumber.js';
 
 import { ValidatorStatus } from '../const';
-import { LIMIT_WINDOW } from '../const';
 import { Validator } from '../model/validator.interface';
 import validatorModel from '../model/validator.model';
 import { formalizePageAndLimit } from '../utils/utils';
@@ -10,7 +9,11 @@ export class ValidatorRepo {
   private model = validatorModel;
 
   public async findAll(pageNum?: number, limitNum?: number) {
-    return this.model.find({});
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    return this.model
+      .find({})
+      .limit(limit)
+      .skip(limit * page);
   }
 
   public async findCandidates(pageNum?: number, limitNum?: number) {

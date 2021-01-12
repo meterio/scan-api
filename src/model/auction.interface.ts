@@ -8,6 +8,15 @@ export interface AuctionDist {
   token: Token;
 }
 
+export interface AuctionTx {
+  txid: string;
+  address: string;
+  amount: string;
+  type: string;
+  timestamp: number;
+  nonce: number;
+}
+
 export interface Auction {
   id: string;
   startHeight: number;
@@ -20,6 +29,7 @@ export interface Auction {
   reservedPrice: BigNumber;
   receivedMTR: BigNumber;
   actualPrice: BigNumber;
+  txs: AuctionTx[];
   distMTRG: AuctionDist[];
   toSummary(): Object;
 }

@@ -125,7 +125,7 @@ txSchema.methods.getType = function () {
   return 'transfer';
 };
 
-txSchema.methods.getAmountStr = function () {
+txSchema.methods.getTotalAmountStr = function () {
   if (!this.clauses || this.clauses.length === 0) {
     return '0 MTR';
   }
@@ -163,8 +163,13 @@ txSchema.methods.getAmountStr = function () {
 };
 
 txSchema.methods.toSummary = function () {
-  const a = this.getAmountStr();
-  console.log('tx: ', this.hash, 'amount: ', a);
+  const a = this.getTotalAmountStr();
+  const tos = {};
+  for (const c of this.clauses) {
+    const amt = new BigNumber(c.value);
+    tos[c.to] = true;
+  }
+
   return {
     hash: this.hash,
     block: this.block,
@@ -172,9 +177,10 @@ txSchema.methods.toSummary = function () {
     clauseCount: this.clauses ? this.clauses.length : 0,
     type: this.getType(),
     paid: this.paid,
-    amountStr: a,
+    totalAmountStr: a,
     feeStr: `${fromWei(this.paid)} MTR`,
     reverted: this.reverted,
+    tos: Object.keys(tos),
   };
 };
 

@@ -19,7 +19,9 @@ class AuctionController implements Controller {
 
   private initializeRoutes() {
     this.router.get(`${this.path}/present`, try$(this.getPresentAuction));
-    this.router.get(`${this.path}/summaries`, try$(this.getSummaries));
+    this.router.get(`${this.path}/past`, try$(this.getPastAuctions));
+    this.router.get(`${this.path}/:id/bids`, try$(this.getAuctionBids));
+    this.router.get(`${this.path}/:id/dists`, try$(this.getAuctionDists));
   }
 
   private getPresentAuction = async (req: Request, res: Response) => {
@@ -50,22 +52,40 @@ class AuctionController implements Controller {
         reserved: `${fromWei(p.reservedMTRG)} MTRG`,
         reservedPrice: p.reservedPrice,
         received: `${fromWei(p.receivedMTR)} MTR`,
-        auctionTxs: auctionTxs,
+        bids: auctionTxs,
       },
     });
   };
 
-  private getSummaries = async (req: Request, res: Response) => {
+  private getPastAuctions = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const summaries = await this.auctionRepo.findAllPagination(page, limit);
-    if (!summaries || summaries.length <= 0) {
-      return res.json({ summaries: [] });
+    const auctions = await this.auctionRepo.findAllPagination(page, limit);
+    if (!auctions || auctions.length <= 0) {
+      return res.json({ auctions: [] });
     }
     const result = [];
-    for (const s of summaries) {
+    for (const s of auctions) {
       result.push(s.toSummary());
     }
-    return res.json({ summaries: result });
+    return res.json({ auctions: result });
+  };
+
+  private getAuctionBids = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const auction = await this.auctionRepo.findByID(id);
+    if (!auction) {
+      return res.json({ bids: [] });
+    }
+    return res.json({ bids: auction.txs });
+  };
+
+  private getAuctionDists = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const auction = await this.auctionRepo.findByID(id);
+    if (!auction) {
+      return res.json({ dists: [] });
+    }
+    return res.json({ dists: auction.distMTRG });
   };
 }
 export default AuctionController;

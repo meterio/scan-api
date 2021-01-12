@@ -17,6 +17,19 @@ export class BlockRepo {
     return this.block.find().sort({ createdAt: -1 }).limit(count);
   }
 
+  public async findBySigner(
+    address: string,
+    pageNum?: number,
+    limitNum?: number
+  ) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    return this.block
+      .find({ signer: address })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(limit * page);
+  }
+
   public async findKBlocks(pageNum?: number, limitNum?: number) {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.block
@@ -24,6 +37,13 @@ export class BlockRepo {
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip(limit * page);
+  }
+
+  public async findKBlocksByEpochs(epochs: number[]) {
+    return this.block.find({
+      blockType: BlockType.KBlock,
+      epoch: { $in: epochs },
+    });
   }
 
   public async findByNumber(num: number) {

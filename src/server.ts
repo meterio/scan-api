@@ -2,6 +2,7 @@ require('./utils/validateEnv');
 
 import App from './app';
 import AccountController from './controllers/account.controller';
+import AuctionController from './controllers/auction.controller';
 import BlockController from './controllers/block.controller';
 import HomeController from './controllers/home.controller';
 import MetricController from './controllers/metric.controller';
@@ -21,6 +22,7 @@ const app = new App([
   new PowController(),
   new TransferController(),
   new ValidatorController(),
+  new AuctionController(),
 ]);
 
 app.listen();

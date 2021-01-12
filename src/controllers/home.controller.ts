@@ -2,10 +2,12 @@ import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
 import Controller from '../interfaces/controller.interface';
+import BucketRepo from '../repo/bucket.repo';
 
 class HomeController implements Controller {
   public path = '/';
   public router = Router();
+  private bucketRepo = new BucketRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -14,6 +16,7 @@ class HomeController implements Controller {
   private initializeRoutes() {
     this.router.get(`${this.path}`, try$(this.getHome));
     this.router.get(`${this.path}/api/dashboard/metric`, try$(this.getMetric));
+    this.router.get(`${this.path}/buckets`, try$(this.getBuckets));
   }
 
   private getHome = async (req: Request, res: Response) => {
@@ -22,6 +25,11 @@ class HomeController implements Controller {
 
   private getMetric = async (req, res) => {
     return res.json({});
+  };
+
+  private getBuckets = async (req, res) => {
+    const buckets = await this.bucketRepo.findAll();
+    return res.json({ buckets });
   };
 }
 

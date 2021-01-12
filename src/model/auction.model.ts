@@ -1,5 +1,3 @@
-import { disconnect } from 'process';
-
 import BigNumber from 'bignumber.js';
 import * as mongoose from 'mongoose';
 
@@ -23,6 +21,18 @@ const auctionDistSchema = new mongoose.Schema(
       set: (enumValue: Token) => Token[enumValue],
       required: true,
     },
+  },
+  { _id: false }
+);
+
+const auctionTxSchema = new mongoose.Schema(
+  {
+    txid: { type: String, required: true, unique: true },
+    address: { type: String, required: true },
+    amount: { type: String, required: true },
+    type: { type: String, required: true },
+    timestamp: { type: Number, required: true },
+    nonce: { type: Number, required: true },
   },
   { _id: false }
 );
@@ -64,15 +74,8 @@ const auctionSchema = new mongoose.Schema({
     set: (bnum: BigNumber) => bnum.toFixed(0),
     required: true,
   },
+  txs: [auctionTxSchema],
   distMTRG: [auctionDistSchema],
-});
-
-auctionSchema.set('toJSON', {
-  transform: (doc, ret, options) => {
-    delete ret.__v;
-    delete ret._id;
-    return ret;
-  },
 });
 
 auctionSchema.methods.toSummary = function () {
@@ -90,14 +93,23 @@ auctionSchema.methods.toSummary = function () {
     endHeight: this.endHeight,
     endEpoch: this.endEpoch,
     createTime: this.createTime,
+    bidCount: this.txs ? this.txs.length : 0,
+    distCount: this.dist ? this.dist.length : 0,
     released: `${fromWei(this.releasedMTRG)} MTRG`,
     received: `${fromWei(this.receivedMTR)} MTR`,
     reserved: `${fromWei(this.reservedMTRG)} MTRG`,
     reservedPrice: this.reservedPrice.toFixed(),
     actualPrice: this.actualPrice.toFixed(),
-    dist: dist,
   };
 };
+
+auctionSchema.set('toJSON', {
+  transform: (doc, ret, options) => {
+    delete ret.__v;
+    delete ret._id;
+    return ret;
+  },
+});
 
 const model = mongoose.model<Auction & mongoose.Document>(
   'auction',
