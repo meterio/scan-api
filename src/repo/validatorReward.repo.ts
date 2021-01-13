@@ -1,5 +1,5 @@
-import { ValidatorReward } from '../model/ValidatorReward.interface';
-import ValidatorRewardModel from '../model/ValidatorReward.model';
+import { ValidatorReward } from '../model/validatorReward.interface';
+import ValidatorRewardModel from '../model/validatorReward.model';
 import { formalizePageAndLimit } from '../utils/utils';
 
 export class ValidatorRewardRepo {
