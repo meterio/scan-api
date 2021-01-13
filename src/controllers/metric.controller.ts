@@ -1,3 +1,4 @@
+import axios from 'axios';
 import BigNumber from 'bignumber.js';
 import { Router } from 'express';
 import { try$ } from 'express-toolbox';
@@ -23,6 +24,7 @@ class MetricController implements Controller {
     this.router.get(`${this.path}/pow`, try$(this.getPowMetric));
     this.router.get(`${this.path}/pos`, try$(this.getPosMetric));
     this.router.get(`${this.path}/head`, try$(this.getHeadMetric));
+    this.router.get(`${this.path}/chart`, try$(this.getChart));
   }
 
   private getAllMetric = async (req, res) => {
@@ -154,6 +156,37 @@ class MetricController implements Controller {
       result[h.key] = h.num;
     }
     return res.json({ heads: result });
+  };
+
+  private getChart = async (req, res) => {
+    const end = Math.floor(+new Date() / 1000);
+    const start = end - 7 * 24 * 3600;
+    const step = '24h';
+    const hashrates = await axios.get(
+      `http://monitor.meter.io:9090/api/v1/query_range?query=bitcoind_blockchain_hashrate&start=${start}&end=${end}&step=${step}`
+    );
+    console.log(hashrates.data);
+
+    if (!hashrates || !hashrates.data || !hashrates.data.data) {
+      return res.json({
+        hashrates: {
+          mainnet: [],
+          testnet: [],
+        },
+      });
+    }
+    let mainrates = [];
+    let testrates = [];
+
+    for (const m of hashrates.data.data.result) {
+      if (mainrates.length <= 0 && m.metric.job === 'mainnet_bitcoin') {
+        mainrates.push(...m.values);
+      }
+      if (testrates.length <= 0 && m.metric.job === 'shoal_bitcoin') {
+        testrates.push(...m.values);
+      }
+    }
+    return res.json({ hashrates: { mainnet: mainrates, testnet: testrates } });
   };
 }
 

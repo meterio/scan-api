@@ -8,6 +8,7 @@ API service of Meter next generation Scan.
 - `GET /api/metrics/pos` - Get PoS metrics
 - `GET /api/metrics/pow` - Get PoW metrics
 - `GET /api/metrics/head` - Get head metrics
+- `GET /api/metrics/chart` - Get hashrate chart metrics
 - `GET /api/validators/count` - Get validators count information
 - `GET /api/validators/delegate?page=1&limit=10` - Get delegate validator information <sup>i</sup>
 - `GET /api/validators/candidate?page=1&limit=10` - Get candidate validator information <sup>i</sup>
@@ -127,6 +128,29 @@ API service of Meter next generation Scan.
     "pow": 10,
     "account": 8,
     "erc20": 30
+  }
+}
+```
+
+### GET /api/metrics/chart
+
+```json
+{
+  "hashrates": {
+    "mainnet": [
+      [1610176050, "99150555.21346013"],
+      [1610262450, "99150555.21346013"],
+      [1610348850, "99150555.21346013"],
+      [1610435250, "99150555.21346013"],
+      [1610521650, "14943576.10785735"]
+    ],
+    "testnet": [
+      [1610176050, "99150555.21346013"],
+      [1610262450, "99150555.21346013"],
+      [1610348850, "99150555.21346013"],
+      [1610435250, "99150555.21346013"],
+      [1610521650, "14943576.10785735"]
+    ]
   }
 }
 ```
