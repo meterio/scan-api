@@ -1,7 +1,10 @@
+import { POINT_CONVERSION_COMPRESSED } from 'constants';
+
 import BigNumber from 'bignumber.js';
 import * as mongoose from 'mongoose';
 
 import { Token, ZeroAddress, enumKeys } from '../const';
+import { Balance } from '../utils/balance';
 import { fromWei } from '../utils/utils';
 import { blockConciseSchema } from './blockConcise.model';
 import { Tx } from './tx.interface';
@@ -133,13 +136,12 @@ txSchema.methods.getTotalAmounts = function () {
     const c = this.clauses[0];
     return {
       amounts: [c.value],
-      amountStrs: `${fromWei(c.value)} ${Token[c.token]}`,
+      amountStrs: [`${fromWei(c.value, 6)} ${Token[c.token]}`],
     };
   }
   let mtr = new BigNumber(0);
   let mtrg = new BigNumber(0);
   let mtrUsed = false;
-  let amountStr = '';
   for (const c of this.clauses) {
     if (c.token === Token.MTR) {
       mtr = mtr.plus(c.value);
@@ -153,13 +155,12 @@ txSchema.methods.getTotalAmounts = function () {
   let amountStrs = [];
   if (mtr.isGreaterThan(0)) {
     amounts.push(mtr.toFixed());
-    amountStrs.push(`${fromWei(mtr, 3)} MTR`);
+    amountStrs.push(`${fromWei(mtr, 6)} MTR`);
   }
   if (mtrg.isGreaterThan(0)) {
     amounts.push(mtrg.toFixed());
-    amountStrs.push(`${(fromWei(mtrg), 3)} MTRG`);
+    amountStrs.push(`${fromWei(mtrg, 6)} MTRG`);
   }
-  console.log(amountStr);
   if (amountStrs.length <= 0) {
     amounts.push('0');
     amountStrs.push(mtrUsed ? '0 MTR' : '0 MTRG');
@@ -169,11 +170,31 @@ txSchema.methods.getTotalAmounts = function () {
 
 txSchema.methods.toSummary = function () {
   const a = this.getTotalAmounts();
-  const tos = {};
+  const tos: { [key: string]: Balance } = {};
   for (const c of this.clauses) {
-    const amt = new BigNumber(c.value);
-    tos[c.to] = true;
+    if (!(c.to in tos)) {
+      tos[c.to] = new Balance(c.to, 0, 0);
+    }
+    switch (c.token) {
+      case Token.MTR:
+        tos[c.to].plusMTR(c.value);
+        break;
+      case Token.MTRG:
+        tos[c.to].plusMTRG(c.value);
+        break;
+    }
   }
+
+  const sortedTos = Object.values(tos).sort((a, b) => {
+    return a
+      .MTR()
+      .plus(a.MTRG())
+      .minus(b.MTR())
+      .minus(b.MTRG())
+      .isGreaterThan(0)
+      ? 1
+      : -1;
+  });
 
   return {
     hash: this.hash,
@@ -183,11 +204,13 @@ txSchema.methods.toSummary = function () {
     type: this.getType(),
     paid: this.paid,
     totalAmounts: a.amounts,
-    totalAmountStr: a.amountStrs,
+    totalAmountStrs: a.amountStrs,
     fee: this.paid.toFixed(),
     feeStr: `${fromWei(this.paid)} MTR`,
     reverted: this.reverted,
-    tos: Object.keys(tos),
+    tos: sortedTos.map((t) => {
+      return { address: t.Address(), mtr: t.MTR(), mtrg: t.MTRG() };
+    }),
   };
 };
 

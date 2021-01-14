@@ -56,7 +56,7 @@ export const isNumString = (val: string) => {
 
 export const fromWei = (val: string | number | BigNumber, precision = -1) => {
   let p = undefined;
-  if (typeof precision === 'number' && precision >= 0) {
+  if (precision >= 0) {
     p = precision;
   }
   return new BigNumber(val).dividedBy(UNIT_WEI).toFixed(p);
