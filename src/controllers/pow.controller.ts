@@ -53,7 +53,8 @@ class PowController implements Controller {
         for (const addr in rewardMap) {
           details.push({
             address: addr,
-            subTotal: `${fromWei(rewardMap[addr])} MTR`,
+            subTotal: rewardMap[addr].toFixed(),
+            subTotalStr: `${fromWei(rewardMap[addr])} MTR`,
           });
         }
         rewards.push({
@@ -61,7 +62,8 @@ class PowController implements Controller {
           powBlock: 1274, // FIXME: fake number
           timestamp: kb.timestamp,
           epoch: kb.epoch,
-          totalAmount: `${fromWei(total)} MTR`,
+          totalAmount: total.toFixed(),
+          totalAmountStr: `${fromWei(total)} MTR`,
           details,
         });
       }

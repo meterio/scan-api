@@ -34,7 +34,8 @@ class AuctionController implements Controller {
     for (const t of p.auctionTxs) {
       auctionTxs.push({
         address: t.addr,
-        amount: `${fromWei(t.amount)} MTR`,
+        amount: t.amount,
+        amountStr: `${fromWei(t.amount)} MTR`,
         count: t.count,
         nonce: t.nonce,
         timestamp: t.lastTime,
@@ -48,10 +49,13 @@ class AuctionController implements Controller {
         endHeight: p.endHeight,
         endEpoch: p.endEpoch,
         createTime: p.createTime,
-        released: `${fromWei(p.releasedMTRG)} MTRG`,
-        reserved: `${fromWei(p.reservedMTRG)} MTRG`,
+        released: p.releasedMTRG,
+        releasedStr: `${fromWei(p.releasedMTRG)} MTRG`,
+        reserved: p.reservedMTRG,
+        reservedStr: `${fromWei(p.reservedMTRG)} MTRG`,
         reservedPrice: p.reservedPrice,
-        received: `${fromWei(p.receivedMTR)} MTR`,
+        received: p.receivedMTR,
+        receivedStr: `${fromWei(p.receivedMTR)} MTR`,
         bids: auctionTxs,
       },
     });

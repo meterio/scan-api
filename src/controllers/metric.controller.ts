@@ -71,7 +71,8 @@ class MetricController implements Controller {
         delegates: Number(map[MetricName.DELEGATE_COUNT]),
         onlineNodes: 0, // FIXME: fake data
         totalNodes: Number(map[MetricName.DELEGATE_COUNT]),
-        totalStaked: `${fromWei(totalStaked)} MTRG`,
+        totalStaked: totalStaked,
+        totalStakedStr: `${fromWei(totalStaked)} MTRG`,
       },
       pow: {
         best: Number(map[MetricName.POW_BEST]),

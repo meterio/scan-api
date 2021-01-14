@@ -54,8 +54,12 @@ export const isNumString = (val: string) => {
   return /^\d+$/.test(val);
 };
 
-export const fromWei = (val: string | number | BigNumber) => {
-  return new BigNumber(val).dividedBy(UNIT_WEI).toFixed();
+export const fromWei = (val: string | number | BigNumber, precision = -1) => {
+  let p = undefined;
+  if (typeof precision === 'number' && precision >= 0) {
+    p = precision;
+  }
+  return new BigNumber(val).dividedBy(UNIT_WEI).toFixed(p);
 };
 
 export const toWei = (val: string | number | BigNumber) => {

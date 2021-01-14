@@ -83,7 +83,8 @@ auctionSchema.methods.toSummary = function () {
   for (const d of this.distMTRG) {
     dist.push({
       address: d.address,
-      amount: `${fromWei(d.amount)} ${Token[d.token]}`,
+      amount: d.amount,
+      amountStr: `${fromWei(d.amount)} ${Token[d.token]}`,
     });
   }
   return {
@@ -95,9 +96,12 @@ auctionSchema.methods.toSummary = function () {
     createTime: this.createTime,
     bidCount: this.txs ? this.txs.length : 0,
     distCount: this.dist ? this.dist.length : 0,
-    released: `${fromWei(this.releasedMTRG)} MTRG`,
-    received: `${fromWei(this.receivedMTR)} MTR`,
-    reserved: `${fromWei(this.reservedMTRG)} MTRG`,
+    released: this.releasedMTRG.toFixed(),
+    releasedStr: `${fromWei(this.releasedMTRG)} MTRG`,
+    received: this.receivedMTR.toFixed(),
+    receivedStr: `${fromWei(this.receivedMTR)} MTR`,
+    reserved: this.reservedMTRG.toFixed(),
+    reservedStr: `${fromWei(this.reservedMTRG)} MTRG`,
     reservedPrice: this.reservedPrice.toFixed(),
     actualPrice: this.actualPrice.toFixed(),
   };

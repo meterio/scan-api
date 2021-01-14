@@ -125,13 +125,16 @@ txSchema.methods.getType = function () {
   return 'transfer';
 };
 
-txSchema.methods.getTotalAmountStr = function () {
+txSchema.methods.getTotalAmounts = function () {
   if (!this.clauses || this.clauses.length === 0) {
-    return '0 MTR';
+    return { amounts: ['0'], amountStrs: ['0 MTR'] };
   }
   if (this.clauses.length === 1) {
     const c = this.clauses[0];
-    return `${fromWei(c.value)} ${Token[c.token]}`;
+    return {
+      amounts: [c.value],
+      amountStrs: `${fromWei(c.value)} ${Token[c.token]}`,
+    };
   }
   let mtr = new BigNumber(0);
   let mtrg = new BigNumber(0);
@@ -146,24 +149,26 @@ txSchema.methods.getTotalAmountStr = function () {
       mtrg = mtrg.plus(c.value);
     }
   }
+  let amounts = [];
+  let amountStrs = [];
   if (mtr.isGreaterThan(0)) {
-    amountStr = `${fromWei(mtr)} MTR`;
+    amounts.push(mtr.toFixed());
+    amountStrs.push(`${fromWei(mtr, 3)} MTR`);
   }
   if (mtrg.isGreaterThan(0)) {
-    if (amountStr) {
-      amountStr += ' & ';
-    }
-    amountStr += `${fromWei(mtrg)} MTRG`;
+    amounts.push(mtrg.toFixed());
+    amountStrs.push(`${(fromWei(mtrg), 3)} MTRG`);
   }
   console.log(amountStr);
-  if (!amountStr) {
-    amountStr = mtrUsed ? '0 MTR' : '0 MTRG';
+  if (amountStrs.length <= 0) {
+    amounts.push('0');
+    amountStrs.push(mtrUsed ? '0 MTR' : '0 MTRG');
   }
-  return amountStr;
+  return { amounts, amountStrs };
 };
 
 txSchema.methods.toSummary = function () {
-  const a = this.getTotalAmountStr();
+  const a = this.getTotalAmounts();
   const tos = {};
   for (const c of this.clauses) {
     const amt = new BigNumber(c.value);
@@ -177,7 +182,9 @@ txSchema.methods.toSummary = function () {
     clauseCount: this.clauses ? this.clauses.length : 0,
     type: this.getType(),
     paid: this.paid,
-    totalAmountStr: a,
+    totalAmounts: a.amounts,
+    totalAmountStr: a.amountStrs,
+    fee: this.paid.toFixed(),
     feeStr: `${fromWei(this.paid)} MTR`,
     reverted: this.reverted,
     tos: Object.keys(tos),

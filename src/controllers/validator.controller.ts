@@ -46,8 +46,10 @@ class ValidatorController implements Controller {
     const delegates = await this.validatorRepo.countDelegate();
     const jailed = await this.validatorRepo.countJailed();
     return res.json({
-      totalStaked: `${fromWei(candidateTotalStaked)} MTRG`,
-      totalDelegateStaked: `${fromWei(delegateTotalStaked)} MTRG`,
+      totalStaked: candidateTotalStaked,
+      totalStakedStr: `${fromWei(candidateTotalStaked)} MTRG`,
+      totalDelegateStaked: delegateTotalStaked,
+      totalDelegateStakedStr: `${fromWei(delegateTotalStaked)} MTRG`,
       onlineNode: 0, // FIXME: fake stub
       totalNode: delegates,
       delegates,
@@ -75,7 +77,8 @@ class ValidatorController implements Controller {
           .dividedBy(UNIT_SHANNON)
           .times(100)
           .toPrecision(2)}%`,
-        totalVotes: `${fromWei(v.totalVotes)} MTRG`,
+        totalVotes: v.totalVotes.toFixed(),
+        totalVotesStr: `${fromWei(v.totalVotes)} MTRG`,
         upTime: '100%', // FIXME: fake stub
       });
     }
@@ -101,7 +104,8 @@ class ValidatorController implements Controller {
         netAddr: `${v.ipAddress}:${v.port}`,
         // pubKey: v.pubKey,
 
-        votingPower: `${fromWei(v.votingPower)} MTRG`,
+        votingPower: v.votingPower.toFixed(),
+        votingPowerStr: `${fromWei(v.votingPower)} MTRG`,
         'commission%': `${new BigNumber(v.delegateCommission)
           .dividedBy(UNIT_SHANNON)
           .times(100)
