@@ -53,12 +53,15 @@ class AccountController implements Controller {
     const { address } = req.params;
     const account = await this.accountRepo.findByAddress(address);
     if (!account) {
-      return res.json({ account: {
-        mtrBalance:0,
-        mtrgBalance: 0,
-        hasCode:false,
-        hasMaster:false,
-      } });
+      return res.json({
+        account: {
+          address,
+          mtrBalance: 0,
+          mtrgBalance: 0,
+          firstSeen: { number: -1, timestamp: 0 },
+          lastUpdate: { number: -1, timestamp: 0 },
+        },
+      });
     }
     return res.json({ account });
   };
