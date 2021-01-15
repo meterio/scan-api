@@ -80,7 +80,7 @@ class AuctionController implements Controller {
     if (!auction) {
       return res.json({ bids: [] });
     }
-    return res.json({ bids: auction.txs });
+    return res.json({ summary: auction.toSummary(), bids: auction.txs });
   };
 
   private getAuctionDists = async (req: Request, res: Response) => {
@@ -89,7 +89,7 @@ class AuctionController implements Controller {
     if (!auction) {
       return res.json({ dists: [] });
     }
-    return res.json({ dists: auction.distMTRG });
+    return res.json({ summary: auction.toSummary(), dists: auction.distMTRG });
   };
 }
 export default AuctionController;
