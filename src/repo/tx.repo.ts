@@ -5,6 +5,10 @@ import { formalizePageAndLimit } from '../utils/utils';
 export class TxRepo {
   private tx = txModel;
 
+  public async count() {
+    return this.tx.countDocuments();
+  }
+
   public async findAll() {
     return this.tx.find();
   }

@@ -5,8 +5,10 @@ import { try$ } from 'express-toolbox';
 
 import { MetricName, enumVals } from '../const';
 import Controller from '../interfaces/controller.interface';
+import BlockRepo from '../repo/block.repo';
 import HeadRepo from '../repo/head.repo';
 import MetricRepo from '../repo/metric.repo';
+import TxRepo from '../repo/tx.repo';
 import { fromWei } from '../utils/utils';
 
 class MetricController implements Controller {
@@ -14,6 +16,8 @@ class MetricController implements Controller {
   public router = Router();
   private metricRepo = new MetricRepo();
   private headRepo = new HeadRepo();
+  private blockRepo = new BlockRepo();
+  private txRepo = new TxRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -23,46 +27,49 @@ class MetricController implements Controller {
     this.router.get(`${this.path}/all`, try$(this.getAllMetric));
     this.router.get(`${this.path}/pow`, try$(this.getPowMetric));
     this.router.get(`${this.path}/pos`, try$(this.getPosMetric));
+    this.router.get(`${this.path}/token`, try$(this.getTokenMetric));
     this.router.get(`${this.path}/head`, try$(this.getHeadMetric));
     this.router.get(`${this.path}/chart`, try$(this.getChart));
   }
 
-  private getAllMetric = async (req, res) => {
+  private getMetricMap = async () => {
     const names = enumVals(MetricName);
     const metrics = await this.metricRepo.findByKeys(names);
     let map: { [key: string]: string } = {};
     for (const m of metrics) {
       map[m.key] = m.value;
     }
+    return map;
+  };
 
+  private getPosData = async () => {
+    let map = await this.getMetricMap();
+    const recentBlocks = await this.blockRepo.findRecent(20);
+    let avgBlockTime = 2;
+    if (recentBlocks && recentBlocks.length > 2) {
+      const last = recentBlocks[0];
+      const first = recentBlocks[recentBlocks.length - 1];
+      avgBlockTime =
+        Math.floor(
+          (100 * (last.timestamp - first.timestamp)) / (recentBlocks.length - 1)
+        ) / 100;
+    }
+    const txsCount = await this.txRepo.count();
     const buckets = map[MetricName.BUCKETS];
 
     let totalStaked = new BigNumber(0);
     for (const b of JSON.parse(buckets)) {
       totalStaked = totalStaked.plus(b.totalVotes);
     }
-
-    return res.json({
-      mtrg: {
-        price: map[MetricName.MTRG_PRICE],
-        priceChange: map[MetricName.MTRG_PRICE_CHANGE],
-        avgDailyReward: '235 MTRG', // FIXME: fake data
-        circulation: new BigNumber(map[MetricName.MTRG_CIRCULATION])
-          .dividedBy(1e18)
-          .toFixed(),
-      },
-      mtr: {
-        price: map[MetricName.MTR_PRICE],
-        priceChange: map[MetricName.MTR_PRICE_CHANGE],
-        circulation: new BigNumber(map[MetricName.MTR_CIRCULATION])
-          .dividedBy(1e18)
-          .toFixed(),
-      },
+    return {
       pos: {
         best: Number(map[MetricName.POS_BEST]),
         kblock: Number(map[MetricName.KBLOCK]),
         epoch: Number(map[MetricName.EPOCH]),
         seq: Number(map[MetricName.SEQ]),
+        avgBlockTime: avgBlockTime,
+        txsCount,
+        inflation: '5%',
       },
       staking: {
         buckets: Number(map[MetricName.BUCKET_COUNT]),
@@ -72,8 +79,14 @@ class MetricController implements Controller {
         onlineNodes: 0, // FIXME: fake data
         totalNodes: Number(map[MetricName.DELEGATE_COUNT]),
         totalStaked: totalStaked,
-        totalStakedStr: `${fromWei(totalStaked)} MTRG`,
+        totalStakedStr: `${fromWei(totalStaked, 2)} MTRG`,
       },
+    };
+  };
+
+  private getPowData = async () => {
+    let map = await this.getMetricMap();
+    return {
       pow: {
         best: Number(map[MetricName.POW_BEST]),
         difficulty: map[MetricName.DIFFICULTY],
@@ -81,19 +94,12 @@ class MetricController implements Controller {
         costParity: map[MetricName.COST_PARITY],
         rewardPerDay: map[MetricName.REWARD_PER_DAY],
       },
-    });
+    };
   };
 
-  private getPowMetric = async (req, res) => {
-    const names = enumVals(MetricName);
-    const metrics = await this.metricRepo.findByKeys(names);
-    let map: { [key: string]: string } = {};
-    for (const m of metrics) {
-      map[m.key] = m.value;
-    }
-
-    const hashrate = Number(map[MetricName.HASHRATE]);
-    return res.json({
+  private getTokenData = async () => {
+    let map = await this.getMetricMap();
+    return {
       mtr: {
         price: map[MetricName.MTR_PRICE],
         priceChange: map[MetricName.MTR_PRICE_CHANGE],
@@ -101,48 +107,43 @@ class MetricController implements Controller {
           .dividedBy(1e18)
           .toFixed(),
       },
-      pow: {
-        best: Number(map[MetricName.POW_BEST]),
-        difficulty: map[MetricName.DIFFICULTY],
-        hashrate,
-        costParity: map[MetricName.COST_PARITY],
-        rewardPerDay: map[MetricName.REWARD_PER_DAY],
+
+      mtrg: {
+        price: map[MetricName.MTRG_PRICE],
+        priceChange: map[MetricName.MTRG_PRICE_CHANGE],
+        avgDailyReward: '235 MTRG', // FIXME: fake data
+        circulation: new BigNumber(map[MetricName.MTRG_CIRCULATION])
+          .dividedBy(1e18)
+          .toFixed(),
       },
+    };
+  };
+
+  private getAllMetric = async (req, res) => {
+    const posData = await this.getPosData();
+    const powData = await this.getPowData();
+    const tokenData = await this.getTokenData();
+
+    return res.json({
+      ...tokenData,
+      ...powData,
+      ...posData,
     });
   };
 
+  private getPowMetric = async (req, res) => {
+    const powData = await this.getPowData();
+    return res.json(powData);
+  };
+
   private getPosMetric = async (req, res) => {
-    const names = enumVals(MetricName);
-    const metrics = await this.metricRepo.findByKeys(names);
-    let map: { [key: string]: string } = {};
-    for (const m of metrics) {
-      map[m.key] = m.value;
-    }
+    const posData = await this.getPosData();
+    return res.json(posData);
+  };
 
-    const buckets = map[MetricName.BUCKETS];
-
-    let totalStaked = new BigNumber(0);
-    for (const b of JSON.parse(buckets)) {
-      totalStaked = totalStaked.plus(b.totalVotes);
-    }
-
-    return res.json({
-      pos: {
-        best: Number(map[MetricName.POS_BEST]),
-        kblock: Number(map[MetricName.KBLOCK]),
-        epoch: Number(map[MetricName.EPOCH]),
-        seq: Number(map[MetricName.SEQ]),
-      },
-      staking: {
-        buckets: Number(map[MetricName.BUCKET_COUNT]),
-        candidates: Number(map[MetricName.CANDIDATE_COUNT]),
-        validators: Number(map[MetricName.STAKEHOLDER_COUNT]),
-        delegates: Number(map[MetricName.DELEGATE_COUNT]),
-        onlineNodes: 0, // FIXME: fake data
-        totalNodes: Number(map[MetricName.DELEGATE_COUNT]),
-        totalStaked: `${fromWei(totalStaked)} MTRG`,
-      },
-    });
+  private getTokenMetric = async (req, res) => {
+    const tokenData = await this.getTokenData();
+    return res.json(tokenData);
   };
 
   private getHeadMetric = async (req, res) => {
