@@ -19,8 +19,8 @@ export class BucketRepo {
     return this.model
       .find({
         owner: { $regex: new RegExp(`^${address}$`, 'i') },
-        createTime: -1,
       })
+      .sort({ createTime: -1 })
       .limit(limit)
       .skip(limit * page);
   }
