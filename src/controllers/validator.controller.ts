@@ -26,6 +26,10 @@ class ValidatorController implements Controller {
     this.router.get(`${this.path}/delegate`, try$(this.getDelegates));
     this.router.get(`${this.path}/jailed`, try$(this.getJailed));
     this.router.get(`${this.path}/rewards`, try$(this.getPosRewards));
+    this.router.get(
+      `${this.path}/rewards/:epoch`,
+      try$(this.getPosRewardsByEpoch)
+    );
   }
 
   private getValidatorsCount = async (req: Request, res: Response) => {
@@ -170,6 +174,34 @@ class ValidatorController implements Controller {
       rewards: rewards.map((r) => {
         const d = eMap[r.epoch];
         return { ...r.toSummary(), timestamp: d?.timestamp, height: d.number };
+      }),
+    });
+  };
+
+  private getPosRewardsByEpoch = async (req: Request, res: Response) => {
+    const { epoch } = req.params;
+    const reward = await this.validatorRewardsRepo.findByEpoch(parseInt(epoch));
+    if (!reward) {
+      return res.json({
+        epoch,
+        timestamp: 0,
+        height: 0,
+        totalReward: '0',
+        baseReward: '0',
+        rewards: [],
+      });
+    }
+    const epochs = [parseInt(epoch)];
+    const blks = await this.blockRepo.findKBlocksByEpochs(epochs);
+    const b = blks[0];
+    return res.json({
+      timestamp: b.timestamp,
+      height: b.number,
+      epoch: reward.epoch,
+      baseReward: reward.baseReward.toFixed(),
+      totalReward: reward.baseReward.toFixed(),
+      rewards: reward.rewards.map((item) => {
+        return { address: item.address, amount: item.amount.toFixed() };
       }),
     });
   };

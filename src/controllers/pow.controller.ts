@@ -23,6 +23,10 @@ class PowController implements Controller {
   private initializeRoutes() {
     this.router.get(`${this.path}/rewards`, try$(this.getPowRewards));
     this.router.get(
+      `${this.path}/rewards/:epoch`,
+      try$(this.getPowRewardsByEpoch)
+    );
+    this.router.get(
       `${this.path}/blocks/recent`,
       try$(this.getRecentPowBlocks)
     );
@@ -69,6 +73,55 @@ class PowController implements Controller {
       }
     }
     return res.json({ rewards });
+  };
+
+  private getPowRewardsByEpoch = async (req: Request, res: Response) => {
+    const { epoch } = req.params;
+    const kblocks = await this.blockRepo.findKBlocksByEpochs([parseInt(epoch)]);
+    if (kblocks.length <= 0) {
+      return res.json({
+        posBlock: 0,
+        powBlock: 0,
+        timestamp: 0,
+        epoch: epoch,
+        totalAmount: 0,
+        totalAmountStr: `0 MTR`,
+        details: [],
+      });
+    }
+
+    const kb = kblocks[0];
+    const coinbaseTxHash = kb.txHashs[0];
+    const coinbaseTx = await this.txRepo.findByHash(coinbaseTxHash);
+    let total = new BigNumber(0);
+    let rewardMap: { [key: string]: BigNumber } = {};
+    let details = [];
+    if (!!coinbaseTx && coinbaseTx.origin === ZeroAddress) {
+      for (const c of coinbaseTx.clauses) {
+        total = total.plus(c.value);
+        if (c.to in rewardMap) {
+          rewardMap[c.to] = rewardMap[c.to].plus(c.value);
+        } else {
+          rewardMap[c.to] = new BigNumber(c.value);
+        }
+      }
+      for (const addr in rewardMap) {
+        details.push({
+          address: addr,
+          subTotal: rewardMap[addr].toFixed(),
+          subTotalStr: `${fromWei(rewardMap[addr])} MTR`,
+        });
+      }
+      return res.json({
+        posBlock: kb.number,
+        powBlock: 1274, // FIXME: fake number
+        timestamp: kb.timestamp,
+        epoch: kb.epoch,
+        totalAmount: total.toFixed(),
+        totalAmountStr: `${fromWei(total)} MTR`,
+        details,
+      });
+    }
   };
 
   private getRecentPowBlocks = async (req: Request, res: Response) => {
