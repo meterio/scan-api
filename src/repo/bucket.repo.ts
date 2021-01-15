@@ -10,14 +10,17 @@ export class BucketRepo {
     return this.model.find({});
   }
 
-  public async findByAddress(
+  public async findByAccount(
     address: string,
     pageNum?: number,
     limitNum?: number
   ) {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.model
-      .find({ owner: address, createTime: -1 })
+      .find({
+        owner: { $regex: new RegExp(`^${address}$`, 'i') },
+        createTime: -1,
+      })
       .limit(limit)
       .skip(limit * page);
   }

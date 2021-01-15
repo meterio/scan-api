@@ -114,7 +114,7 @@ class AccountController implements Controller {
   private getBucketsByAccount = async (req, res) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const bkts = await this.bucketRepo.findByAddress(address, page, limit);
+    const bkts = await this.bucketRepo.findByAccount(address, page, limit);
     if (!bkts) {
       return res.json({ buckets: [] });
     }
@@ -139,16 +139,17 @@ class AccountController implements Controller {
   private getDelegatorsByAccount = async (req, res) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const bkts = await this.bucketRepo.findByAddress(address, page, limit);
+    const bkts = await this.bucketRepo.findByAccount(address, page, limit);
     if (!bkts) {
       return res.json({ delegators: [] });
     }
     let dMap: { [key: string]: BigNumber } = {};
     for (const b of bkts) {
-      if (b.owner in dMap) {
-        dMap[b.owner] = b.totalVotes.plus(dMap[b.owner]);
+      const owner = b.owner.toLowerCase();
+      if (owner in dMap) {
+        dMap[owner] = b.totalVotes.plus(dMap[owner]);
       } else {
-        dMap[b.owner] = b.totalVotes;
+        dMap[owner] = b.totalVotes;
       }
     }
     const delegators = Object.entries(dMap)

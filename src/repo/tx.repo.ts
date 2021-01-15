@@ -29,7 +29,14 @@ export class TxRepo {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.tx
       .find({
-        $or: [{ origin: addr }, { clauses: { $elemMatch: { to: addr } } }],
+        $or: [
+          { origin: { $regex: new RegExp(`^${addr}$`, 'i') } },
+          {
+            clauses: {
+              $elemMatch: { to: { $regex: new RegExp(`^${addr}$`, 'i') } },
+            },
+          },
+        ],
       })
       .sort({ createdAt: -1 })
       .limit(limit)

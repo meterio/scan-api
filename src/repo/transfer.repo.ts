@@ -35,7 +35,12 @@ export class TransferRepo {
   ) {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.transfer
-      .find({ $or: [{ from: addr }, { to: addr }] })
+      .find({
+        $or: [
+          { from: { $regex: new RegExp(`^${addr}$`, 'i') } },
+          { to: { $regex: new RegExp(`^${addr}$`, 'i') } },
+        ],
+      })
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip(limit * page);
@@ -49,7 +54,15 @@ export class TransferRepo {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.transfer
       .find({
-        $and: [{ token: Token.ERC20 }, { $or: [{ from: addr }, { to: addr }] }],
+        $and: [
+          { token: Token.ERC20 },
+          {
+            $or: [
+              { from: { $regex: new RegExp(`^${addr}$`, 'i') } },
+              { to: { $regex: new RegExp(`^${addr}$`, 'i') } },
+            ],
+          },
+        ],
       })
       .sort({ createdAt: -1 })
       .limit(limit)
