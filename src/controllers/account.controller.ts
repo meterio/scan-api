@@ -9,7 +9,7 @@ import BlockRepo from '../repo/block.repo';
 import BucketRepo from '../repo/bucket.repo';
 import TransferRepo from '../repo/transfer.repo';
 import TxRepo from '../repo/tx.repo';
-import { extractPageAndLimitQueryParam } from '../utils/utils';
+import { extractPageAndLimitQueryParam, fromWei } from '../utils/utils';
 
 class AccountController implements Controller {
   public path = '/api/accounts';
@@ -63,7 +63,11 @@ class AccountController implements Controller {
         },
       });
     }
-    return res.json({ account });
+    return res.json({
+      ...account,
+      mtrBalanceStr: fromWei(account.mtrBalance) + ' MTR',
+      mtrgBalanceStr: fromWei(account.mtrgBalance) + ' MTRG',
+    });
   };
 
   private getTxsByAccount = async (req, res) => {
