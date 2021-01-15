@@ -57,7 +57,9 @@ class AccountController implements Controller {
         account: {
           address,
           mtrBalance: 0,
+          mtrBalanceStr: '0 MTR',
           mtrgBalance: 0,
+          mtrgBalanceStr: '0 MTRG',
           firstSeen: { number: -1, timestamp: 0 },
           lastUpdate: { number: -1, timestamp: 0 },
         },
