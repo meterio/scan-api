@@ -76,11 +76,15 @@ class AccountController implements Controller {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const txs = await this.txRepo.findByAccount(address, page, limit);
+    const count = await this.txRepo.countByAccount(address);
 
     if (!txs) {
-      return res.json({ txs: [] });
+      return res.json({ totalPage: 0, txSummaries: [] });
     }
-    return res.json({ txSummaries: txs.map((tx) => tx.toSummary()) });
+    return res.json({
+      totalPage: Math.ceil(count / limit),
+      txSummaries: txs.map((tx) => tx.toSummary()),
+    });
   };
 
   private getTransfersByAccount = async (req, res) => {
@@ -92,10 +96,11 @@ class AccountController implements Controller {
       page,
       limit
     );
+    const count = await this.transferRepo.countByAccount(address);
     if (!transfers) {
-      return res.json({ transfers: [] });
+      return res.json({ totalPage: 0, transfers: [] });
     }
-    return res.json({ transfers });
+    return res.json({ totalPage: Math.ceil(count / limit), transfers });
   };
 
   private getERC20TransfersByAccount = async (req, res) => {
@@ -107,20 +112,23 @@ class AccountController implements Controller {
       page,
       limit
     );
+    const count = await this.transferRepo.countERC20TransferByAccount(address);
     if (!transfers) {
-      return res.json({ transfers: [] });
+      return res.json({ totalPage: 0, transfers: [] });
     }
-    return res.json({ transfers });
+    return res.json({ totalPage: Math.ceil(count / limit), transfers });
   };
 
   private getBucketsByAccount = async (req, res) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const bkts = await this.bucketRepo.findByAccount(address, page, limit);
+    const count = await this.bucketRepo.countByAccount(address);
     if (!bkts) {
       return res.json({ buckets: [] });
     }
     return res.json({
+      totalPage: Math.ceil(count / limit),
       buckets: bkts.map((b) => {
         return b.toJSON();
       }),
@@ -130,12 +138,16 @@ class AccountController implements Controller {
   private getProposedByAccount = async (req, res) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
+    const count = await this.blockRepo.countBySigner(address);
     const proposed = await this.blockRepo.findBySigner(address, page, limit);
 
     if (!proposed) {
-      return res.json({ txs: [] });
+      return res.json({ totalPage: 0, proposed: [] });
     }
-    return res.json({ proposed: proposed.map((b) => b.toSummary()) });
+    return res.json({
+      totalPage: Math.ceil(count / limit),
+      proposed: proposed.map((b) => b.toSummary()),
+    });
   };
 
   private getDelegatorsByAccount = async (req, res) => {
@@ -164,6 +176,7 @@ class AccountController implements Controller {
 
     if (delegators.length >= (page - 1) * limit) {
       return res.json({
+        totalPage: Math.ceil(delegators.length / limit),
         delegators: delegators.slice((page - 1) * limit, page * limit),
       });
     } else {

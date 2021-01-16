@@ -8,6 +8,10 @@ import { formalizePageAndLimit } from '../utils/utils';
 export class ValidatorRepo {
   private model = validatorModel;
 
+  public async countAll() {
+    return this.model.estimatedDocumentCount();
+  }
+
   public async findAll(pageNum?: number, limitNum?: number) {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.model

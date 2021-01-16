@@ -5,6 +5,10 @@ import { formalizePageAndLimit } from '../utils/utils';
 export class ValidatorRewardRepo {
   private model = ValidatorRewardModel;
 
+  public async countAll() {
+    return this.model.estimatedDocumentCount({});
+  }
+
   public async findAll(pageNum?: number, limitNum?: number) {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.model

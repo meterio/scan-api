@@ -20,6 +20,18 @@ export class TxRepo {
   public async findByHash(hash: string) {
     return this.tx.findOne({ hash });
   }
+  public async countByAccount(addr: string) {
+    return this.tx.count({
+      $or: [
+        { origin: { $regex: new RegExp(`^${addr}$`, 'i') } },
+        {
+          clauses: {
+            $elemMatch: { to: { $regex: new RegExp(`^${addr}$`, 'i') } },
+          },
+        },
+      ],
+    });
+  }
 
   public async findByAccount(
     addr: string,

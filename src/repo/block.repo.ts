@@ -17,6 +17,10 @@ export class BlockRepo {
     return this.block.find().sort({ createdAt: -1 }).limit(count);
   }
 
+  public async countBySigner(address: string) {
+    return this.block.count({ signer: address });
+  }
+
   public async findBySigner(
     address: string,
     pageNum?: number,
@@ -28,6 +32,10 @@ export class BlockRepo {
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip(limit * page);
+  }
+
+  public async countKBlocks() {
+    return this.block.count({ blockType: BlockType.KBlock });
   }
 
   public async findKBlocks(pageNum?: number, limitNum?: number) {

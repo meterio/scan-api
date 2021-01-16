@@ -28,6 +28,15 @@ export class TransferRepo {
       .sort({ blockNumber: 1 });
   }
 
+  public async countByAccount(addr: string) {
+    return this.transfer.count({
+      $or: [
+        { from: { $regex: new RegExp(`^${addr}$`, 'i') } },
+        { to: { $regex: new RegExp(`^${addr}$`, 'i') } },
+      ],
+    });
+  }
+
   public async findByAccount(
     addr: string,
     pageNum?: number,
@@ -44,6 +53,20 @@ export class TransferRepo {
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip(limit * page);
+  }
+
+  public async countERC20TransferByAccount(addr: string) {
+    return this.transfer.count({
+      $and: [
+        { token: Token.ERC20 },
+        {
+          $or: [
+            { from: { $regex: new RegExp(`^${addr}$`, 'i') } },
+            { to: { $regex: new RegExp(`^${addr}$`, 'i') } },
+          ],
+        },
+      ],
+    });
   }
 
   public async findERC20TransferByAccount(

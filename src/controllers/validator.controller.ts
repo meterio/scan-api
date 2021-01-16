@@ -33,8 +33,8 @@ class ValidatorController implements Controller {
   }
 
   private getValidatorsCount = async (req: Request, res: Response) => {
-    const validators = await this.validatorRepo.findAll();
-    if (!validators) {
+    const validatorCount = await this.validatorRepo.countAll();
+    if (validatorCount <= 0) {
       return res.json({
         totalStaked: 0,
         onlineNode: 0,
@@ -66,7 +66,7 @@ class ValidatorController implements Controller {
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const candidates = await this.validatorRepo.findCandidates(page, limit);
     if (!candidates) {
-      return res.json({ total: 0, candidates: [] });
+      return res.json({ totalPage: 0, candidates: [] });
     }
     const count = await this.validatorRepo.countCandidate();
     let results = [];
@@ -87,7 +87,7 @@ class ValidatorController implements Controller {
       });
     }
     return res.json({
-      total: count,
+      totalPage: Math.ceil(count / limit),
       candidates: results,
     });
   };
@@ -96,7 +96,7 @@ class ValidatorController implements Controller {
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const delegates = await this.validatorRepo.findDelegate(page, limit);
     if (!delegates) {
-      return res.json({ total: 0, delegates: [] });
+      return res.json({ totalPage: 0, delegates: [] });
     }
     const delegateTotalStaked = await this.validatorRepo.getDelegateTotalStaked();
     const count = await this.validatorRepo.countDelegate();
@@ -124,7 +124,7 @@ class ValidatorController implements Controller {
       });
     }
     return res.json({
-      total: count,
+      totalPage: Math.ceil(count / limit),
       delegates: results,
     });
   };
@@ -133,7 +133,7 @@ class ValidatorController implements Controller {
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const jailed = await this.validatorRepo.findJailed(page, limit);
     if (jailed) {
-      return res.json({ total: 0, jailed: [] });
+      return res.json({ totalPage: 0, jailed: [] });
     }
     const count = await this.validatorRepo.countJailed();
     let results = [];
@@ -152,7 +152,7 @@ class ValidatorController implements Controller {
       });
     }
     return res.json({
-      total: count,
+      totalPage: Math.ceil(count / limit),
       jailed: results,
     });
   };
@@ -161,8 +161,9 @@ class ValidatorController implements Controller {
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
     const rewards = await this.validatorRewardsRepo.findAll(page, limit);
+    const count = await this.validatorRewardsRepo.countAll();
     if (!rewards) {
-      return res.json({ rewards: [] });
+      return res.json({ totalPage: 0, rewards: [] });
     }
     const epochs = rewards.map((r) => r.epoch);
     const blks = await this.blockRepo.findKBlocksByEpochs(epochs);
@@ -171,9 +172,14 @@ class ValidatorController implements Controller {
       eMap[b.epoch] = { timestamp: b.timestamp, number: b.number };
     }
     return res.json({
+      totalPage: Math.ceil(count / limit),
       rewards: rewards.map((r) => {
         const d = eMap[r.epoch];
-        return { ...r.toSummary(), timestamp: d?.timestamp, height: d.number };
+        return {
+          ...r.toSummary(),
+          timestamp: d?.timestamp,
+          height: d.number,
+        };
       }),
     });
   };

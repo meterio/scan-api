@@ -64,14 +64,15 @@ class AuctionController implements Controller {
   private getPastAuctions = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const auctions = await this.auctionRepo.findAllPagination(page, limit);
+    const count = await this.auctionRepo.countAll();
     if (!auctions || auctions.length <= 0) {
-      return res.json({ auctions: [] });
+      return res.json({ totalPage: 0, auctions: [] });
     }
     const result = [];
     for (const s of auctions) {
       result.push(s.toSummary());
     }
-    return res.json({ auctions: result });
+    return res.json({ totalPage: Math.ceil(count / limit), auctions: result });
   };
 
   private getAuctionBids = async (req: Request, res: Response) => {

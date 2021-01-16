@@ -10,6 +10,12 @@ export class BucketRepo {
     return this.model.find({});
   }
 
+  public async countByAccount(address: string) {
+    return this.model.count({
+      owner: { $regex: new RegExp(`^${address}$`, 'i') },
+    });
+  }
+
   public async findByAccount(
     address: string,
     pageNum?: number,
