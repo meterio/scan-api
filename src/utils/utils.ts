@@ -54,15 +54,8 @@ export const isNumString = (val: string) => {
   return /^\d+$/.test(val);
 };
 
-export const commaSeparated = (num: number | string) => {
-  return String(num).replace(/^\d+/, (number) =>
-    [...number]
-      .map(
-        (digit, index, digits) =>
-          (!index || (digits.length - index) % 3 ? '' : ',') + digit
-      )
-      .join('')
-  );
+export const commaSeparated = (x: number | string) => {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };
 
 export const fromWei = (val: string | number | BigNumber, precision = -1) => {
