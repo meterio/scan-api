@@ -66,7 +66,7 @@ class AccountController implements Controller {
       });
     }
     return res.json({
-      ...account,
+      ...account.toJSON(),
       mtrBalanceStr: fromWei(account.mtrBalance) + ' MTR',
       mtrgBalanceStr: fromWei(account.mtrgBalance) + ' MTRG',
     });
