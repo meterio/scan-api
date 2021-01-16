@@ -54,12 +54,24 @@ export const isNumString = (val: string) => {
   return /^\d+$/.test(val);
 };
 
+export const commaSeparated = (num: number | string) => {
+  return String(num).replace(/^\d+/, (number) =>
+    [...number]
+      .map(
+        (digit, index, digits) =>
+          (!index || (digits.length - index) % 3 ? '' : ',') + digit
+      )
+      .join('')
+  );
+};
+
 export const fromWei = (val: string | number | BigNumber, precision = -1) => {
   let p = undefined;
   if (precision >= 0) {
     p = precision;
   }
-  return new BigNumber(val).dividedBy(UNIT_WEI).toFixed(p);
+  const num = new BigNumber(val).dividedBy(UNIT_WEI).toFixed(p);
+  return commaSeparated(num);
 };
 
 export const toWei = (val: string | number | BigNumber) => {

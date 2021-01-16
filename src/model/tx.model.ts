@@ -136,7 +136,7 @@ txSchema.methods.getTotalAmounts = function () {
     const c = this.clauses[0];
     return {
       amounts: [c.value],
-      amountStrs: [`${fromWei(c.value, 6)} ${Token[c.token]}`],
+      amountStrs: [`${fromWei(c.value, 2)} ${Token[c.token]}`],
     };
   }
   let mtr = new BigNumber(0);
@@ -155,11 +155,11 @@ txSchema.methods.getTotalAmounts = function () {
   let amountStrs = [];
   if (mtr.isGreaterThan(0)) {
     amounts.push(mtr.toFixed());
-    amountStrs.push(`${fromWei(mtr, 6)} MTR`);
+    amountStrs.push(`${fromWei(mtr, 2)} MTR`);
   }
   if (mtrg.isGreaterThan(0)) {
     amounts.push(mtrg.toFixed());
-    amountStrs.push(`${fromWei(mtrg, 6)} MTRG`);
+    amountStrs.push(`${fromWei(mtrg, 2)} MTRG`);
   }
   if (amountStrs.length <= 0) {
     amounts.push('0');
