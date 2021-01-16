@@ -1,9 +1,11 @@
 import BigNumber from 'bignumber.js';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
+import { Document } from 'mongoose';
 
-import { LIMIT_WINDOW, UNIT_SHANNON } from '../const';
+import { UNIT_SHANNON } from '../const';
 import Controller from '../interfaces/controller.interface';
+import { Validator } from '../model/validator.interface';
 import BlockRepo from '../repo/block.repo';
 import ValidatorRepo from '../repo/validator.repo';
 import ValidatorRewardRepo from '../repo/validatorReward.repo';
@@ -46,9 +48,9 @@ class ValidatorController implements Controller {
     }
     const candidateTotalStaked = await this.validatorRepo.getCandidateTotalStaked();
     const delegateTotalStaked = await this.validatorRepo.getDelegateTotalStaked();
-    const candidates = await this.validatorRepo.countCandidate();
-    const delegates = await this.validatorRepo.countDelegate();
-    const jailed = await this.validatorRepo.countJailed();
+    const candidates = await this.validatorRepo.countCandidatesByFilter('');
+    const delegates = await this.validatorRepo.countDelegatesByFilter('');
+    const jailed = await this.validatorRepo.countJailedByFilter('');
     return res.json({
       totalStaked: candidateTotalStaked,
       totalStakedStr: `${fromWei(candidateTotalStaked)} MTRG`,
@@ -62,98 +64,118 @@ class ValidatorController implements Controller {
     });
   };
 
+  private convertCandidate = (v: Validator & Document) => {
+    return {
+      name: v.name,
+      address: v.address,
+      netAddr: `${v.ipAddress}:${v.port}`,
+      pubKey: v.pubKey,
+
+      'commission%': `${new BigNumber(v.commission)
+        .dividedBy(UNIT_SHANNON)
+        .times(100)
+        .toPrecision(2)}%`,
+      totalVotes: v.totalVotes.toFixed(),
+      totalVotesStr: `${fromWei(v.totalVotes)} MTRG`,
+      upTime: '100%', // FIXME: fake stub
+    };
+  };
+
   private getCandidates = async (req: Request, res: Response) => {
+    const { search } = req.query;
+    const filter = search ? search.toString() : '';
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const candidates = await this.validatorRepo.findCandidates(page, limit);
-    if (!candidates) {
+    const count = await this.validatorRepo.countCandidatesByFilter(filter);
+    if (count <= 0) {
       return res.json({ totalPage: 0, candidates: [] });
     }
-    const count = await this.validatorRepo.countCandidate();
-    let results = [];
-    for (const v of candidates) {
-      results.push({
-        name: v.name,
-        address: v.address,
-        netAddr: `${v.ipAddress}:${v.port}`,
-        pubKey: v.pubKey,
-
-        'commission%': `${new BigNumber(v.commission)
-          .dividedBy(UNIT_SHANNON)
-          .times(100)
-          .toPrecision(2)}%`,
-        totalVotes: v.totalVotes.toFixed(),
-        totalVotesStr: `${fromWei(v.totalVotes)} MTRG`,
-        upTime: '100%', // FIXME: fake stub
-      });
-    }
+    const candidates = await this.validatorRepo.findCandidatesByFilter(
+      filter,
+      page,
+      limit
+    );
     return res.json({
       totalPage: Math.ceil(count / limit),
-      candidates: results,
+      candidates: candidates.map(this.convertCandidate),
     });
+  };
+
+  private convertDelegate = (v: Validator & Document, totalStaked: string) => {
+    return {
+      name: v.name,
+      address: v.address,
+      netAddr: `${v.ipAddress}:${v.port}`,
+      // pubKey: v.pubKey,
+
+      votingPower: v.votingPower.toFixed(),
+      votingPowerStr: `${fromWei(v.votingPower)} MTRG`,
+      'commission%': `${new BigNumber(v.delegateCommission)
+        .dividedBy(UNIT_SHANNON)
+        .times(100)
+        .toPrecision(2)}%`,
+      'shares%': `${v.votingPower
+        .dividedBy(totalStaked)
+        .times(100)
+        .toPrecision(2)} %`,
+      'up48h%': '100%', // FIXME: fake data
+      totalPoints: v.totalPoints,
+      upTime: '100%', // FIXME: fake stub
+    };
   };
 
   private getDelegates = async (req: Request, res: Response) => {
+    const { search } = req.query;
+    const filter = search ? search.toString() : '';
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const delegates = await this.validatorRepo.findDelegate(page, limit);
-    if (!delegates) {
+    const count = await this.validatorRepo.countDelegatesByFilter(filter);
+    if (count <= 0) {
       return res.json({ totalPage: 0, delegates: [] });
     }
+    const delegates = await this.validatorRepo.findDelegatesByFilter(
+      filter,
+      page,
+      limit
+    );
     const delegateTotalStaked = await this.validatorRepo.getDelegateTotalStaked();
-    const count = await this.validatorRepo.countDelegate();
-    let results = [];
-    for (const v of delegates) {
-      results.push({
-        name: v.name,
-        address: v.address,
-        netAddr: `${v.ipAddress}:${v.port}`,
-        // pubKey: v.pubKey,
-
-        votingPower: v.votingPower.toFixed(),
-        votingPowerStr: `${fromWei(v.votingPower)} MTRG`,
-        'commission%': `${new BigNumber(v.delegateCommission)
-          .dividedBy(UNIT_SHANNON)
-          .times(100)
-          .toPrecision(2)}%`,
-        'shares%': `${v.votingPower
-          .dividedBy(delegateTotalStaked)
-          .times(100)
-          .toPrecision(2)} %`,
-        'up48h%': '100%', // FIXME: fake data
-        totalPoints: v.totalPoints,
-        upTime: '100%', // FIXME: fake stub
-      });
-    }
     return res.json({
       totalPage: Math.ceil(count / limit),
-      delegates: results,
+      delegates: delegates.map((d) =>
+        this.convertDelegate(d, delegateTotalStaked)
+      ),
     });
   };
 
+  private convertJailed = (v: Validator & Document) => {
+    return {
+      name: v.name,
+      address: v.address,
+      netAddr: `${v.ipAddress}:${v.port}`,
+      // pubKey: v.pubKey,
+
+      totalPoints: v.totalPoints,
+      bailAmount: `${fromWei(v.bailAmount)} MTRG`,
+      jailedTime: v.jailedTime,
+      infractins: v.infractions,
+      upTime: '100%', // FIXME: fake stub
+    };
+  };
+
   private getJailed = async (req: Request, res: Response) => {
+    const { search } = req.query;
+    const filter = search ? search.toString() : '';
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const jailed = await this.validatorRepo.findJailed(page, limit);
-    if (jailed) {
+    const count = await this.validatorRepo.countJailedByFilter(filter);
+    if (count <= 0) {
       return res.json({ totalPage: 0, jailed: [] });
     }
-    const count = await this.validatorRepo.countJailed();
-    let results = [];
-    for (const v of jailed) {
-      results.push({
-        name: v.name,
-        address: v.address,
-        netAddr: `${v.ipAddress}:${v.port}`,
-        // pubKey: v.pubKey,
-
-        totalPoints: v.totalPoints,
-        bailAmount: `${fromWei(v.bailAmount)} MTRG`,
-        jailedTime: v.jailedTime,
-        infractins: v.infractions,
-        upTime: '100%', // FIXME: fake stub
-      });
-    }
+    const jailed = await this.validatorRepo.findJailedByFilter(
+      filter,
+      page,
+      limit
+    );
     return res.json({
       totalPage: Math.ceil(count / limit),
-      jailed: results,
+      jailed: jailed.map(this.convertJailed),
     });
   };
 

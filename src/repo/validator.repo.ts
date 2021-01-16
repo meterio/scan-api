@@ -20,6 +20,7 @@ export class ValidatorRepo {
       .skip(limit * page);
   }
 
+  /*
   public async findCandidates(pageNum?: number, limitNum?: number) {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.model
@@ -29,13 +30,42 @@ export class ValidatorRepo {
       .limit(limit)
       .skip(limit * page);
   }
-
   public async countCandidate() {
     return this.model.count({
       status: { $in: [ValidatorStatus.CANDIDATE, ValidatorStatus.DELEGATE] },
     });
   }
+  */
 
+  public async findCandidatesByFilter(
+    filter: string,
+    pageNum?: number,
+    limitNum?: number
+  ) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    return this.model
+      .find({
+        $or: [
+          { name: { $regex: new RegExp(`.*${filter}.*`, 'i') } },
+          { address: { $regex: new RegExp(`.*${filter}.*`, 'i') } },
+        ],
+        status: { $in: [ValidatorStatus.CANDIDATE, ValidatorStatus.DELEGATE] },
+      })
+      .limit(limit)
+      .skip(limit * page);
+  }
+
+  public async countCandidatesByFilter(filter: string) {
+    return this.model.count({
+      $or: [
+        { name: { $regex: new RegExp(`.*${filter}.*`, 'i') } },
+        { address: { $regex: new RegExp(`.*${filter}.*`, 'i') } },
+      ],
+      status: { $in: [ValidatorStatus.CANDIDATE, ValidatorStatus.DELEGATE] },
+    });
+  }
+
+  /*
   public async findDelegate(pageNum?: number, limitNum?: number) {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.model
@@ -47,7 +77,37 @@ export class ValidatorRepo {
   public async countDelegate() {
     return this.model.count({ status: ValidatorStatus.DELEGATE });
   }
+  */
 
+  public async findDelegatesByFilter(
+    filter: string,
+    pageNum?: number,
+    limitNum?: number
+  ) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    return this.model
+      .find({
+        $or: [
+          { name: { $regex: new RegExp(`.*${filter}.*`, 'i') } },
+          { address: { $regex: new RegExp(`.*${filter}.*`, 'i') } },
+        ],
+        status: ValidatorStatus.DELEGATE,
+      })
+      .limit(limit)
+      .skip(limit * page);
+  }
+
+  public async countDelegatesByFilter(filter: string) {
+    return this.model.count({
+      $or: [
+        { name: { $regex: new RegExp(`.*${filter}.*`, 'i') } },
+        { address: { $regex: new RegExp(`.*${filter}.*`, 'i') } },
+      ],
+      status: ValidatorStatus.DELEGATE,
+    });
+  }
+
+  /*
   public async findJailed(pageNum?: number, limitNum?: number) {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.model
@@ -58,6 +118,36 @@ export class ValidatorRepo {
 
   public async countJailed() {
     return this.model.count({ status: ValidatorStatus.JAILED });
+  }
+  */
+
+  public async findJailedByFilter(
+    filter: string,
+    pageNum?: number,
+    limitNum?: number
+  ) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    return this.model
+      .find({
+        $or: [
+          { name: { $regex: new RegExp(`.*${filter}.*`, 'i') } },
+          { address: { $regex: new RegExp(`.*${filter}.*`, 'i') } },
+        ],
+
+        status: ValidatorStatus.JAILED,
+      })
+      .limit(limit)
+      .skip(limit * page);
+  }
+
+  public async countJailedByFilter(filter: string) {
+    return this.model.count({
+      $or: [
+        { name: { $regex: new RegExp(`.*${filter}.*`, 'i') } },
+        { address: { $regex: new RegExp(`.*${filter}.*`, 'i') } },
+      ],
+      status: ValidatorStatus.JAILED,
+    });
   }
 
   public async findByAddress(address: string) {
