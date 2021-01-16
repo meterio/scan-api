@@ -1,3 +1,4 @@
+import { isAddress } from '@meterio/devkit/dist/cry';
 import { Router } from 'express';
 import { try$ } from 'express-toolbox';
 
@@ -36,8 +37,12 @@ class SearchController implements Controller {
       return res.json({ type: 'tx', data: tx });
     }
     if (account) {
-      return res.json({ type: 'account', data: account });
+      return res.json({ type: 'address', data: account });
     }
+    if (isAddress(hash)) {
+      return res.json({ type: 'address', data: { address: hash } });
+    }
+    return res.json({ type: 'unknown', data: {} });
   };
 }
 
