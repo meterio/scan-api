@@ -55,7 +55,12 @@ export const isNumString = (val: string) => {
 };
 
 export const commaSeparated = (x: number | string) => {
-  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const tgt = x.toString();
+  const items = tgt.split('.');
+  return (
+    items[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',') +
+    (items.length >= 2 ? '.' + items[1] : '')
+  );
 };
 
 export const fromWei = (val: string | number | BigNumber, precision = -1) => {
