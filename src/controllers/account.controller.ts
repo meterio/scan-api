@@ -52,20 +52,31 @@ class AccountController implements Controller {
     );
   }
   private getTopMTRAccounts = async (req: Request, res: Response) => {
-    const accounts = await this.accountRepo.findTopMTRAccounts();
-    console.log(accounts);
-    if (!accounts) {
-      return res.json({ accounts: [] });
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+    const count = await this.accountRepo.count();
+
+    if (count <= 0) {
+      return res.json({ totalPage: 0, accounts: [] });
     }
-    return res.json({ accounts: accounts.map(this.convertAccount) });
+    const accounts = await this.accountRepo.findTopMTRAccounts(page, limit);
+    return res.json({
+      totalPage: Math.ceil(count / limit),
+      accounts: accounts.map(this.convertAccount),
+    });
   };
 
   private getTopMTRGAccounts = async (req: Request, res: Response) => {
-    const accounts = await this.accountRepo.findTopMTRGAccounts();
-    if (!accounts) {
-      return res.json({ accounts: [] });
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+    const count = await this.accountRepo.count();
+
+    if (count <= 0) {
+      return res.json({ totalPage: 0, accounts: [] });
     }
-    return res.json({ accounts: accounts.map(this.convertAccount) });
+    const accounts = await this.accountRepo.findTopMTRGAccounts(page, limit);
+    return res.json({
+      totalPage: Math.ceil(count / limit),
+      accounts: accounts.map(this.convertAccount),
+    });
   };
 
   private convertAccount = (account: any) => {

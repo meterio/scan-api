@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js';
 
 import accountModel from '../model/account.model';
 import { BlockConcise } from '../model/blockConcise.interface';
+import { formalizePageAndLimit } from '../utils/utils';
 
 export class AccountRepo {
   private model = accountModel;
@@ -16,12 +17,26 @@ export class AccountRepo {
     });
   }
 
-  public async findTopMTRAccounts() {
-    return this.model.find().sort({ mtrRank: 1 });
+  public async count() {
+    return this.model.estimatedDocumentCount();
   }
 
-  public async findTopMTRGAccounts() {
-    return this.model.find().sort({ mtrgRank: 1 });
+  public async findTopMTRAccounts(pageNum?: number, limitNum?: number) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    return this.model
+      .find()
+      .sort({ mtrRank: 1 })
+      .limit(limit)
+      .skip(limit * page);
+  }
+
+  public async findTopMTRGAccounts(pageNum?: number, limitNum?: number) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    return this.model
+      .find()
+      .sort({ mtrgRank: 1 })
+      .limit(limit)
+      .skip(limit * page);
   }
 
   public async findByAddressList(addressList: string[]) {
