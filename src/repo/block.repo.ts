@@ -13,8 +13,17 @@ export class BlockRepo {
     return this.block.find();
   }
 
-  public async findRecent(count: number) {
-    return this.block.find().sort({ createdAt: -1 }).limit(count);
+  public async count() {
+    return this.block.estimatedDocumentCount();
+  }
+
+  public async findRecent(pageNum?: number, limitNum?: number) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    return this.block
+      .find()
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(limit * page);
   }
 
   public async countBySigner(address: string) {

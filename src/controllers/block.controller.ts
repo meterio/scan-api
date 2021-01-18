@@ -7,6 +7,7 @@ import Controller from '../interfaces/controller.interface';
 import { Block } from '../model/block.interface';
 import BlockRepo from '../repo/block.repo';
 import TxRepo from '../repo/tx.repo';
+import { extractPageAndLimitQueryParam } from '../utils/utils';
 import { isHexBytes, isUInt } from '../utils/validator';
 
 class BlockController implements Controller {
@@ -82,20 +83,17 @@ class BlockController implements Controller {
   };
 
   private getRecentBlocks = async (req, res) => {
-    let count = RECENT_WINDOW;
-    try {
-      const countParam = Number(req.query.count);
-      count = countParam > 1 ? countParam : count;
-    } catch (e) {
-      // ignore
-      console.log('Invalid count param: ', req.query.count);
-    }
+    const { page, limit } = extractPageAndLimitQueryParam(req);
 
-    const blocks = await this.blockRepo.findRecent(count);
-    if (!blocks) {
-      return res.json({ blocks: [] });
+    const count = await this.blockRepo.count();
+    if (count <= 0) {
+      return res.json({ totalPage: 0, blocks: [] });
     }
-    res.json({ blocks: blocks.map((b) => b.toSummary()) });
+    const blocks = await this.blockRepo.findRecent(page, limit);
+    res.json({
+      totalPage: Math.ceil(count / limit),
+      blocks: blocks.map((b) => b.toSummary()),
+    });
   };
 }
 export default BlockController;

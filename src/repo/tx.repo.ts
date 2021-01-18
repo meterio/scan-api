@@ -6,15 +6,20 @@ export class TxRepo {
   private tx = txModel;
 
   public async count() {
-    return this.tx.countDocuments();
+    return this.tx.estimatedDocumentCount();
   }
 
   public async findAll() {
     return this.tx.find();
   }
 
-  public async findRecent(count: number) {
-    return this.tx.find().sort({ createdAt: -1 }).limit(count);
+  public async findRecent(pageNum?: number, limitNum?: number) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    return this.tx
+      .find()
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(limit * page);
   }
 
   public async findByHash(hash: string) {

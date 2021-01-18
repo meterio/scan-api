@@ -4,6 +4,7 @@ import { try$ } from 'express-toolbox';
 import { RECENT_WINDOW } from '../const';
 import Controller from '../interfaces/controller.interface';
 import TxRepo from '../repo/tx.repo';
+import { extractPageAndLimitQueryParam } from '../utils/utils';
 
 class TxController implements Controller {
   public path = '/api/txs';
@@ -20,19 +21,16 @@ class TxController implements Controller {
   }
 
   private getRecent = async (req: Request, res: Response) => {
-    let count = RECENT_WINDOW;
-    try {
-      const countParam = Number(req.query.count);
-      count = countParam > 1 ? countParam : count;
-    } catch (e) {
-      // ignore
-      console.log('Invalid count param: ', req.query.count);
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+    const count = await this.txRepo.count();
+    if (count <= 0) {
+      return res.json({ totalPage: 0, txs: [] });
     }
-    const txs = await this.txRepo.findRecent(count);
-    if (!txs) {
-      return res.json({ txs: [] });
-    }
-    return res.json({ txs: txs.map((tx) => tx.toSummary()) });
+    const txs = await this.txRepo.findRecent(page, limit);
+    return res.json({
+      totalPage: Math.ceil(count / limit),
+      txs: txs.map((tx) => tx.toSummary()),
+    });
   };
 
   private getTxByHash = async (req, res) => {
