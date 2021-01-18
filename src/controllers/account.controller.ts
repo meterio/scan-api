@@ -4,6 +4,7 @@ import { HttpError, try$ } from 'express-toolbox';
 
 import { LIMIT_WINDOW } from '../const';
 import Controller from '../interfaces/controller.interface';
+import { Account } from '../model/account.interface';
 import AccountRepo from '../repo/account.repo';
 import BlockRepo from '../repo/block.repo';
 import BucketRepo from '../repo/bucket.repo';
@@ -25,6 +26,8 @@ class AccountController implements Controller {
   }
 
   private initializeRoutes() {
+    this.router.get(`${this.path}/top/mtr`, try$(this.getTopMTRAccounts));
+    this.router.get(`${this.path}/top/mtrg`, try$(this.getTopMTRGAccounts));
     this.router.get(`${this.path}/:address`, try$(this.getAccount));
     this.router.get(`${this.path}/:address/txs`, try$(this.getTxsByAccount));
     this.router.get(
@@ -48,28 +51,50 @@ class AccountController implements Controller {
       try$(this.getDelegatorsByAccount)
     );
   }
+  private getTopMTRAccounts = async (req: Request, res: Response) => {
+    const accounts = await this.accountRepo.findTopMTRAccounts();
+    console.log(accounts);
+    if (!accounts) {
+      return res.json({ accounts: [] });
+    }
+    return res.json({ accounts: accounts.map(this.convertAccount) });
+  };
+
+  private getTopMTRGAccounts = async (req: Request, res: Response) => {
+    const accounts = await this.accountRepo.findTopMTRGAccounts();
+    if (!accounts) {
+      return res.json({ accounts: [] });
+    }
+    return res.json({ accounts: accounts.map(this.convertAccount) });
+  };
+
+  private convertAccount = (account: any) => {
+    if (!account) {
+      return {
+        mtrBalance: 0,
+        mtrBalanceStr: '0 MTR',
+        mtrgBalance: 0,
+        mtrgBalanceStr: '0 MTRG',
+        firstSeen: { number: -1, timestamp: 0 },
+        lastUpdate: { number: -1, timestamp: 0 },
+      };
+    }
+    return {
+      ...account.toJSON(),
+      mtrBalanceStr: fromWei(account.mtrBalance) + ' MTR',
+      mtrgBalanceStr: fromWei(account.mtrgBalance) + ' MTRG',
+    };
+  };
 
   private getAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const account = await this.accountRepo.findByAddress(address);
-    if (!account) {
-      return res.json({
-        account: {
-          address,
-          mtrBalance: 0,
-          mtrBalanceStr: '0 MTR',
-          mtrgBalance: 0,
-          mtrgBalanceStr: '0 MTRG',
-          firstSeen: { number: -1, timestamp: 0 },
-          lastUpdate: { number: -1, timestamp: 0 },
-        },
-      });
-    }
+    const actJson = this.convertAccount(account);
+
     return res.json({
       account: {
-        ...account.toJSON(),
-        mtrBalanceStr: fromWei(account.mtrBalance) + ' MTR',
-        mtrgBalanceStr: fromWei(account.mtrgBalance) + ' MTRG',
+        address,
+        ...actJson,
       },
     });
   };

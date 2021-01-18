@@ -16,6 +16,14 @@ export class AccountRepo {
     });
   }
 
+  public async findTopMTRAccounts() {
+    return this.model.find().sort({ mtrRank: 1 });
+  }
+
+  public async findTopMTRGAccounts() {
+    return this.model.find().sort({ mtrgRank: 1 });
+  }
+
   public async findByAddressList(addressList: string[]) {
     return this.model.find({
       address: { $in: addressList },
@@ -31,6 +39,8 @@ export class AccountRepo {
       address,
       mtrBalance: new BigNumber('0'),
       mtrgBalance: new BigNumber('0'),
+      mtrRank: 99999999,
+      mtrgRank: 99999999,
 
       firstSeen,
       lastUpdate,
