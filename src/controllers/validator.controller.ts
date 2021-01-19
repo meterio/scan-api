@@ -79,10 +79,10 @@ class ValidatorController implements Controller {
     const { address } = req.params;
     const buckets = await this.bucketRepo.findByCandidate(address);
     if (!buckets) {
-      return res.json({ buckets: [] });
+      return res.json({ votes: [] });
     }
     return res.json({
-      buckets: buckets.map((b) => {
+      votes: buckets.map((b) => {
         return {
           id: b.id,
           address: b.owner,
