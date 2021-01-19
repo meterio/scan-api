@@ -7,6 +7,7 @@ import { UNIT_SHANNON } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { Validator } from '../model/validator.interface';
 import BlockRepo from '../repo/block.repo';
+import BucketRepo from '../repo/bucket.repo';
 import ValidatorRepo from '../repo/validator.repo';
 import ValidatorRewardRepo from '../repo/validatorReward.repo';
 import { extractPageAndLimitQueryParam, fromWei } from '../utils/utils';
@@ -17,6 +18,7 @@ class ValidatorController implements Controller {
   private validatorRepo = new ValidatorRepo();
   private validatorRewardsRepo = new ValidatorRewardRepo();
   private blockRepo = new BlockRepo();
+  private bucketRepo = new BucketRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -24,6 +26,15 @@ class ValidatorController implements Controller {
 
   private initializeRoutes() {
     this.router.get(`${this.path}/count`, try$(this.getValidatorsCount));
+    this.router.get(`${this.path}/:address`, try$(this.getValidatorByAddress));
+    this.router.get(
+      `${this.path}/:address/delegators`,
+      try$(this.getDelegatorsByAddress)
+    );
+    this.router.get(
+      `${this.path}/:address/votes`,
+      try$(this.getVotesByAddress)
+    );
     this.router.get(`${this.path}/candidate`, try$(this.getCandidates));
     this.router.get(`${this.path}/delegate`, try$(this.getDelegates));
     this.router.get(`${this.path}/jailed`, try$(this.getJailed));
@@ -33,6 +44,54 @@ class ValidatorController implements Controller {
       try$(this.getPosRewardsByEpoch)
     );
   }
+  private getDelegatorsByAddress = async (req: Request, res: Response) => {
+    const { address } = req.params;
+    const buckets = await this.bucketRepo.findByCandidate(address);
+    if (!buckets) {
+      return res.json({ delegators: [] });
+    }
+    let total = new BigNumber(0);
+    let dMap: { [key: string]: BigNumber } = {};
+    for (const b of buckets) {
+      total = total.plus(b.totalVotes);
+      const voter = b.owner.toLowerCase();
+      if (voter in dMap) {
+        const v = dMap[voter];
+        dMap[voter] = v.plus(b.totalVotes);
+      } else {
+        dMap[voter] = b.totalVotes;
+      }
+    }
+    let delegators = [];
+    for (const addr in dMap) {
+      const amount = dMap[addr];
+      delegators.push({
+        amount: amount.toFixed(),
+        address: addr,
+        amountStr: fromWei(amount) + ' MTRG',
+        percent: amount.dividedBy(total).times(100).toFixed(2) + '%',
+      });
+    }
+    return res.json({ delegators });
+  };
+
+  private getVotesByAddress = async (req: Request, res: Response) => {
+    const { address } = req.params;
+    const buckets = await this.bucketRepo.findByCandidate(address);
+    if (!buckets) {
+      return res.json({ buckets: [] });
+    }
+    return res.json({ buckets });
+  };
+
+  private getValidatorByAddress = async (req: Request, res: Response) => {
+    const { address } = req.params;
+    const validator = await this.validatorRepo.findByAccount(address);
+    if (!validator || validator.length <= 0) {
+      return res.json({ validator: {} });
+    }
+    return res.json({ validator: validator[0] });
+  };
 
   private getValidatorsCount = async (req: Request, res: Response) => {
     const validatorCount = await this.validatorRepo.countAll();

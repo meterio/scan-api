@@ -37,6 +37,12 @@ export class ValidatorRepo {
   }
   */
 
+  public async findByAccount(address: string) {
+    return this.model.find({
+      address: { $regex: new RegExp(`^${address}$`, 'i') },
+    });
+  }
+
   public async findCandidatesByFilter(
     filter: string,
     pageNum?: number,
