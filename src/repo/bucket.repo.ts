@@ -32,7 +32,7 @@ export class BucketRepo {
   }
 
   public async findByCandidate(address: string) {
-    return this.model.find({ candidate: address });
+    return this.model.find({ candidate: address, unbounded: false });
   }
 
   public async findByID(id: string) {

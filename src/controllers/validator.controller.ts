@@ -68,7 +68,7 @@ class ValidatorController implements Controller {
       delegators.push({
         amount: amount.toFixed(),
         address: addr,
-        amountStr: fromWei(amount) + ' MTRG',
+        amountStr: fromWei(amount, 2) + ' MTRG',
         percent: amount.dividedBy(total).times(100).toFixed(2) + '%',
       });
     }
@@ -81,7 +81,18 @@ class ValidatorController implements Controller {
     if (!buckets) {
       return res.json({ buckets: [] });
     }
-    return res.json({ buckets });
+    return res.json({
+      buckets: buckets.map((b) => {
+        return {
+          id: b.id,
+          address: b.owner,
+          value: b.value,
+          valueStr: fromWei(b.value, 2) + ' ' + b.token,
+          totalVotes: b.totalVotes,
+          totalVotesStr: fromWei(b.totalVotes, 2) + ' ' + b.token,
+        };
+      }),
+    });
   };
 
   private getValidatorByAddress = async (req: Request, res: Response) => {
