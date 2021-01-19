@@ -27,6 +27,15 @@ class ValidatorController implements Controller {
 
   private initializeRoutes() {
     this.router.get(`${this.path}/count`, try$(this.getValidatorsCount));
+    this.router.get(`${this.path}/candidate`, try$(this.getCandidates));
+    this.router.get(`${this.path}/delegate`, try$(this.getDelegates));
+    this.router.get(`${this.path}/jailed`, try$(this.getJailed));
+    this.router.get(`${this.path}/rewards`, try$(this.getPosRewards));
+    this.router.get(
+      `${this.path}/rewards/:epoch`,
+      try$(this.getPosRewardsByEpoch)
+    );
+
     this.router.get(`${this.path}/:address`, try$(this.getValidatorByAddress));
     this.router.get(
       `${this.path}/:address/delegators`,
@@ -35,14 +44,6 @@ class ValidatorController implements Controller {
     this.router.get(
       `${this.path}/:address/votes`,
       try$(this.getVotesByAddress)
-    );
-    this.router.get(`${this.path}/candidate`, try$(this.getCandidates));
-    this.router.get(`${this.path}/delegate`, try$(this.getDelegates));
-    this.router.get(`${this.path}/jailed`, try$(this.getJailed));
-    this.router.get(`${this.path}/rewards`, try$(this.getPosRewards));
-    this.router.get(
-      `${this.path}/rewards/:epoch`,
-      try$(this.getPosRewardsByEpoch)
     );
   }
   private getDelegatorsByAddress = async (req: Request, res: Response) => {
