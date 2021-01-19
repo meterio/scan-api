@@ -30,14 +30,14 @@ export class BlockRepo {
     return this.block.count({ signer: address });
   }
 
-  public async findBySigner(
+  public async findByBeneficiary(
     address: string,
     pageNum?: number,
     limitNum?: number
   ) {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.block
-      .find({ signer: address })
+      .find({ beneficiary: address.toLowerCase() })
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip(limit * page);

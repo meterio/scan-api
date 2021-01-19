@@ -177,7 +177,11 @@ class AccountController implements Controller {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const count = await this.blockRepo.countBySigner(address);
-    const proposed = await this.blockRepo.findBySigner(address, page, limit);
+    const proposed = await this.blockRepo.findByBeneficiary(
+      address,
+      page,
+      limit
+    );
 
     if (!proposed) {
       return res.json({ totalPage: 0, proposed: [] });
