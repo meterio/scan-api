@@ -57,7 +57,8 @@ const blockSchema = new mongoose.Schema(
     blockType: {
       type: String,
       enum: enumKeys(BlockType),
-      get: (enumValue: string) => BlockType[enumValue as keyof typeof BlockType],
+      get: (enumValue: string) =>
+        BlockType[enumValue as keyof typeof BlockType],
       set: (enumValue: BlockType) => BlockType[enumValue],
       required: true,
     },
@@ -95,7 +96,7 @@ blockSchema.methods.toSummary = function () {
     blockType: this.blockType,
     gasUsed: this.gasUsed,
     txCount: this.txCount,
-    signer: this.signer,
+    beneficiary: this.beneficiary,
   };
 };
 const model = mongoose.model<Block & mongoose.Document>('block', blockSchema);

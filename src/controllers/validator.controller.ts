@@ -153,7 +153,7 @@ class ValidatorController implements Controller {
       // pubKey: v.pubKey,
 
       totalPoints: v.totalPoints,
-      bailAmount: `${fromWei(v.bailAmount)} MTRG`,
+      bailAmount: `${fromWei(v.bailAmount, 2)} MTRG`,
       jailedTime: v.jailedTime,
       infractins: v.infractions,
       upTime: '100%', // FIXME: fake stub
