@@ -76,7 +76,7 @@ class ValidatorController implements Controller {
         .times(100)
         .toPrecision(2)}%`,
       totalVotes: v.totalVotes.toFixed(),
-      totalVotesStr: `${fromWei(v.totalVotes)} MTRG`,
+      totalVotesStr: `${fromWei(v.totalVotes, 2)} MTRG`,
       upTime: '100%', // FIXME: fake stub
     };
   };
@@ -108,7 +108,7 @@ class ValidatorController implements Controller {
       // pubKey: v.pubKey,
 
       votingPower: v.votingPower.toFixed(),
-      votingPowerStr: `${fromWei(v.votingPower)} MTRG`,
+      votingPowerStr: `${fromWei(v.votingPower, 2)} MTRG`,
       'commission%': `${new BigNumber(v.delegateCommission)
         .dividedBy(UNIT_SHANNON)
         .times(100)
