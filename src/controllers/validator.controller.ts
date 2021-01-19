@@ -4,6 +4,7 @@ import { try$ } from 'express-toolbox';
 import { Document } from 'mongoose';
 
 import { UNIT_SHANNON } from '../const';
+import { Token } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { Validator } from '../model/validator.interface';
 import BlockRepo from '../repo/block.repo';
@@ -87,9 +88,10 @@ class ValidatorController implements Controller {
           id: b.id,
           address: b.owner,
           value: b.value,
-          valueStr: fromWei(b.value, 2) + ' ' + b.token,
+          valueStr: fromWei(b.value, 2) + ' ' + Token[b.token],
           totalVotes: b.totalVotes,
-          totalVotesStr: fromWei(b.totalVotes, 2) + ' ' + b.token,
+          totalVotesStr: fromWei(b.totalVotes, 2) + ' ' + Token[b.token],
+          timestamp: b.createTime,
         };
       }),
     });
