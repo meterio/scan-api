@@ -99,6 +99,15 @@ class MetricController implements Controller {
 
   private getTokenData = async () => {
     let map = await this.getMetricMap();
+    let avgDailyReward = '0 MTRG';
+    try {
+      let s = map[MetricName.PRESENT_AUCTION];
+      let present = JSON.parse(s);
+      avgDailyReward =
+        new BigNumber(present.releasedMTRG).dividedBy(1e18).toFixed(0) +
+        ' MTRG';
+    } catch (e) {}
+
     return {
       mtr: {
         price: map[MetricName.MTR_PRICE],
@@ -111,7 +120,7 @@ class MetricController implements Controller {
       mtrg: {
         price: map[MetricName.MTRG_PRICE],
         priceChange: map[MetricName.MTRG_PRICE_CHANGE],
-        avgDailyReward: '235 MTRG', // FIXME: fake data
+        avgDailyReward,
         circulation: new BigNumber(map[MetricName.MTRG_CIRCULATION])
           .dividedBy(1e18)
           .toFixed(),
