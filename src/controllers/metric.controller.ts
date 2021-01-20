@@ -103,9 +103,11 @@ class MetricController implements Controller {
     try {
       let s = map[MetricName.PRESENT_AUCTION];
       let present = JSON.parse(s);
-      avgDailyReward =
-        new BigNumber(present.releasedMTRG).dividedBy(1e18).toFixed(0) +
-        ' MTRG';
+      if (present.releasedMTRG && Number(present.releasedMTRG)) {
+        avgDailyReward =
+          new BigNumber(present.releasedMTRG).dividedBy(1e18).toFixed(0) +
+          ' MTRG';
+      }
     } catch (e) {}
 
     return {
