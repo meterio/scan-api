@@ -88,7 +88,7 @@ class ValidatorController implements Controller {
         return {
           id: b.id,
           address: b.owner,
-          value: b.value,
+          value: b.value.toFixed(),
           valueStr: fromWei(b.value, 2) + ' ' + Token[b.token],
           totalVotes: b.totalVotes,
           totalVotesStr: fromWei(b.totalVotes, 2) + ' ' + Token[b.token],
