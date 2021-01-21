@@ -10,6 +10,7 @@ import BlockRepo from '../repo/block.repo';
 import HeadRepo from '../repo/head.repo';
 import MetricRepo from '../repo/metric.repo';
 import TxRepo from '../repo/tx.repo';
+import ValidatorRepo from '../repo/validator.repo';
 import { fromWei } from '../utils/utils';
 
 class MetricController implements Controller {
@@ -20,6 +21,7 @@ class MetricController implements Controller {
   private blockRepo = new BlockRepo();
   private txRepo = new TxRepo();
   private accountRepo = new AccountRepo();
+  private validatorRepo = new ValidatorRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -32,6 +34,7 @@ class MetricController implements Controller {
     this.router.get(`${this.path}/token`, try$(this.getTokenMetric));
     this.router.get(`${this.path}/head`, try$(this.getHeadMetric));
     this.router.get(`${this.path}/chart`, try$(this.getChart));
+    this.router.get(`${this.path}/committee`, try$(this.getCommittee));
   }
 
   private getMetricMap = async () => {
@@ -177,6 +180,58 @@ class MetricController implements Controller {
       result[h.key] = h.num;
     }
     return res.json({ heads: result });
+  };
+  private getCommittee = async (req, res) => {
+    let statusMap = {};
+    const roles = await axios.get(
+      `http://monitor.meter.io:9090/api/v1/query?query=pacemaker_role`
+    );
+    if (!roles || !roles.data || !roles.data.data) {
+      return res.json({ size: 0, active: 0, members: [] });
+    }
+    for (const r of roles.data.data.result) {
+      const ip = r.metric.instance;
+      const name = r.metric.name;
+      statusMap[ip] = r.value && r.value[0] ? r.value[0][1] : '-1';
+    }
+    const kblocks = await this.blockRepo.findKBlocks(1, 1);
+    if (!roles || !kblocks || kblocks.length <= 0) {
+      return res.json({ size: 0, active: 0, members: [] });
+    }
+    const block = await this.blockRepo.findByNumber(kblocks[0].number + 1);
+    if (!block || block.committee.length <= 0) {
+      return res.json({ size: 0, active: 0, members: [] });
+    }
+
+    let members = [];
+    const size = block.committee.length;
+    let active = 0;
+    for (const m of block.committee) {
+      const ip = m.netAddr.toLowerCase().split(':')[0];
+      let name = '';
+      let status = -1;
+      if (ip in statusMap) {
+        status = Number(statusMap[ip]);
+      }
+      const v = await this.validatorRepo.findByECDSAPubKey(m.pubKey);
+      if (!v) {
+        status = -3;
+      } else if (v.ipAddress !== ip) {
+        status = -4;
+      } else {
+        name = v.name;
+      }
+      members.push({
+        name,
+        pubkey: m.pubKey,
+        ip,
+        status,
+      });
+      if (status === 1) {
+        active++;
+      }
+    }
+    return res.json({ size, active, members });
   };
 
   private getChart = async (req, res) => {

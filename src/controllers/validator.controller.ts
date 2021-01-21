@@ -150,7 +150,6 @@ class ValidatorController implements Controller {
         .toPrecision(2)}%`,
       totalVotes: v.totalVotes.toFixed(),
       totalVotesStr: `${fromWei(v.totalVotes, 2)} MTRG`,
-      upTime: '100%', // FIXME: fake stub
       totalPoints: v.totalPoints ? Number(v.totalPoints.toFixed()) : 0,
     };
   };

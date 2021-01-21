@@ -164,6 +164,12 @@ export class ValidatorRepo {
     return this.model.findOne({ pubKey });
   }
 
+  public async findByECDSAPubKey(ecdsaKey: string) {
+    return this.model.findOne({
+      pubKey: { $regex: new RegExp(`^${ecdsaKey}:.*$`) },
+    });
+  }
+
   public async bulkInsert(...models: Validator[]) {
     return this.model.create(models);
   }
