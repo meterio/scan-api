@@ -5,6 +5,7 @@ import { try$ } from 'express-toolbox';
 
 import { MetricName, enumVals } from '../const';
 import Controller from '../interfaces/controller.interface';
+import AccountRepo from '../repo/account.repo';
 import BlockRepo from '../repo/block.repo';
 import HeadRepo from '../repo/head.repo';
 import MetricRepo from '../repo/metric.repo';
@@ -18,6 +19,7 @@ class MetricController implements Controller {
   private headRepo = new HeadRepo();
   private blockRepo = new BlockRepo();
   private txRepo = new TxRepo();
+  private accountRepo = new AccountRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -109,6 +111,8 @@ class MetricController implements Controller {
           ' MTRG';
       }
     } catch (e) {}
+    const nonZeroMTR = this.accountRepo.countNonZeroMTR();
+    const nonZeroMTRG = this.accountRepo.countNonZeroMTRG();
 
     return {
       mtr: {
@@ -117,6 +121,7 @@ class MetricController implements Controller {
         circulation: new BigNumber(map[MetricName.MTR_CIRCULATION])
           .dividedBy(1e18)
           .toFixed(),
+        addressCount: nonZeroMTR,
       },
 
       mtrg: {
@@ -126,6 +131,7 @@ class MetricController implements Controller {
         circulation: new BigNumber(map[MetricName.MTRG_CIRCULATION])
           .dividedBy(1e18)
           .toFixed(),
+        addressCount: nonZeroMTRG,
       },
     };
   };
