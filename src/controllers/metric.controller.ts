@@ -263,18 +263,27 @@ class MetricController implements Controller {
     const hashrates = await axios.get(
       `http://monitor.meter.io:9090/api/v1/query_range?query=bitcoind_blockchain_hashrate&start=${start}&end=${end}&step=${step}`
     );
-    console.log(hashrates.data);
+    const diffs = await axios.get(
+      `http://monitor.meter.io:9090/api/v1/query_range?query=bitcoind_blockchain_difficulty&start=${start}&end=${end}&step=${step}`
+    );
 
-    if (!hashrates || !hashrates.data || !hashrates.data.data) {
+    if (
+      !hashrates ||
+      !hashrates.data ||
+      !hashrates.data.data ||
+      !diffs ||
+      !diffs.data ||
+      !diffs.data.data
+    ) {
       return res.json({
-        hashrates: {
-          mainnet: [],
-          testnet: [],
-        },
+        hashrates: { mainnet: [], testnet: [] },
+        diffs: { mainnet: [], testnet: [] },
       });
     }
     let mainrates = [];
     let testrates = [];
+    let maindiffs = [];
+    let testdiffs = [];
 
     for (const m of hashrates.data.data.result) {
       if (mainrates.length <= 0 && m.metric.job === 'mainnet_bitcoin') {
@@ -284,7 +293,19 @@ class MetricController implements Controller {
         testrates.push(...m.values);
       }
     }
-    return res.json({ hashrates: { mainnet: mainrates, testnet: testrates } });
+    for (const m of diffs.data.data.result) {
+      if (maindiffs.length <= 0 && m.metric.job === 'mainnet_bitcoin') {
+        maindiffs.push(...m.values);
+      }
+      if (testdiffs.length <= 0 && m.metric.job === 'shoal_bitcoin') {
+        testdiffs.push(...m.values);
+      }
+    }
+
+    return res.json({
+      hashrates: { mainnet: mainrates, testnet: testrates },
+      diffs: { mainnet: maindiffs, testnet: testdiffs },
+    });
   };
 }
 
