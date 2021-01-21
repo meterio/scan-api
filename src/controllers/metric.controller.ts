@@ -216,10 +216,16 @@ class MetricController implements Controller {
     });
 
     let members = [];
-    const size = block.committee.length;
+    const size = vMap.length;
     let active = 0;
+    let visited = {};
     for (const m of block.committee) {
       const ip = m.netAddr.toLowerCase().split(':')[0];
+      if (visited[ip]) {
+        continue;
+      } else {
+        visited[ip] = true;
+      }
       let status = -1;
       let error = '';
       if (ip in statusMap) {
