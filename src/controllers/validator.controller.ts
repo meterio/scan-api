@@ -151,6 +151,7 @@ class ValidatorController implements Controller {
       totalVotes: v.totalVotes.toFixed(),
       totalVotesStr: `${fromWei(v.totalVotes, 2)} MTRG`,
       upTime: '100%', // FIXME: fake stub
+      totalPoints: v.totalPoints ? Number(v.totalPoints.toFixed()) : 0,
     };
   };
 
@@ -189,10 +190,8 @@ class ValidatorController implements Controller {
       'shares%': `${v.votingPower
         .dividedBy(totalStaked)
         .times(100)
-        .toPrecision(2)} %`,
-      'up48h%': '100%', // FIXME: fake data
-      totalPoints: v.totalPoints,
-      upTime: '100%', // FIXME: fake stub
+        .toPrecision(2)}%`,
+      totalPoints: v.totalPoints ? Number(v.totalPoints.toFixed()) : 0,
     };
   };
 
@@ -225,11 +224,10 @@ class ValidatorController implements Controller {
       netAddr: `${v.ipAddress}:${v.port}`,
       // pubKey: v.pubKey,
 
-      totalPoints: v.totalPoints,
+      totalPoints: v.totalPoints ? Number(v.totalPoints.toFixed()) : 0,
       bailAmount: `${fromWei(v.bailAmount, 2)} MTRG`,
       jailedTime: v.jailedTime,
       infractins: v.infractions,
-      upTime: '100%', // FIXME: fake stub
     };
   };
 
