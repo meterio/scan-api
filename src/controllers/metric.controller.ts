@@ -216,7 +216,7 @@ class MetricController implements Controller {
     });
 
     let members = [];
-    const size = vMap.length;
+    const size = Object.keys(vMap).length;
     let active = 0;
     let visited = {};
     for (const m of block.committee) {
@@ -241,7 +241,7 @@ class MetricController implements Controller {
       const name = v ? v.name : '';
       members.push({
         index: m.index,
-        monitorName: '',
+        monitorName: nameMap[ip] || '',
         name,
         memberPubkey: m.pubKey,
         pubkey: v ? v.pubKey : '',
