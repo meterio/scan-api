@@ -81,8 +81,10 @@ class MetricController implements Controller {
         candidates: Number(map[MetricName.CANDIDATE_COUNT]),
         validators: Number(map[MetricName.STAKEHOLDER_COUNT]),
         delegates: Number(map[MetricName.DELEGATE_COUNT]),
-        onlineNodes: 0, // FIXME: fake data
-        totalNodes: Number(map[MetricName.DELEGATE_COUNT]),
+        onlineNodes: Number(map[MetricName.DELEGATE_COUNT]),
+        totalNodes:
+          Number(map[MetricName.DELEGATE_COUNT]) +
+          Number(map[MetricName.JAILED_COUNT]),
         totalStaked: totalStaked,
         totalStakedStr: `${fromWei(totalStaked, 2)} MTRG`,
       },
