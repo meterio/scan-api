@@ -21,12 +21,13 @@ export class AccountRepo {
     return this.model.estimatedDocumentCount();
   }
 
-  public async countNonZeroMTR() {
-    return this.model.count({ mtrBalance: { $ne: new BigNumber('0') } });
-  }
-
-  public async countNonZeroMTRG() {
-    return this.model.count({ mtrgBalance: { $ne: new BigNumber('0') } });
+  public async countNonZero() {
+    return this.model.count({
+      $or: [
+        { mtrBalance: { $ne: new BigNumber('0') } },
+        { mtrgBalance: { $ne: new BigNumber('0') } },
+      ],
+    });
   }
 
   public async findTopMTRAccounts(pageNum?: number, limitNum?: number) {

@@ -63,6 +63,8 @@ class MetricController implements Controller {
     for (const b of JSON.parse(buckets)) {
       totalStaked = totalStaked.plus(b.totalVotes);
     }
+
+    const nonZeroCount = this.accountRepo.countNonZero();
     return {
       pos: {
         best: Number(map[MetricName.POS_BEST]),
@@ -72,6 +74,7 @@ class MetricController implements Controller {
         avgBlockTime: avgBlockTime,
         txsCount,
         inflation: '5%',
+        addressCount: nonZeroCount,
       },
       staking: {
         buckets: Number(map[MetricName.BUCKET_COUNT]),
@@ -111,8 +114,6 @@ class MetricController implements Controller {
           ' MTRG';
       }
     } catch (e) {}
-    const nonZeroMTR = this.accountRepo.countNonZeroMTR();
-    const nonZeroMTRG = this.accountRepo.countNonZeroMTRG();
 
     return {
       mtr: {
@@ -121,7 +122,6 @@ class MetricController implements Controller {
         circulation: new BigNumber(map[MetricName.MTR_CIRCULATION])
           .dividedBy(1e18)
           .toFixed(),
-        addressCount: nonZeroMTR,
       },
 
       mtrg: {
@@ -131,7 +131,6 @@ class MetricController implements Controller {
         circulation: new BigNumber(map[MetricName.MTRG_CIRCULATION])
           .dividedBy(1e18)
           .toFixed(),
-        addressCount: nonZeroMTRG,
       },
     };
   };
