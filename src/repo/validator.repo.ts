@@ -170,7 +170,7 @@ export class ValidatorRepo {
       .replace('/', '[/]')
       .replace('=', '[=]');
     return this.model.findOne({
-      pubKey: { $regex: new RegExp(`^${key}:::.*$`) },
+      pubKey: { $regex: new RegExp(`^${key}.*$`) },
     });
   }
 

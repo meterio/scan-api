@@ -192,7 +192,7 @@ class MetricController implements Controller {
     for (const r of roles.data.data.result) {
       const ip = r.metric.instance;
       const name = r.metric.name;
-      statusMap[ip] = r.value && r.value[0] ? r.value[0][1] : '-1';
+      statusMap[ip] = r.value && r.value[0] ? Number(r.value[0][1]) : -1;
     }
     const kblocks = await this.blockRepo.findKBlocks(1, 1);
     if (!roles || !kblocks || kblocks.length <= 0) {
@@ -226,12 +226,13 @@ class MetricController implements Controller {
         pubkey: m.pubKey,
         ip,
         status,
+        v,
       });
       if (status === 1) {
         active++;
       }
     }
-    return res.json({ size, active, members });
+    return res.json({ size, active, members, statusMap });
   };
 
   private getChart = async (req, res) => {
