@@ -96,6 +96,7 @@ class MetricController implements Controller {
         best: Number(map[MetricName.POW_BEST]),
         difficulty: map[MetricName.DIFFICULTY],
         hashrate: map[MetricName.HASHRATE],
+        coef: map[MetricName.COEF],
         costParity: map[MetricName.COST_PARITY],
         rewardPerDay: map[MetricName.REWARD_PER_DAY],
       },
