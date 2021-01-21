@@ -165,8 +165,12 @@ export class ValidatorRepo {
   }
 
   public async findByECDSAPubKey(ecdsaKey: string) {
+    const key = ecdsaKey
+      .replace('+', '[+]')
+      .replace('/', '[/]')
+      .replace('=', '[=]');
     return this.model.findOne({
-      pubKey: { $regex: new RegExp(`^${ecdsaKey}:::.*$`) },
+      pubKey: { $regex: new RegExp(`^${key}:::.*$`) },
     });
   }
 
