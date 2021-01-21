@@ -64,7 +64,7 @@ class MetricController implements Controller {
       totalStaked = totalStaked.plus(b.totalVotes);
     }
 
-    const nonZeroCount = this.accountRepo.countNonZero();
+    const nonZeroCount = await this.accountRepo.countNonZero();
     return {
       pos: {
         best: Number(map[MetricName.POS_BEST]),
