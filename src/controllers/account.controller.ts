@@ -176,7 +176,7 @@ class AccountController implements Controller {
   private getProposedByAccount = async (req, res) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const count = await this.blockRepo.countBySigner(address);
+    const count = await this.blockRepo.countByBeneficiary(address);
     const proposed = await this.blockRepo.findByBeneficiary(
       address,
       page,

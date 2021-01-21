@@ -26,8 +26,8 @@ export class BlockRepo {
       .skip(limit * page);
   }
 
-  public async countBySigner(address: string) {
-    return this.block.count({ signer: address });
+  public async countByBeneficiary(address: string) {
+    return this.block.count({ beneficiary: address });
   }
 
   public async findByBeneficiary(
