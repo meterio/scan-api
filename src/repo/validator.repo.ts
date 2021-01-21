@@ -12,7 +12,11 @@ export class ValidatorRepo {
     return this.model.estimatedDocumentCount();
   }
 
-  public async findAll(pageNum?: number, limitNum?: number) {
+  public async findAll() {
+    return this.model.find({});
+  }
+
+  public async findAllPagination(pageNum?: number, limitNum?: number) {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.model
       .find({})

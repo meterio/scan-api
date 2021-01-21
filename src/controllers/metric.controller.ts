@@ -1,10 +1,13 @@
 import axios from 'axios';
 import BigNumber from 'bignumber.js';
+import { json } from 'envalid';
 import { Router } from 'express';
 import { try$ } from 'express-toolbox';
+import { Document } from 'mongoose';
 
 import { MetricName, enumVals } from '../const';
 import Controller from '../interfaces/controller.interface';
+import { Validator } from '../model/validator.interface';
 import AccountRepo from '../repo/account.repo';
 import BlockRepo from '../repo/block.repo';
 import HeadRepo from '../repo/head.repo';
@@ -183,6 +186,7 @@ class MetricController implements Controller {
   };
   private getCommittee = async (req, res) => {
     let statusMap = {};
+    let nameMap = {};
     const roles = await axios.get(
       `http://monitor.meter.io:9090/api/v1/query?query=pacemaker_role`
     );
@@ -192,7 +196,8 @@ class MetricController implements Controller {
     for (const r of roles.data.data.result) {
       const ip = r.metric.instance;
       const name = r.metric.name;
-      statusMap[ip] = r.value && r.value[0] ? Number(r.value[0][1]) : -1;
+      statusMap[ip] = r.value && r.value.length >= 2 ? Number(r.value[1]) : -1;
+      nameMap[ip] = name;
     }
     const kblocks = await this.blockRepo.findKBlocks(1, 1);
     if (!roles || !kblocks || kblocks.length <= 0) {
@@ -203,30 +208,40 @@ class MetricController implements Controller {
       return res.json({ size: 0, active: 0, members: [] });
     }
 
+    const validators = await this.validatorRepo.findAll();
+    let vMap: { [key: string]: Validator & Document } = {};
+    validators.forEach((v) => {
+      const ecdsaKey = v.pubKey.split(':::')[0];
+      vMap[ecdsaKey] = v;
+    });
+
     let members = [];
     const size = block.committee.length;
     let active = 0;
     for (const m of block.committee) {
       const ip = m.netAddr.toLowerCase().split(':')[0];
-      let name = '';
       let status = -1;
+      let error = '';
       if (ip in statusMap) {
         status = Number(statusMap[ip]);
       }
-      const v = await this.validatorRepo.findByECDSAPubKey(m.pubKey);
+      const v = vMap[m.pubKey];
       if (!v) {
-        status = -3;
-      } else if (v.ipAddress !== ip) {
-        status = -4;
-      } else {
-        name = v.name;
+        error = 'no validator info found (possible key mismatch)';
       }
+      if (v.ipAddress !== ip) {
+        error = 'ip address mismatch with validator info';
+      }
+      const name = v ? v.name : '';
       members.push({
+        index: m.index,
+        monitorName: '',
         name,
-        pubkey: m.pubKey,
+        memberPubkey: m.pubKey,
+        pubkey: v ? v.pubKey : '',
         ip,
         status,
-        v,
+        error,
       });
       if (status === 1) {
         active++;
