@@ -245,17 +245,20 @@ class MetricController implements Controller {
     }
 
     let members = [];
-    const size = block.committee.length;
+    let pMap: { [key: string]: boolean } = {};
+
     let healthy = 0,
       invalid = 0,
       down = 0,
       jailed = 0;
     let visited = {};
+    let size = 0;
     for (const m of block.committee) {
       const ip = m.netAddr.toLowerCase().split(':')[0];
       if (visited[ip]) {
         continue;
       }
+      size++;
       visited[ip] = true;
 
       let status = -1;
