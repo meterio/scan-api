@@ -293,6 +293,10 @@ class MetricController implements Controller {
       }
     }
 
+    /*
+    size = healthy + down + invalid
+    jailed refers to the number of members in jail
+    */
     return res.json({
       size,
       healthy,
