@@ -30,6 +30,10 @@ export class AccountRepo {
     });
   }
 
+  public async findKnownAccounts() {
+    return this.model.find({ name: { $exists: true } });
+  }
+
   public async findTopMTRAccounts(pageNum?: number, limitNum?: number) {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.model

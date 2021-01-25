@@ -5,8 +5,10 @@ import { Document } from 'mongoose';
 import { RECENT_WINDOW } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { Block } from '../model/block.interface';
+import AccountRepo from '../repo/account.repo';
 import BlockRepo from '../repo/block.repo';
 import TxRepo from '../repo/tx.repo';
+import ValidatorRepo from '../repo/validator.repo';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
 import { isHexBytes, isUInt } from '../utils/validator';
 
@@ -15,6 +17,8 @@ class BlockController implements Controller {
   public router = Router();
   private blockRepo = new BlockRepo();
   private txRepo = new TxRepo();
+  private accountRepo = new AccountRepo();
+  private validatorRepo = new ValidatorRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -53,6 +57,8 @@ class BlockController implements Controller {
     let ans = blk.toSummary();
     ans.txSummaries = txs.map((tx) => tx.toSummary());
 
+    const nameMap = await this.getNameMap();
+    ans.beneficiaryName = nameMap[ans.beneficiary] || '';
     delete ans.txHashs;
     return res.json({ block: ans });
   };
@@ -82,9 +88,24 @@ class BlockController implements Controller {
     return res.json({ txs });
   };
 
+  private getNameMap = async () => {
+    let nameMap: { [key: string]: string } = {};
+    const knownAccts = await this.accountRepo.findKnownAccounts();
+    knownAccts.forEach((a) => {
+      nameMap[a.address] = a.name;
+    });
+    const validators = await this.validatorRepo.findAll();
+    validators.forEach((v) => {
+      if (v.name) {
+        nameMap[v.address] = v.name;
+      }
+    });
+    return nameMap;
+  };
+
   private getRecentBlocks = async (req, res) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
-
+    const nameMap = await this.getNameMap();
     const count = await this.blockRepo.count();
     if (count <= 0) {
       return res.json({ totalPage: 0, blocks: [] });
@@ -92,7 +113,12 @@ class BlockController implements Controller {
     const blocks = await this.blockRepo.findRecent(page, limit);
     res.json({
       totalPage: Math.ceil(count / limit),
-      blocks: blocks.map((b) => b.toSummary()),
+      blocks: blocks.map((b) => {
+        return {
+          ...b.toSummary(),
+          beneficiaryName: nameMap[b.beneficiary] || '',
+        };
+      }),
     });
   };
 }

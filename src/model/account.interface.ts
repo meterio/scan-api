@@ -4,6 +4,7 @@ import { BlockConcise } from './blockConcise.interface';
 
 export interface Account {
   address: string;
+  name?: string;
   mtrBalance: BigNumber;
   mtrgBalance: BigNumber;
   mtrRank: number;
