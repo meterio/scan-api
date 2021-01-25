@@ -240,7 +240,7 @@ class MetricController implements Controller {
     }
 
     let members = [];
-    const size = Object.keys(vMap).length;
+    const size = block.committee.length;
     let healthy = 0,
       invalid = 0,
       down = 0,
