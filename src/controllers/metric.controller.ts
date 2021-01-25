@@ -5,7 +5,7 @@ import { Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { Document } from 'mongoose';
 
-import { MetricName, enumVals } from '../const';
+import { MetricName, ValidatorStatus, enumVals } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { Validator } from '../model/validator.interface';
 import AccountRepo from '../repo/account.repo';
@@ -37,7 +37,7 @@ class MetricController implements Controller {
     this.router.get(`${this.path}/token`, try$(this.getTokenMetric));
     this.router.get(`${this.path}/head`, try$(this.getHeadMetric));
     this.router.get(`${this.path}/chart`, try$(this.getChart));
-    this.router.get(`${this.path}/committee`, try$(this.getCommittee));
+    this.router.get(`${this.path}/committee`, try$(this.getCommitteeMetric));
   }
 
   private getMetricMap = async () => {
@@ -148,11 +148,14 @@ class MetricController implements Controller {
     const posData = await this.getPosData();
     const powData = await this.getPowData();
     const tokenData = await this.getTokenData();
+    let committeeData = await this.getCommitteeData();
 
+    delete committeeData.committee.members;
     return res.json({
       ...tokenData,
       ...powData,
       ...posData,
+      ...committeeData,
     });
   };
 
@@ -185,14 +188,29 @@ class MetricController implements Controller {
     return res.json({ heads: result });
   };
 
-  private getCommittee = async (req, res) => {
+  private getCommitteeMetric = async (req, res) => {
+    const committeeData = await this.getCommitteeData();
+    return res.json(committeeData);
+  };
+
+  private async getCommitteeData() {
+    const emptyResponse = {
+      committee: {
+        size: 0,
+        healthy: 0,
+        down: 0,
+        invalid: 0,
+        jailed: 0,
+        members: [],
+      },
+    };
     let statusMap = {};
     let nameMap = {};
     const roles = await axios.get(
       `http://monitor.meter.io:9090/api/v1/query?query=pacemaker_role`
     );
     if (!roles || !roles.data || !roles.data.data) {
-      return res.json({ size: 0, active: 0, members: [] });
+      return emptyResponse;
     }
     for (const r of roles.data.data.result) {
       const ip = r.metric.instance;
@@ -202,25 +220,12 @@ class MetricController implements Controller {
     }
     const kblocks = await this.blockRepo.findKBlocks(1, 1);
     if (!roles || !kblocks || kblocks.length <= 0) {
-      return res.json({
-        size: 0,
-        healthy: 0,
-        invalid: 0,
-        jailed: 0,
-        down: 0,
-        members: [],
-      });
+      return emptyResponse;
     }
+
     const block = await this.blockRepo.findByNumber(kblocks[0].number + 1);
     if (!block || block.committee.length <= 0) {
-      return res.json({
-        size: 0,
-        healthy: 0,
-        invalid: 0,
-        jailed: 0,
-        down: 0,
-        members: [],
-      });
+      return emptyResponse;
     }
 
     const validators = await this.validatorRepo.findAll();
@@ -254,7 +259,7 @@ class MetricController implements Controller {
       visited[ip] = true;
 
       let status = -1;
-      let error = '';
+      let error = undefined;
       if (ip in statusMap) {
         status = Number(statusMap[ip]);
       }
@@ -264,17 +269,16 @@ class MetricController implements Controller {
       } else if (v.ipAddress !== ip) {
         error = 'ip address mismatch with validator info';
       }
-      const name = v ? v.name : '';
-      const injail = v ? v.address in jMap : false;
+      const name = v ? v.name : nameMap[ip] || '';
+      const injail = v ? v.status === ValidatorStatus.JAILED : false;
       members.push({
         index: m.index,
-        monitorName: nameMap[ip] || '',
         name,
         memberPubkey: m.pubKey,
         address: v ? v.address : '0x',
         ip,
         status,
-        jailed: injail,
+        injail,
         error,
       });
       if (injail) {
@@ -297,16 +301,8 @@ class MetricController implements Controller {
     size = healthy + down + invalid
     jailed refers to the number of members in jail
     */
-    return res.json({
-      size,
-      healthy,
-      down,
-      invalid,
-      jailed,
-      members,
-      statusMap,
-    });
-  };
+    return { committee: { size, healthy, down, invalid, jailed, members } };
+  }
 
   private getChart = async (req, res) => {
     const end = Math.floor(+new Date() / 1000);
