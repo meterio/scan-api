@@ -184,6 +184,7 @@ class MetricController implements Controller {
     }
     return res.json({ heads: result });
   };
+
   private getCommittee = async (req, res) => {
     let statusMap = {};
     let nameMap = {};
@@ -201,11 +202,11 @@ class MetricController implements Controller {
     }
     const kblocks = await this.blockRepo.findKBlocks(1, 1);
     if (!roles || !kblocks || kblocks.length <= 0) {
-      return res.json({ size: 0, active: 0, members: [] });
+      return res.json({ size: 0, healthy: 0, jailed: 0, down: 0, members: [] });
     }
     const block = await this.blockRepo.findByNumber(kblocks[0].number + 1);
     if (!block || block.committee.length <= 0) {
-      return res.json({ size: 0, active: 0, members: [] });
+      return res.json({ size: 0, healthy: 0, jailed: 0, down: 0, members: [] });
     }
 
     const validators = await this.validatorRepo.findAll();
@@ -217,7 +218,9 @@ class MetricController implements Controller {
 
     let members = [];
     const size = Object.keys(vMap).length;
-    let active = 0;
+    let healthy = 0,
+      down = 0,
+      jailed = 0;
     let visited = {};
     for (const m of block.committee) {
       const ip = m.netAddr.toLowerCase().split(':')[0];
@@ -234,8 +237,7 @@ class MetricController implements Controller {
       const v = vMap[m.pubKey];
       if (!v) {
         error = 'no validator info found (possible key mismatch)';
-      }
-      if (v.ipAddress !== ip) {
+      } else if (v.ipAddress !== ip) {
         error = 'ip address mismatch with validator info';
       }
       const name = v ? v.name : '';
@@ -245,15 +247,34 @@ class MetricController implements Controller {
         name,
         memberPubkey: m.pubKey,
         pubkey: v ? v.pubKey : '',
+        address: v.address,
         ip,
         status,
         error,
       });
       if (status === 1) {
-        active++;
+        healthy++;
+      }
+      if (status === -1) {
+        down++;
       }
     }
-    return res.json({ size, active, members, statusMap });
+
+    const jailedVal = await this.metricRepo.findByKey(MetricName.JAILED);
+    if (jailedVal) {
+      const injail = JSON.parse(jailedVal.value);
+      for (const j of injail) {
+        for (let m of members) {
+          if (m.address === j.address) {
+            m.status = -999;
+            jailed++;
+            break;
+          }
+        }
+      }
+    }
+    healthy -= jailed;
+    return res.json({ size, healthy, down, jailed, members, statusMap });
   };
 
   private getChart = async (req, res) => {
