@@ -202,23 +202,47 @@ class MetricController implements Controller {
     }
     const kblocks = await this.blockRepo.findKBlocks(1, 1);
     if (!roles || !kblocks || kblocks.length <= 0) {
-      return res.json({ size: 0, healthy: 0, jailed: 0, down: 0, members: [] });
+      return res.json({
+        size: 0,
+        healthy: 0,
+        invalid: 0,
+        jailed: 0,
+        down: 0,
+        members: [],
+      });
     }
     const block = await this.blockRepo.findByNumber(kblocks[0].number + 1);
     if (!block || block.committee.length <= 0) {
-      return res.json({ size: 0, healthy: 0, jailed: 0, down: 0, members: [] });
+      return res.json({
+        size: 0,
+        healthy: 0,
+        invalid: 0,
+        jailed: 0,
+        down: 0,
+        members: [],
+      });
     }
 
     const validators = await this.validatorRepo.findAll();
-    let vMap: { [key: string]: Validator & Document } = {};
+    let vMap: { [key: string]: Validator & Document } = {}; // validator map [ip -> validator obj]
     validators.forEach((v) => {
       const ecdsaKey = v.pubKey.split(':::')[0];
       vMap[ecdsaKey] = v;
     });
 
+    let jMap: { [key: string]: boolean } = {}; // jailed map [address -> injail]
+    const jailedVal = await this.metricRepo.findByKey(MetricName.JAILED);
+    if (jailedVal) {
+      const injail = JSON.parse(jailedVal.value);
+      injail.map((j) => {
+        jMap[j.address] = true;
+      });
+    }
+
     let members = [];
     const size = Object.keys(vMap).length;
     let healthy = 0,
+      invalid = 0,
       down = 0,
       jailed = 0;
     let visited = {};
@@ -226,9 +250,9 @@ class MetricController implements Controller {
       const ip = m.netAddr.toLowerCase().split(':')[0];
       if (visited[ip]) {
         continue;
-      } else {
-        visited[ip] = true;
       }
+      visited[ip] = true;
+
       let status = -1;
       let error = '';
       if (ip in statusMap) {
@@ -241,40 +265,43 @@ class MetricController implements Controller {
         error = 'ip address mismatch with validator info';
       }
       const name = v ? v.name : '';
+      const injail = v ? v.address in jMap : false;
       members.push({
         index: m.index,
         monitorName: nameMap[ip] || '',
         name,
         memberPubkey: m.pubKey,
-        pubkey: v ? v.pubKey : '',
-        address: v.address,
+        address: v ? v.address : '0x',
         ip,
         status,
+        jailed: injail,
         error,
       });
-      if (status === 1) {
-        healthy++;
+      if (injail) {
+        jailed++;
       }
-      if (status === -1) {
-        down++;
+      switch (status) {
+        case 0:
+          invalid++;
+          break;
+        case 1: // validator
+        case 2: // proposer
+          healthy++;
+          break;
+        case -1:
+          down++;
       }
     }
 
-    const jailedVal = await this.metricRepo.findByKey(MetricName.JAILED);
-    if (jailedVal) {
-      const injail = JSON.parse(jailedVal.value);
-      for (const j of injail) {
-        for (let m of members) {
-          if (m.address === j.address) {
-            m.status = -999;
-            jailed++;
-            break;
-          }
-        }
-      }
-    }
-    healthy -= jailed;
-    return res.json({ size, healthy, down, jailed, members, statusMap });
+    return res.json({
+      size,
+      healthy,
+      down,
+      invalid,
+      jailed,
+      members,
+      statusMap,
+    });
   };
 
   private getChart = async (req, res) => {
