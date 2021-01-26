@@ -35,7 +35,7 @@ const blockSchema = new mongoose.Schema(
     stateRoot: { type: String, required: true },
     receiptsRoot: { type: String, required: true },
     signer: { type: String, required: true, index: true },
-    beneficiary: { type: String, required: true },
+    beneficiary: { type: String, required: true, index: true },
     size: { type: Number, required: true },
 
     nonce: { type: String, required: true },
@@ -61,8 +61,9 @@ const blockSchema = new mongoose.Schema(
         BlockType[enumValue as keyof typeof BlockType],
       set: (enumValue: BlockType) => BlockType[enumValue],
       required: true,
+      index: true,
     },
-    epoch: { type: Number, required: true },
+    epoch: { type: Number, required: true, index: true },
     kblockData: [{ type: String }],
 
     createdAt: { type: Number, index: true },
