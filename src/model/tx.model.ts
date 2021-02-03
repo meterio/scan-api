@@ -1,9 +1,17 @@
 import { POINT_CONVERSION_COMPRESSED } from 'constants';
 
+import * as dev from '@meterio/devkit';
 import BigNumber from 'bignumber.js';
 import * as mongoose from 'mongoose';
 
-import { Token, ZeroAddress, enumKeys } from '../const';
+import {
+  AccountLockAddress,
+  AuctionAddress,
+  StakingAddress,
+  Token,
+  ZeroAddress,
+  enumKeys,
+} from '../const';
 import { Balance } from '../utils/balance';
 import { fromWei } from '../utils/utils';
 import { blockConciseSchema } from './blockConcise.model';
@@ -119,6 +127,15 @@ txSchema.set('toJSON', {
 txSchema.methods.getType = function () {
   for (const c of this.clauses) {
     if (c.data !== '0x') {
+      if (c.to.toLowerCase() === AccountLockAddress) {
+        return 'account lock';
+      }
+      if (c.to.toLowerCase() === StakingAddress) {
+        return 'staking';
+      }
+      if (c.to.toLowerCase() === AuctionAddress) {
+        return 'auction';
+      }
       return 'call';
     }
   }

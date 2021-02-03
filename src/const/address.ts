@@ -14,7 +14,12 @@ export const ExtensionAddress =
   '0x' + Buffer.from('Extension').toString('hex').padStart(40, '0');
 export const MeasureAddress =
   '0x' + Buffer.from('Measure').toString('hex').padStart(40, '0');
+
 export const ZeroAddress = '0x'.padEnd(42, '0');
+
+export const AccountLockAddress = '0x6163636f756e742d6c6f636b2d61646472657373'; // Account Lock Script
+export const StakingAddress = '0x616b696e672d6d6f64756c652d61646472657373'; // Staking Script
+export const AuctionAddress = '0x74696f6e2d6163636f756e742d61646472657373'; // Auction Script
 
 export const KnowExchange = new Map<string, string>();
 
