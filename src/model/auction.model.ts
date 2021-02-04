@@ -74,6 +74,12 @@ const auctionSchema = new mongoose.Schema({
     set: (bnum: BigNumber) => bnum.toFixed(0),
     required: true,
   },
+  leftoverMTRG: {
+    type: String,
+    get: (num: string) => new BigNumber(num),
+    set: (bnum: BigNumber) => bnum.toFixed(0),
+    required: true,
+  },
   txs: [auctionTxSchema],
   distMTRG: [auctionDistSchema],
 });
@@ -104,6 +110,8 @@ auctionSchema.methods.toSummary = function () {
     reservedStr: `${fromWei(this.reservedMTRG)} MTRG`,
     reservedPrice: this.reservedPrice.toFixed(),
     actualPrice: this.actualPrice.toFixed(),
+    leftover: this.leftoverMTRG.toFixed(),
+    leftoeverStr: `${fromWei(this.leftoverMTRG)} MTRG`,
   };
 };
 
