@@ -56,6 +56,8 @@ class AuctionController implements Controller {
         reservedPrice: p.reservedPrice,
         received: p.receivedMTR,
         receivedStr: `${fromWei(p.receivedMTR)} MTR`,
+        leftover: p.leftoverMTRG,
+        leftoverStr: `${fromWei(p.leftoverMTRG)} MTRG`,
         bids: auctionTxs,
       },
     });
