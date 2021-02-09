@@ -8,6 +8,7 @@ import { Account } from '../model/account.interface';
 import AccountRepo from '../repo/account.repo';
 import BlockRepo from '../repo/block.repo';
 import BucketRepo from '../repo/bucket.repo';
+import TokenProfileRepo from '../repo/tokenProfile.repo';
 import TransferRepo from '../repo/transfer.repo';
 import TxRepo from '../repo/tx.repo';
 import { extractPageAndLimitQueryParam, fromWei } from '../utils/utils';
@@ -20,6 +21,7 @@ class AccountController implements Controller {
   private transferRepo = new TransferRepo();
   private bucketRepo = new BucketRepo();
   private blockRepo = new BlockRepo();
+  private tokenProfileRepo = new TokenProfileRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -150,11 +152,31 @@ class AccountController implements Controller {
       page,
       limit
     );
+    const profiles = await this.tokenProfileRepo.findAll();
+    let tokens = {};
+    for (const p of profiles) {
+      tokens[p.address] = p;
+    }
+
     const count = await this.transferRepo.countERC20TransferByAccount(address);
     if (!transfers) {
-      return res.json({ totalPage: 0, transfers: [] });
+      return res.json({ totalPage: 0, transfers: [], tokens: {} });
     }
-    return res.json({ totalPage: Math.ceil(count / limit), transfers });
+    let jTransfers = [];
+    for (let tr of transfers) {
+      const addr = tr.tokenAddress.toLowerCase();
+      let jTr = tr.toJSON();
+      if (addr in tokens) {
+        jTr.symbol = tokens[addr].symbol.toUpperCase();
+      } else {
+        jTr.symbol = '';
+      }
+      jTransfers.push(jTr);
+    }
+    return res.json({
+      totalPage: Math.ceil(count / limit),
+      transfers: jTransfers,
+    });
   };
 
   private getBucketsByAccount = async (req, res) => {
