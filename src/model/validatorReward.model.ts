@@ -39,7 +39,7 @@ validatorRewardSchema.methods.toSummary = function () {
   return {
     epoch: this.epoch,
     baseReward: this.baseReward.toFixed(),
-    totalReward: this.baseReward.toFixed(),
+    totalReward: this.totalReward.toFixed(),
   };
 };
 
