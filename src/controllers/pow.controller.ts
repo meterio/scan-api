@@ -62,8 +62,22 @@ class PowController implements Controller {
             subTotalStr: `${fromWei(rewardMap[addr])} MTR`,
           });
         }
+        let powStart = 0;
+        let powEnd = 0;
+        if (kb.powBlocks) {
+          for (const pb of kb.powBlocks) {
+            if (powStart == 0) {
+              powStart = pb.height;
+            } else {
+              powStart = powStart > pb.height ? pb.height : powStart;
+            }
+            powEnd = powEnd < pb.height ? pb.height : powEnd;
+          }
+        }
         rewards.push({
           posBlock: kb.number,
+          powStart,
+          powEnd,
           powBlock: 1274, // FIXME: fake number
           timestamp: kb.timestamp,
           epoch: kb.epoch,

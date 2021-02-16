@@ -23,6 +23,16 @@ const qcSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const powBlockSchema = new mongoose.Schema(
+  {
+    hash: { type: String, required: true },
+    prevBlock: { type: String, required: true },
+    beneficiary: { type: String, required: true },
+    height: { type: Number, required: true },
+  },
+  { _id: false }
+);
+
 const blockSchema = new mongoose.Schema(
   {
     hash: { type: String, required: true, index: { unique: true } },
@@ -65,6 +75,7 @@ const blockSchema = new mongoose.Schema(
     },
     epoch: { type: Number, required: true, index: true },
     kblockData: [{ type: String }],
+    powBlocks: [powBlockSchema],
 
     createdAt: { type: Number, index: true },
   },

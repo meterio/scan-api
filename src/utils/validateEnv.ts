@@ -9,7 +9,7 @@ function validateEnv() {
     MONGO_SSL_CA: str(),
 
     // server
-    PORT: num(),
+    PORT: port(),
   });
 }
 
