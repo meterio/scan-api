@@ -43,6 +43,7 @@ const auctionSchema = new mongoose.Schema({
   startEpoch: { type: Number, required: true },
   endHeight: { type: Number, required: true },
   endEpoch: { type: Number, required: true },
+  sequence: { type: Number, required: true },
   createTime: { type: Number, required: true },
   releasedMTRG: {
     type: String,
@@ -99,6 +100,7 @@ auctionSchema.methods.toSummary = function () {
     startEpoch: this.startEpoch,
     endHeight: this.endHeight,
     endEpoch: this.endEpoch,
+    sequence: this.sequence,
     createTime: this.createTime,
     bidCount: this.txs ? this.txs.length : 0,
     distCount: this.dist ? this.dist.length : 0,

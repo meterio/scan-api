@@ -23,6 +23,7 @@ export interface Auction {
   startEpoch: number;
   endHeight: number;
   endEpoch: number;
+  sequence: number;
   createTime: number;
   releasedMTRG: BigNumber;
   reservedMTRG: BigNumber;
@@ -32,5 +33,5 @@ export interface Auction {
   leftoverMTRG: BigNumber;
   txs: AuctionTx[];
   distMTRG: AuctionDist[];
-  toSummary(): Object;
+  toSummary(): any;
 }
