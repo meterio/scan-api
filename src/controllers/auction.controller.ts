@@ -24,43 +24,52 @@ class AuctionController implements Controller {
     this.router.get(`${this.path}/:id/dists`, try$(this.getAuctionDists));
   }
 
+  private convertPresentAuction = (p) => {
+    let auctionTxs = [];
+    for (const t of p.auctionTxs) {
+      auctionTxs.push({
+        txid: t.txid,
+        address: t.address,
+        amount: t.amount,
+        amountStr: `${fromWei(t.amount)} MTR`,
+        type: t.type,
+        nonce: t.nonce,
+        timestamp: t.lastTime,
+      });
+    }
+    return {
+      summary: {
+        id: p.auctionID,
+        startHeight: p.startHeight,
+        startEpoch: p.startEpoch,
+        endHeight: p.endHeight,
+        endEpoch: p.endEpoch,
+        sequence: p.sequence,
+        createTime: p.createTime,
+        bidCount: p.auctionTxs.length ? p.auctionTxs.length : 0,
+        released: p.releasedMTRG,
+        releasedStr: `${fromWei(p.releasedMTRG)} MTRG`,
+        received: p.receivedMTR,
+        receivedStr: `${fromWei(p.receivedMTR)} MTR`,
+        reserved: '0',
+        reservedStr: '0 MTRG',
+        reservedPrice: p.reservedPrice,
+        actualPrice: '0',
+        leftover: '0',
+        leftoverStr: '0 MTRG',
+      },
+      bids: auctionTxs,
+    };
+  };
+
   private getPresentAuction = async (req: Request, res: Response) => {
     const present = await this.metricRepo.findByKey(MetricName.PRESENT_AUCTION);
     if (!present || present.value == '{}') {
       return res.json({ present: {} });
     }
     const p = JSON.parse(present.value);
-    let auctionTxs = [];
-    for (const t of p.auctionTxs) {
-      auctionTxs.push({
-        address: t.addr,
-        amount: t.amount,
-        amountStr: `${fromWei(t.amount)} MTR`,
-        count: t.count,
-        nonce: t.nonce,
-        timestamp: t.lastTime,
-      });
-    }
-    return res.json({
-      present: {
-        id: p.auctionID,
-        startHeight: p.startHeight,
-        startEpoch: p.startEpoch,
-        endHeight: p.endHeight,
-        endEpoch: p.endEpoch,
-        createTime: p.createTime,
-        released: p.releasedMTRG,
-        releasedStr: `${fromWei(p.releasedMTRG)} MTRG`,
-        reserved: p.reservedMTRG,
-        reservedStr: `${fromWei(p.reservedMTRG)} MTRG`,
-        reservedPrice: p.reservedPrice,
-        received: p.receivedMTR,
-        receivedStr: `${fromWei(p.receivedMTR)} MTR`,
-        leftover: p.leftoverMTRG,
-        leftoverStr: `${fromWei(p.leftoverMTRG)} MTRG`,
-        bids: auctionTxs,
-      },
-    });
+    const converted = this.convertPresentAuction(p);
+    res.json({ present: converted.summary, bids: converted.bids });
   };
 
   private getPastAuctions = async (req: Request, res: Response) => {
@@ -79,6 +88,14 @@ class AuctionController implements Controller {
 
   private getAuctionBids = async (req: Request, res: Response) => {
     const { id } = req.params;
+    const present = await this.metricRepo.findByKey(MetricName.PRESENT_AUCTION);
+    if (present && present.value != '{}') {
+      const p = JSON.parse(present.value);
+      if (id === p.auctionID) {
+        return res.json(this.convertPresentAuction(p));
+      }
+    }
+
     const auction = await this.auctionRepo.findByID(id);
     if (!auction) {
       return res.json({ bids: [] });
