@@ -127,14 +127,18 @@ txSchema.set('toJSON', {
 txSchema.methods.getType = function () {
   for (const c of this.clauses) {
     if (c.data !== '0x') {
-      if (c.to.toLowerCase() === AccountLockAddress) {
-        return 'account lock';
-      }
-      if (c.to.toLowerCase() === StakingAddress) {
-        return 'staking';
-      }
-      if (c.to.toLowerCase() === AuctionAddress) {
-        return 'auction';
+      if (c.to) {
+        if (c.to.toLowerCase() === AccountLockAddress) {
+          return 'account lock';
+        }
+        if (c.to.toLowerCase() === StakingAddress) {
+          return 'staking';
+        }
+        if (c.to.toLowerCase() === AuctionAddress) {
+          return 'auction';
+        }
+      } else {
+        return 'empty';
       }
       return 'call';
     }
