@@ -150,7 +150,10 @@ class MetricController implements Controller {
     const tokenData = await this.getTokenData();
     let committeeData = await this.getCommitteeData();
 
-    delete committeeData.committee.members;
+    delete committeeData.committee.invalidMembers;
+    delete committeeData.committee.healthyMembers;
+    delete committeeData.committee.downMembers;
+    delete committeeData.committee.jailedMembers;
     return res.json({
       ...tokenData,
       ...powData,
@@ -201,7 +204,10 @@ class MetricController implements Controller {
         down: 0,
         invalid: 0,
         jailed: 0,
-        members: [],
+        jailedMembers: [],
+        healthyMembers: [],
+        downMembers: [],
+        invalidMembers: [],
       },
     };
     let statusMap = {};
