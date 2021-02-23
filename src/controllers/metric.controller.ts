@@ -244,13 +244,15 @@ class MetricController implements Controller {
       });
     }
 
-    let members = [];
-    let pMap: { [key: string]: boolean } = {};
-
     let healthy = 0,
       invalid = 0,
       down = 0,
       jailed = 0;
+    let healthyMembers = [],
+      invalidMembers = [],
+      downMembers = [],
+      jailedMembers = [];
+
     let visited = {};
     let size = 0;
     for (const m of block.committee) {
@@ -274,29 +276,32 @@ class MetricController implements Controller {
       }
       const name = v ? v.name : nameMap[ip] || '';
       const injail = v ? v.status === ValidatorStatus.JAILED : false;
-      members.push({
+      const member = {
         index: m.index,
         name,
         memberPubkey: m.pubKey,
         address: v ? v.address : '0x',
         ip,
         status,
-        injail,
         error,
-      });
+      };
       if (injail) {
         jailed++;
+        jailedMembers.push(member);
       }
       switch (status) {
         case 0:
           invalid++;
+          invalidMembers.push(member);
           break;
         case 1: // validator
         case 2: // proposer
           healthy++;
+          healthyMembers.push(member);
           break;
         case -1:
           down++;
+          downMembers.push(member);
       }
     }
 
@@ -304,7 +309,19 @@ class MetricController implements Controller {
     size = healthy + down + invalid
     jailed refers to the number of members in jail
     */
-    return { committee: { size, healthy, down, invalid, jailed, members } };
+    return {
+      committee: {
+        size,
+        healthy,
+        down,
+        invalid,
+        jailed,
+        healthyMembers,
+        downMembers,
+        invalidMembers,
+        jailedMembers,
+      },
+    };
   }
 
   private getChart = async (req, res) => {
