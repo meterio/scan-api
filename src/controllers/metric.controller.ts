@@ -38,6 +38,7 @@ class MetricController implements Controller {
     this.router.get(`${this.path}/head`, try$(this.getHeadMetric));
     this.router.get(`${this.path}/chart`, try$(this.getChart));
     this.router.get(`${this.path}/committee`, try$(this.getCommitteeMetric));
+    this.router.get(`${this.path}/invalid`, try$(this.getInvalidNodesMetric));
   }
 
   private getMetricMap = async () => {
@@ -85,12 +86,12 @@ class MetricController implements Controller {
       staking: {
         buckets: Number(map[MetricName.BUCKET_COUNT]),
         candidates: Number(map[MetricName.CANDIDATE_COUNT]),
-        validators: Number(map[MetricName.STAKEHOLDER_COUNT]),
+        stakeholders: Number(map[MetricName.STAKEHOLDER_COUNT]),
         delegates: Number(map[MetricName.DELEGATE_COUNT]),
-        onlineNodes: Number(map[MetricName.DELEGATE_COUNT]),
-        totalNodes:
-          Number(map[MetricName.DELEGATE_COUNT]) +
-          Number(map[MetricName.JAILED_COUNT]),
+        healthyNodes:
+          Number(map[MetricName.CANDIDATE_COUNT]) -
+          Number(map[MetricName.INVALID_NODES_COUNT]),
+        invalidNodes: Number(map[MetricName.INVALID_NODES_COUNT]),
         totalStaked: totalStaked,
         totalStakedStr: `${fromWei(totalStaked, 2)} MTRG`,
       },
@@ -189,6 +190,13 @@ class MetricController implements Controller {
       result[h.key] = h.num;
     }
     return res.json({ heads: result });
+  };
+
+  private getInvalidNodesMetric = async (req, res) => {
+    const map = await this.getMetricMap();
+    const invalidNodes = map[MetricName.INVALID_NODES];
+    const parsed = JSON.parse(invalidNodes);
+    return res.json({ invalidNodes: parsed });
   };
 
   private getCommitteeMetric = async (req, res) => {
