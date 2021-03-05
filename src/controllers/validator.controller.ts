@@ -1,14 +1,22 @@
+import * as devkit from '@meterio/devkit';
 import BigNumber from 'bignumber.js';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { Document } from 'mongoose';
 
-import { UNIT_SHANNON } from '../const';
+import {
+  AccountLockAddress,
+  AuctionAddress,
+  StakingAddress,
+  UNIT_SHANNON,
+  ZeroAddress,
+} from '../const';
 import { Token } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { Validator } from '../model/validator.interface';
 import BlockRepo from '../repo/block.repo';
 import BucketRepo from '../repo/bucket.repo';
+import TxRepo from '../repo/tx.repo';
 import ValidatorRepo from '../repo/validator.repo';
 import ValidatorRewardRepo from '../repo/validatorReward.repo';
 import { extractPageAndLimitQueryParam, fromWei } from '../utils/utils';
@@ -20,6 +28,7 @@ class ValidatorController implements Controller {
   private validatorRewardsRepo = new ValidatorRewardRepo();
   private blockRepo = new BlockRepo();
   private bucketRepo = new BucketRepo();
+  private txRepo = new TxRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -278,8 +287,9 @@ class ValidatorController implements Controller {
 
   private getPosRewardsByEpoch = async (req: Request, res: Response) => {
     const { epoch } = req.params;
-    const reward = await this.validatorRewardsRepo.findByEpoch(parseInt(epoch));
-    if (!reward) {
+    const epochs = [parseInt(epoch)];
+    const blks = await this.blockRepo.findKBlocksByEpochs(epochs);
+    if (blks.length <= 0) {
       return res.json({
         epoch,
         timestamp: 0,
@@ -289,18 +299,60 @@ class ValidatorController implements Controller {
         rewards: [],
       });
     }
-    const epochs = [parseInt(epoch)];
-    const blks = await this.blockRepo.findKBlocksByEpochs(epochs);
     const b = blks[0];
+    const se = devkit.ScriptEngine;
+    let rewards = [];
+    for (const txhash of b.txHashs) {
+      const tx = await this.txRepo.findByHash(txhash);
+      if (tx.origin === ZeroAddress) {
+        if (tx.clauseCount <= 0) {
+          continue;
+        }
+        for (const clause of tx.clauses) {
+          if (clause.to === StakingAddress) {
+            // staking, only care about governing tx
+            const scriptData = se.decodeScriptData(clause.data);
+            const body = se.decodeStakingBody(scriptData.payload);
+            if (body.opCode === se.StakingOpCode.Governing) {
+              const rewardInfos = se.decodeStakingGoverningExtra(body.extra);
+              for (const reward of rewardInfos) {
+                rewards.push({
+                  address: '0x' + reward.address.toString('hex'),
+                  type: 'transfer',
+                  amount: reward.amount,
+                });
+              }
+            }
+          } else if (clause.to === AuctionAddress) {
+            const scriptData = se.decodeScriptData(clause.data);
+            const body = se.decodeAuctionBody(scriptData.payload);
+            if (body.option === se.AuctionOption.Autobid) {
+              rewards.push({
+                address: '0x' + body.bidder.toString('hex'),
+                type: 'autobid',
+                amount: body.amount,
+              });
+            }
+            // auction, ignored for now
+          } else if (clause.to === AccountLockAddress) {
+            // account lock ignored for now
+          } else {
+            // miner reward
+          }
+        }
+      }
+    }
+    let totalReward = new BigNumber(0);
+    for (const r of rewards) {
+      totalReward = totalReward.plus(r.amount);
+    }
     return res.json({
       timestamp: b.timestamp,
       height: b.number,
-      epoch: reward.epoch,
-      baseReward: reward.baseReward.toFixed(),
-      totalReward: reward.baseReward.toFixed(),
-      rewards: reward.rewards.map((item) => {
-        return { address: item.address, amount: item.amount.toFixed() };
-      }),
+      epoch,
+      baseReward: '25' + '0'.repeat(16),
+      totalReward: totalReward,
+      rewards,
     });
   };
 }
