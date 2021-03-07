@@ -45,7 +45,7 @@ const blockSchema = new mongoose.Schema(
     stateRoot: { type: String, required: true },
     receiptsRoot: { type: String, required: true },
     signer: { type: String, required: true, index: true },
-    beneficiary: { type: String, required: true, index: true },
+    beneficiary: { type: String, required: true },
     size: { type: Number, required: true },
 
     nonce: { type: String, required: true },
@@ -63,17 +63,21 @@ const blockSchema = new mongoose.Schema(
       set: (bnum: BigNumber) => bnum.toFixed(0),
       required: true,
     },
+    actualReward: {
+      type: String,
+      get: (num: string) => new BigNumber(num),
+      set: (bnum: BigNumber) => bnum.toFixed(0),
+      required: true,
+    },
     gasChanged: { type: Number, required: true },
     blockType: {
       type: String,
       enum: enumKeys(BlockType),
-      get: (enumValue: string) =>
-        BlockType[enumValue as keyof typeof BlockType],
+      get: (enumValue: string) => BlockType[enumValue as keyof typeof BlockType],
       set: (enumValue: BlockType) => BlockType[enumValue],
       required: true,
-      index: true,
     },
-    epoch: { type: Number, required: true, index: true },
+    epoch: { type: Number, required: true },
     kblockData: [{ type: String }],
     powBlocks: [powBlockSchema],
 
@@ -86,6 +90,7 @@ const blockSchema = new mongoose.Schema(
     },
   }
 );
+blockSchema.index({ beneficiary: 1 });
 
 blockSchema.set('toJSON', {
   transform: (doc, ret, options) => {

@@ -13,6 +13,7 @@ export interface PosTransfer {
   sender: string;
   recipient: string;
   amount: string;
+  token: number;
 }
 
 export interface TxOutput {
@@ -26,6 +27,13 @@ export interface Clause {
   value: BigNumber;
   token: Token;
   data: string;
+}
+
+export interface GroupedTransfer {
+  sender: string;
+  recipient: string;
+  amount: BigNumber;
+  token: number;
 }
 
 export interface Tx {
@@ -55,5 +63,10 @@ export interface Tx {
   reverted: boolean;
   outputs: TxOutput[];
 
-  toSummary(): Object;
+  totalClauseMTRG: BigNumber;
+  totalClauseMTR: BigNumber;
+  totalTransferMTRG: BigNumber;
+  totalTransferMTR: BigNumber;
+  groupedTransfers: GroupedTransfer[];
+  toSummary(): object;
 }

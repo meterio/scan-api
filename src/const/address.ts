@@ -15,11 +15,41 @@ export const ExtensionAddress =
 export const MeasureAddress =
   '0x' + Buffer.from('Measure').toString('hex').padStart(40, '0');
 
-export const ZeroAddress = '0x'.padEnd(42, '0');
+export const StakingModuleAddress =
+  '0x' +
+  Buffer.from('staking-module-address')
+    .toString('hex')
+    .padStart(40, '0')
+    .slice(-40);
+export const AuctionModuleAddress =
+  '0x' +
+  Buffer.from('auction-account-address')
+    .toString('hex')
+    .padStart(40, '0')
+    .slice(-40);
+export const AccountLockModuleAddress =
+  '0x' +
+  Buffer.from('account-lock-address')
+    .toString('hex')
+    .padStart(40, '0')
+    .slice(-40);
+export const ValidatorBenefitAddress =
+  '0x' +
+  Buffer.from('validator-benefit-address')
+    .toString('hex')
+    .padStart(40, '0')
+    .slice(-40);
+export const AuctionAccountAddress =
+  '0x' +
+  Buffer.from('auction-account-address')
+    .toString('hex')
+    .padStart(40, '0')
+    .slice(-40);
+export const AuctionLeftOverAddress =
+  '0xe852f654dfaee0e2b60842657379a56e1cafa292';
 
-export const AccountLockAddress = '0x6163636f756e742d6c6f636b2d61646472657373'; // Account Lock Script
-export const StakingAddress = '0x616b696e672d6d6f64756c652d61646472657373'; // Staking Script
-export const AuctionAddress = '0x74696f6e2d6163636f756e742d61646472657373'; // Auction Script
+export const ZeroAddress = '0x0000000000000000000000000000000000000000';
+export const BridgePoolAddress = '0x5c5713656c6819ebe3921936fd28bed2a387cda5';
 
 export const KnowExchange = new Map<string, string>();
 

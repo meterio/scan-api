@@ -4,31 +4,23 @@ import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { Document } from 'mongoose';
 
-import {
-  AccountLockAddress,
-  AuctionAddress,
-  StakingAddress,
-  UNIT_SHANNON,
-  ZeroAddress,
-} from '../const';
+import { UNIT_SHANNON } from '../const';
 import { Token } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { Validator } from '../model/validator.interface';
-import BlockRepo from '../repo/block.repo';
 import BucketRepo from '../repo/bucket.repo';
-import TxRepo from '../repo/tx.repo';
+import EpochRewardRepo from '../repo/epochReward.repo';
+import EpochRewardSummaryRepo from '../repo/epochRewardSummary.repo';
 import ValidatorRepo from '../repo/validator.repo';
-import ValidatorRewardRepo from '../repo/validatorReward.repo';
 import { extractPageAndLimitQueryParam, fromWei } from '../utils/utils';
 
 class ValidatorController implements Controller {
   public path = '/api/validators';
   public router = Router();
   private validatorRepo = new ValidatorRepo();
-  private validatorRewardsRepo = new ValidatorRewardRepo();
-  private blockRepo = new BlockRepo();
   private bucketRepo = new BucketRepo();
-  private txRepo = new TxRepo();
+  private epochRewardSummaryRepo = new EpochRewardSummaryRepo();
+  private epochRewardRepo = new EpochRewardRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -39,10 +31,10 @@ class ValidatorController implements Controller {
     this.router.get(`${this.path}/candidate`, try$(this.getCandidates));
     this.router.get(`${this.path}/delegate`, try$(this.getDelegates));
     this.router.get(`${this.path}/jailed`, try$(this.getJailed));
-    this.router.get(`${this.path}/rewards`, try$(this.getPosRewards));
+    this.router.get(`${this.path}/rewards`, try$(this.getEpochRewards));
     this.router.get(
       `${this.path}/rewards/:epoch`,
-      try$(this.getPosRewardsByEpoch)
+      try$(this.getEpochRewardByEpoch)
     );
 
     this.router.get(`${this.path}/:address`, try$(this.getValidatorByAddress));
@@ -258,100 +250,42 @@ class ValidatorController implements Controller {
     });
   };
 
-  private getPosRewards = async (req: Request, res: Response) => {
+  private getEpochRewards = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
-    const rewards = await this.validatorRewardsRepo.findAll(page, limit);
-    const count = await this.validatorRewardsRepo.countAll();
+    const rewards = await this.epochRewardSummaryRepo.findAll(page, limit);
+    const count = await this.epochRewardSummaryRepo.countAll();
     if (!rewards) {
       return res.json({ totalPage: 0, rewards: [] });
     }
-    const epochs = rewards.map((r) => r.epoch);
-    const blks = await this.blockRepo.findKBlocksByEpochs(epochs);
-    let eMap = {};
-    for (const b of blks) {
-      eMap[b.epoch] = { timestamp: b.timestamp, number: b.number };
-    }
     return res.json({
       totalPage: Math.ceil(count / limit),
-      rewards: rewards.map((r) => {
-        const d = eMap[r.epoch];
-        return {
-          ...r.toSummary(),
-          timestamp: d?.timestamp,
-          height: d.number,
-        };
-      }),
+      rewards,
     });
   };
 
-  private getPosRewardsByEpoch = async (req: Request, res: Response) => {
+  private getEpochRewardByEpoch = async (req: Request, res: Response) => {
     const { epoch } = req.params;
-    const epochs = [parseInt(epoch)];
-    const blks = await this.blockRepo.findKBlocksByEpochs(epochs);
-    if (blks.length <= 0) {
+    const summary = await this.epochRewardSummaryRepo.findByEpoch(
+      parseInt(epoch)
+    );
+    if (!summary) {
       return res.json({
         epoch,
+        blockNum: 0,
         timestamp: 0,
-        height: 0,
+        autobidTotal: '0',
+        autobidCount: 0,
+        transferTotal: '0',
+        transferCount: 0,
         totalReward: '0',
-        baseReward: '0',
         rewards: [],
       });
     }
-    const b = blks[0];
-    const se = devkit.ScriptEngine;
-    let rewards = [];
-    for (const txhash of b.txHashs) {
-      const tx = await this.txRepo.findByHash(txhash);
-      if (tx.origin === ZeroAddress) {
-        if (tx.clauseCount <= 0) {
-          continue;
-        }
-        for (const clause of tx.clauses) {
-          if (clause.to === StakingAddress) {
-            // staking, only care about governing tx
-            const scriptData = se.decodeScriptData(clause.data);
-            const body = se.decodeStakingBody(scriptData.payload);
-            if (body.opCode === se.StakingOpCode.Governing) {
-              const rewardInfos = se.decodeStakingGoverningExtra(body.extra);
-              for (const reward of rewardInfos) {
-                rewards.push({
-                  address: '0x' + reward.address.toString('hex'),
-                  type: 'transfer',
-                  amount: reward.amount,
-                });
-              }
-            }
-          } else if (clause.to === AuctionAddress) {
-            const scriptData = se.decodeScriptData(clause.data);
-            const body = se.decodeAuctionBody(scriptData.payload);
-            if (body.option === se.AuctionOption.Autobid) {
-              rewards.push({
-                address: '0x' + body.bidder.toString('hex'),
-                type: 'autobid',
-                amount: body.amount,
-              });
-            }
-            // auction, ignored for now
-          } else if (clause.to === AccountLockAddress) {
-            // account lock ignored for now
-          } else {
-            // miner reward
-          }
-        }
-      }
-    }
-    let totalReward = new BigNumber(0);
-    for (const r of rewards) {
-      totalReward = totalReward.plus(r.amount);
-    }
+    const rewards = await this.epochRewardRepo.findByEpoch(parseInt(epoch));
     return res.json({
-      timestamp: b.timestamp,
-      height: b.number,
       epoch,
-      baseReward: '25' + '0'.repeat(16),
-      totalReward: totalReward,
+      ...summary,
       rewards,
     });
   };

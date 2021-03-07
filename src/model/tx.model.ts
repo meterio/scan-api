@@ -1,18 +1,13 @@
-import { POINT_CONVERSION_COMPRESSED } from 'constants';
-
-import * as dev from '@meterio/devkit';
+import * as devkit from '@meterio/devkit';
 import BigNumber from 'bignumber.js';
 import * as mongoose from 'mongoose';
 
+import { Token, ZeroAddress, enumKeys } from '../const';
 import {
-  AccountLockAddress,
-  AuctionAddress,
-  StakingAddress,
-  Token,
-  ZeroAddress,
-  enumKeys,
-} from '../const';
-import { Balance } from '../utils/balance';
+  AccountLockModuleAddress,
+  AuctionModuleAddress,
+  StakingModuleAddress,
+} from '../const/address';
 import { fromWei } from '../utils/utils';
 import { blockConciseSchema } from './blockConcise.model';
 import { Tx } from './tx.interface';
@@ -52,6 +47,7 @@ const posTransferSchema = new mongoose.Schema(
     sender: { type: String, required: true },
     recipient: { type: String, required: true },
     amount: { type: String, required: true },
+    token: { type: Number, required: false },
   },
   { _id: false }
 );
@@ -61,6 +57,21 @@ const txOutputSchema = new mongoose.Schema(
     contractAddress: { type: String, required: false },
     events: [posEventSchema],
     transfers: [posTransferSchema],
+  },
+  { _id: false }
+);
+
+const groupedTransferSchema = new mongoose.Schema(
+  {
+    sender: { type: String, required: true },
+    recipient: { type: String, required: true },
+    amount: {
+      type: String,
+      get: (num: string) => new BigNumber(num),
+      set: (bnum: BigNumber) => bnum.toFixed(0),
+      required: true,
+    },
+    token: { type: Number, required: false },
   },
   { _id: false }
 );
@@ -106,6 +117,32 @@ const txSchema = new mongoose.Schema(
     },
     outputs: [txOutputSchema],
 
+    totalClauseMTRG: {
+      type: String,
+      get: (num: string) => new BigNumber(num),
+      set: (bnum: BigNumber) => bnum.toFixed(0),
+      required: true,
+    },
+    totalClauseMTR: {
+      type: String,
+      get: (num: string) => new BigNumber(num),
+      set: (bnum: BigNumber) => bnum.toFixed(0),
+      required: true,
+    },
+    totalTransferMTRG: {
+      type: String,
+      get: (num: string) => new BigNumber(num),
+      set: (bnum: BigNumber) => bnum.toFixed(0),
+      required: true,
+    },
+    totalTransferMTR: {
+      type: String,
+      get: (num: string) => new BigNumber(num),
+      set: (bnum: BigNumber) => bnum.toFixed(0),
+      required: true,
+    },
+    groupedTransfers: [groupedTransferSchema],
+
     createdAt: { type: Number, index: true },
   },
   {
@@ -127,17 +164,42 @@ txSchema.set('toJSON', {
 txSchema.methods.getType = function () {
   for (const c of this.clauses) {
     if (c.data !== '0x') {
+      return 'call';
+    }
+  }
+  if (this.origin === ZeroAddress) {
+    return 'reward';
+  }
+  return 'transfer';
+};
+
+txSchema.methods.getType = function () {
+  for (const c of this.clauses) {
+    if (c.data !== '0x') {
       if (c.to) {
-        if (c.to.toLowerCase() === AccountLockAddress) {
+        if (c.to.toLowerCase() === AccountLockModuleAddress) {
           return 'account lock';
         }
-        if (c.to.toLowerCase() === StakingAddress) {
+        if (c.to.toLowerCase() === StakingModuleAddress) {
           return 'staking';
         }
-        if (c.to.toLowerCase() === AuctionAddress) {
+        if (c.to.toLowerCase() === AuctionModuleAddress) {
           return 'auction';
         }
       } else {
+        const se = devkit.ScriptEngine;
+        if (se.IsScriptEngineData(c.data)) {
+          const scriptData = se.decodeScriptData(c.data);
+          if (scriptData.header.modId === se.ModuleID.Staking) {
+            return 'staking';
+          }
+          if (scriptData.header.modId === se.ModuleID.Auction) {
+            return 'auction';
+          }
+          if (scriptData.header.modId === se.ModuleID.AccountLock) {
+            return 'account lock';
+          }
+        }
         return 'empty';
       }
       return 'call';
@@ -149,73 +211,12 @@ txSchema.methods.getType = function () {
   return 'transfer';
 };
 
-txSchema.methods.getTotalAmounts = function () {
-  if (!this.clauses || this.clauses.length === 0) {
-    return { amounts: ['0'], amountStrs: ['0 MTR'] };
-  }
-  if (this.clauses.length === 1) {
-    const c = this.clauses[0];
-    return {
-      amounts: [c.value],
-      amountStrs: [`${fromWei(c.value)} ${Token[c.token]}`],
-    };
-  }
-  let mtr = new BigNumber(0);
-  let mtrg = new BigNumber(0);
-  let mtrUsed = false;
-  for (const c of this.clauses) {
-    if (c.token === Token.MTR) {
-      mtr = mtr.plus(c.value);
-      mtrUsed = true;
-    }
-    if (c.token === Token.MTRG) {
-      mtrg = mtrg.plus(c.value);
-    }
-  }
-  let amounts = [];
-  let amountStrs = [];
-  if (mtr.isGreaterThan(0)) {
-    amounts.push(mtr.toFixed());
-    amountStrs.push(`${fromWei(mtr)} MTR`);
-  }
-  if (mtrg.isGreaterThan(0)) {
-    amounts.push(mtrg.toFixed());
-    amountStrs.push(`${fromWei(mtrg)} MTRG`);
-  }
-  if (amountStrs.length <= 0) {
-    amounts.push('0');
-    amountStrs.push(mtrUsed ? '0 MTR' : '0 MTRG');
-  }
-  return { amounts, amountStrs };
-};
-
 txSchema.methods.toSummary = function () {
-  const a = this.getTotalAmounts();
-  const tos: { [key: string]: Balance } = {};
-  for (const c of this.clauses) {
-    if (!(c.to in tos)) {
-      tos[c.to] = new Balance(c.to, 0, 0);
-    }
-    switch (c.token) {
-      case Token.MTR:
-        tos[c.to].plusMTR(c.value);
-        break;
-      case Token.MTRG:
-        tos[c.to].plusMTRG(c.value);
-        break;
-    }
-  }
-
-  const sortedTos = Object.values(tos).sort((a, b) => {
-    return a
-      .MTR()
-      .plus(a.MTRG())
-      .minus(b.MTR())
-      .minus(b.MTRG())
-      .isGreaterThan(0)
-      ? 1
-      : -1;
+  const sortedTos = this.groupedTransfers.sort((a, b) => {
+    return a.amount.isGreaterThan(b.amount) ? 1 : -1;
   });
+
+  const token = this.clauseCount > 0 ? this.clauses[0].token : 0;
 
   return {
     hash: this.hash,
@@ -223,18 +224,16 @@ txSchema.methods.toSummary = function () {
     origin: this.origin,
     clauseCount: this.clauses ? this.clauses.length : 0,
     type: this.getType(),
-    paid: this.paid,
-    totalAmounts: a.amounts,
-    totalAmountStrs: a.amountStrs,
-    fee: this.paid.toFixed(),
-    feeStr: `${fromWei(this.paid)} MTR`,
+    paid: this.paid.toFixed(),
+    totalClauseMTR: this.totalClauseMTR.toFixed(),
+    totalClauseMTRG: this.totalClauseMTRG.toFixed(),
+    totalTransferMTR: this.totalTransferMTR.toFixed(),
+    totalTransferMTRG: this.totalTransferMTRG.toFixed(),
+    token: token == 0 ? 'MTR' : 'MTRG',
     reverted: this.reverted,
-    tos: sortedTos.map((t) => {
-      return { address: t.Address(), mtr: t.MTR(), mtrg: t.MTRG() };
-    }),
+    groupedTransfers: sortedTos,
   };
 };
-
 const model = mongoose.model<Tx & mongoose.Document>('tx', txSchema, 'txs');
 
 export default model;

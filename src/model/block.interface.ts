@@ -48,11 +48,13 @@ export interface Block {
   txCount: number;
   score: number;
   reward: BigNumber;
+  actualReward: BigNumber;
   gasChanged: number;
   blockType: BlockType;
 
   epoch: number;
   kblockData: string[];
   powBlocks?: PowBlock[];
-  toSummary(): Object;
+  createdAt?: number;
+  toSummary(): object;
 }
