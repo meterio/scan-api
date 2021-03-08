@@ -68,7 +68,7 @@ export interface Tx {
   totalTransferMTRG: BigNumber;
   totalTransferMTR: BigNumber;
   groupedTransfers: GroupedTransfer[];
-  majorTo: string;
+  majorTo?: string;
   toCount: number;
 
   toSummary(): object;
