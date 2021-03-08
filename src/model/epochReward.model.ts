@@ -4,7 +4,7 @@ import * as mongoose from 'mongoose';
 import { EpochReward } from './epochReward.interface';
 
 const epochRewardSchema = new mongoose.Schema({
-  epoch: { type: Number, required: true, unique: true },
+  epoch: { type: Number, required: true, index: true },
   blockNum: { type: Number, required: true },
   txHash: { type: String, required: true },
   clauseIndex: { type: Number, required: true },
@@ -23,6 +23,10 @@ const epochRewardSchema = new mongoose.Schema({
   },
 });
 
-const model = mongoose.model<EpochReward & mongoose.Document>('epochReward', epochRewardSchema, 'epochRewards');
+const model = mongoose.model<EpochReward & mongoose.Document>(
+  'epochReward',
+  epochRewardSchema,
+  'epochRewards'
+);
 
 export default model;

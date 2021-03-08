@@ -15,10 +15,10 @@ export class AuctionRepo {
     return this.model.estimatedDocumentCount();
   }
 
-  public async findAllPagination(pageNum?: number, limitNum?: number) {
+  public async findAllPast(pageNum?: number, limitNum?: number) {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.model
-      .find({})
+      .find({ pending: false })
       .sort({ createTime: -1 })
       .limit(limit)
       .skip(limit * page);
