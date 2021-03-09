@@ -40,7 +40,7 @@ const bidSchema = new mongoose.Schema({
 bidSchema.methods.toSummary = function () {
   return {
     epoch: this.epoch,
-    blockNum: this.blcokNum,
+    blockNum: this.blockNum,
     txHash: this.txHash,
     type: this.type,
     address: this.address,
