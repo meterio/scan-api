@@ -216,6 +216,12 @@ txSchema.methods.getType = function () {
 txSchema.methods.toSummary = function () {
   const token = this.clauseCount > 0 ? this.clauses[0].token : 0;
 
+  let totalClauseAmount = '0';
+  if (token == 0) {
+    totalClauseAmount = this.totalClauseMTR.toFixed();
+  } else {
+    totalClauseAmount = this.totalClauseMTRG.toFixed();
+  }
   return {
     hash: this.hash,
     block: this.block,
@@ -232,6 +238,9 @@ txSchema.methods.toSummary = function () {
     groupedTransfers: this.groupedTransfers,
     majorTo: this.majorTo,
     toCount: this.toCount,
+
+    // calculated
+    totalClauseAmount,
   };
 };
 const model = mongoose.model<Tx & mongoose.Document>('Tx', txSchema, 'txs');
