@@ -282,10 +282,42 @@ class ValidatorController implements Controller {
         rewards: [],
       });
     }
-    const rewards = await this.epochRewardRepo.findByEpoch(parseInt(epoch));
+    const epochRewards = await this.epochRewardRepo.findByEpoch(
+      parseInt(epoch)
+    );
+    let autobidMap = {};
+    let transferMap = {};
+    for (const r of epochRewards) {
+      if (r.type == 'autobid') {
+        if (!(r.address in autobidMap)) {
+          autobidMap[r.address] = new BigNumber(r.amount);
+        } else {
+          autobidMap[r.address] = autobidMap[r.address].plus(r.amount);
+        }
+      }
+      if (r.type == 'transfer') {
+        if (!(r.address in transferMap)) {
+          transferMap[r.address] = new BigNumber(r.amount);
+        } else {
+          transferMap[r.address] = transferMap[r.address].plus(r.amount);
+        }
+      }
+    }
+    const transfers = Object.keys(transferMap).map((addr) => {
+      const amount = transferMap[addr];
+      return { addr, amount, type: 'transfer' };
+    });
+    const autobids = Object.keys(autobidMap).map((addr) => {
+      const amount = autobidMap[addr];
+      return { addr, amount, type: 'autobid' };
+    });
+    const rewards = transfers.concat(autobids).sort((a, b) => {
+      return new BigNumber(a.amount).isGreaterThan(b.amount) ? 1 : -1;
+    });
+
     return res.json({
       epoch,
-      ...summary,
+      summary: summary.toJSON(),
       rewards,
     });
   };

@@ -1,6 +1,6 @@
 import * as devkit from '@meterio/devkit';
 import BigNumber from 'bignumber.js';
-import * as mongoose from 'mongoose';
+import mongoose from 'mongoose';
 
 import { Token, ZeroAddress, enumKeys } from '../const';
 import {

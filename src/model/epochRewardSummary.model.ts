@@ -30,6 +30,14 @@ const epochRewardSummarySchema = new mongoose.Schema({
   },
 });
 
+epochRewardSummarySchema.set('toJSON', {
+  transform: (obj, ret, options) => {
+    delete ret.__v;
+    delete ret._id;
+    return ret;
+  },
+});
+
 const model = mongoose.model<EpochRewardSummary & mongoose.Document>(
   'EpochRewardSummary',
   epochRewardSummarySchema,
