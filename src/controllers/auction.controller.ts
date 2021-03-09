@@ -20,6 +20,7 @@ class AuctionController implements Controller {
   private initializeRoutes() {
     this.router.get(`${this.path}/present`, try$(this.getPresentAuction));
     this.router.get(`${this.path}/past`, try$(this.getPastAuctions));
+    this.router.get(`${this.path}/:id`, try$(this.getAuctionByID));
     this.router.get(`${this.path}/:id/bids`, try$(this.getAuctionBids));
   }
 
@@ -45,11 +46,19 @@ class AuctionController implements Controller {
     });
   };
 
-  private getAuctionBids = async (req: Request, res: Response) => {
+  private getAuctionByID = async (req: Request, res: Response) => {
     const { id } = req.params;
     const auction = await this.auctionRepo.findByID(id);
-    const bids = await this.bidRepo.findByAuctionID(id);
-    return res.json({ summary: auction.toSummary(), bids });
+    return res.json({ summary: auction.toSummary() });
+  };
+
+  private getAuctionBids = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+    const auction = await this.auctionRepo.findByID(id);
+    const bids = await this.bidRepo.findByAuctionID(id, page, limit);
+    const count = await this.bidRepo.countByAuctionID(id);
+    return res.json({ totalPage: Math.ceil(count / limit), bids });
   };
 }
 export default AuctionController;

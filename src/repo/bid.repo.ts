@@ -1,6 +1,6 @@
 import { Bid } from '../model/bid.interface';
 import bidModel from '../model/bid.model';
-
+import { formalizePageAndLimit } from '../utils/utils';
 export class BidRepo {
   private model = bidModel;
 
@@ -22,8 +22,20 @@ export class BidRepo {
     return this.model.findOne({ id });
   }
 
-  public async findByAuctionID(auctionID: string) {
-    return this.model.find({ auctionID });
+  public async countByAuctionID(auctionID: string) {
+    return this.model.count({ auctionID });
+  }
+
+  public async findByAuctionID(
+    auctionID: string,
+    pageNum?: number,
+    limitNum?: number
+  ) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    return this.model
+      .find({ auctionID })
+      .limit(limit)
+      .skip(limit * page);
   }
 
   public async bulkInsert(...bids: Bid[]) {
