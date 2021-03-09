@@ -16,6 +16,10 @@ headSchema.set('toJSON', {
   },
 });
 
-const model = mongoose.model<Head & mongoose.Document>('head', headSchema, 'heads');
+const model = mongoose.model<Head & mongoose.Document>(
+  'Head',
+  headSchema,
+  'heads'
+);
 
 export default model;

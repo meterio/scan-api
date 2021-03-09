@@ -234,6 +234,6 @@ txSchema.methods.toSummary = function () {
     toCount: this.toCount,
   };
 };
-const model = mongoose.model<Tx & mongoose.Document>('tx', txSchema, 'txs');
+const model = mongoose.model<Tx & mongoose.Document>('Tx', txSchema, 'txs');
 
 export default model;

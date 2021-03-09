@@ -35,6 +35,10 @@ tokenBalanceSchema.set('toJSON', {
   },
 });
 
-const model = mongoose.model<TokenBalance & mongoose.Document>('TokenBalance', tokenBalanceSchema);
+const model = mongoose.model<TokenBalance & mongoose.Document>(
+  'TokenBalance',
+  tokenBalanceSchema,
+  'tokenBalances'
+);
 
 export default model;

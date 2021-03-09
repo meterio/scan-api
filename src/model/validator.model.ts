@@ -66,7 +66,7 @@ validatorSchema.set('toJSON', {
 });
 
 const model = mongoose.model<Validator & mongoose.Document>(
-  'validator',
+  'Validator',
   validatorSchema,
   'validators'
 );

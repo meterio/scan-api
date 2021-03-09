@@ -24,7 +24,7 @@ const epochRewardSchema = new mongoose.Schema({
 });
 
 const model = mongoose.model<EpochReward & mongoose.Document>(
-  'epochReward',
+  'EpochReward',
   epochRewardSchema,
   'epochRewards'
 );
