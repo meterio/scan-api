@@ -8,10 +8,24 @@ export class BidRepo {
     return this.model.find();
   }
 
-  public async findByAddress(address: string) {
-    return this.model.findOne({
+  public async countByAddress(address: string) {
+    return this.model.count({
       address: { $regex: new RegExp(`^${address}$`, 'i') },
     });
+  }
+
+  public async findByAddress(
+    address: string,
+    pageNum?: number,
+    limitNum?: number
+  ) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    return this.model
+      .find({
+        address: { $regex: new RegExp(`^${address}$`, 'i') },
+      })
+      .limit(limit)
+      .skip(limit * page);
   }
 
   public async create(bid: Bid) {

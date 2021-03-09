@@ -37,6 +37,22 @@ const bidSchema = new mongoose.Schema({
   },
 });
 
+bidSchema.methods.toSummary = function () {
+  return {
+    epoch: this.epoch,
+    blockNum: this.blcokNum,
+    txHash: this.txHash,
+    type: this.type,
+    address: this.address,
+    auctionID: this.auctionID,
+    amount: new BigNumber(this.amount).toFixed(),
+    pending: this.pending,
+    hammerPrice: this.hammerPrice,
+    lotAmount: this.lotAmount.toFixed(),
+    timestamp: this.timestamp,
+  };
+};
+
 const model = mongoose.model<Bid & mongoose.Document>('Bid', bidSchema, 'bids');
 
 export default model;

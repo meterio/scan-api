@@ -6,6 +6,7 @@ import { LIMIT_WINDOW } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { Account } from '../model/account.interface';
 import AccountRepo from '../repo/account.repo';
+import BidRepo from '../repo/bid.repo';
 import BlockRepo from '../repo/block.repo';
 import BucketRepo from '../repo/bucket.repo';
 import TokenProfileRepo from '../repo/tokenProfile.repo';
@@ -22,6 +23,7 @@ class AccountController implements Controller {
   private bucketRepo = new BucketRepo();
   private blockRepo = new BlockRepo();
   private tokenProfileRepo = new TokenProfileRepo();
+  private bidRepo = new BidRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -32,6 +34,7 @@ class AccountController implements Controller {
     this.router.get(`${this.path}/top/mtrg`, try$(this.getTopMTRGAccounts));
     this.router.get(`${this.path}/:address`, try$(this.getAccount));
     this.router.get(`${this.path}/:address/txs`, try$(this.getTxsByAccount));
+    this.router.get(`${this.path}/:address/bids`, try$(this.getBidsByAccount));
     this.router.get(
       `${this.path}/:address/transfers`,
       try$(this.getTransfersByAccount)
@@ -124,6 +127,21 @@ class AccountController implements Controller {
     return res.json({
       totalPage: Math.ceil(count / limit),
       txSummaries: txs.map((tx) => tx.toSummary()),
+    });
+  };
+
+  private getBidsByAccount = async (req, res) => {
+    const { address } = req.params;
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+    const bids = await this.bidRepo.findByAddress(address, page, limit);
+    const count = await this.bidRepo.countByAddress(address);
+
+    if (!bids) {
+      return res.json({ totalPage: 0, bids: [] });
+    }
+    return res.json({
+      totalPage: Math.ceil(count / limit),
+      bids: bids.map((b) => b.toSummary()),
     });
   };
 

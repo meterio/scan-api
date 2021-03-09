@@ -115,6 +115,8 @@ blockSchema.methods.toSummary = function () {
     gasUsed: this.gasUsed,
     txCount: this.txCount,
     beneficiary: this.beneficiary,
+    reward: this.reward,
+    actualReward: this.actualReward,
   };
 };
 const model = mongoose.model<Block & mongoose.Document>('Block', blockSchema);
