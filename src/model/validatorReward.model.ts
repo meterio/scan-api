@@ -1,5 +1,3 @@
-import { S_IXGRP } from 'constants';
-
 import BigNumber from 'bignumber.js';
 import * as mongoose from 'mongoose';
 

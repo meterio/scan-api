@@ -24,6 +24,7 @@ export class BidRepo {
       .find({
         address: { $regex: new RegExp(`^${address}$`, 'i') },
       })
+      .sort({ timestamp: -1 })
       .limit(limit)
       .skip(limit * page);
   }

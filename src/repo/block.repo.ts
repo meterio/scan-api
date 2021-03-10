@@ -47,6 +47,12 @@ export class BlockRepo {
     return this.block.count({ blockType: BlockType.KBlock });
   }
 
+  public async findByNumberList(nums: number[]) {
+    return this.block.find({
+      number: { $in: nums },
+    });
+  }
+
   public async findKBlocks(pageNum?: number, limitNum?: number) {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.block

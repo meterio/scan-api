@@ -5,6 +5,7 @@ import AccountController from './controllers/account.controller';
 import AuctionController from './controllers/auction.controller';
 import BlockController from './controllers/block.controller';
 import BucketController from './controllers/bucket.controller';
+import EpochController from './controllers/epoch.controller';
 import HomeController from './controllers/home.controller';
 import MetricController from './controllers/metric.controller';
 import PowController from './controllers/pow.controller';
@@ -25,6 +26,7 @@ const app = new App([
   new TransferController(),
   new ValidatorController(),
   new AuctionController(),
+  new EpochController(),
 ]);
 
 app.listen();

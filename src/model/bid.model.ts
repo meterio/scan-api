@@ -5,10 +5,10 @@ import { Bid } from './bid.interface';
 
 const bidSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
-  address: { type: String, required: true },
+  address: { type: String, required: true, index: true },
   amount: { type: String, required: true },
   type: { type: String, required: true },
-  timestamp: { type: Number, required: true },
+  timestamp: { type: Number, required: true, index: true },
   nonce: {
     type: String,
     get: (num: string) => new BigNumber(num),
