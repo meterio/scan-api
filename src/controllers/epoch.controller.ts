@@ -20,7 +20,11 @@ class EpochController implements Controller {
 
   private initializeRoutes() {
     this.router.get(`${this.path}/recent`, try$(this.getRecentEpochs));
-    this.router.get(`${this.path}/:epoch`, try$(this.getEpochByNumber));
+    this.router.get(
+      `${this.path}/:epoch/members`,
+      try$(this.getMembersByEpoch)
+    );
+    this.router.get(`${this.path}/:epoch`, try$(this.getEpochDetail));
   }
 
   private getRecentEpochs = async (req, res) => {
@@ -59,13 +63,13 @@ class EpochController implements Controller {
     res.json({ totalRows: count, epochs });
   };
 
-  private getEpochByNumber = async (req: Request, res: Response) => {
+  private getMembersByEpoch = async (req: Request, res: Response) => {
     const { epoch } = req.params;
+    const { page, limit } = extractPageAndLimitQueryParam(req);
     const committee = await this.committeeRepo.findByEpoch(parseInt(epoch));
     if (!committee) {
       return res.json({
-        summary: {},
-        powBlocks: [],
+        totalRows: 0,
         members: [],
       });
     }
@@ -98,6 +102,27 @@ class EpochController implements Controller {
         };
       }
     });
+
+    if (members.length >= (page - 1) * limit) {
+      return res.json({
+        totalRows: members.length,
+        members: members.slice((page - 1) * limit, page * limit),
+      });
+    } else {
+      return res.json({ totalRows: members.length, members: [] });
+    }
+  };
+
+  private getEpochDetail = async (req: Request, res: Response) => {
+    const { epoch } = req.params;
+    const committee = await this.committeeRepo.findByEpoch(parseInt(epoch));
+    if (!committee) {
+      return res.json({
+        summary: {},
+        powBlocks: [],
+        members: [],
+      });
+    }
     if (!committee.endBlock) {
       return res.json({
         summary: {
@@ -108,7 +133,6 @@ class EpochController implements Controller {
           committeeSize: committee.members.length,
           duration: 0,
         },
-        members,
         powBlocks: [],
       });
     }
@@ -125,7 +149,6 @@ class EpochController implements Controller {
         duration: committee.endBlock.timestamp - committee.startBlock.timestamp,
         committeeSize: committee.members.length,
       },
-      members,
       powBlocks: block.powBlocks,
     });
   };
