@@ -4,6 +4,7 @@ import { try$ } from 'express-toolbox';
 import Controller from '../interfaces/controller.interface';
 import BlockRepo from '../repo/block.repo';
 import CommitteeRepo from '../repo/committee.repo';
+import KnownRepo from '../repo/known.repo';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
 
 class EpochController implements Controller {
@@ -11,6 +12,7 @@ class EpochController implements Controller {
   public router = Router();
   private blockRepo = new BlockRepo();
   private committeeRepo = new CommitteeRepo();
+  private knownRepo = new KnownRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -67,6 +69,35 @@ class EpochController implements Controller {
         members: [],
       });
     }
+    const knowns = await this.knownRepo.findByKeyList(
+      committee.members.map((m) => m.pubKey)
+    );
+    let knownMap = {};
+    for (const k of knowns) {
+      knownMap[k.ecdsaPK] = k;
+    }
+    const members = committee.members.map((m) => {
+      if (m.pubKey in knownMap) {
+        const k = knownMap[m.pubKey];
+        return {
+          index: m.index,
+          pubKey: m.pubKey,
+          netAddr: m.netAddr,
+          name: k.name,
+          description: k.description,
+          address: k.address,
+        };
+      } else {
+        return {
+          index: m.index,
+          pubKey: m.pubKey,
+          netAddr: m.netAddr,
+          name: '',
+          description: '',
+          address: '',
+        };
+      }
+    });
     if (!committee.endBlock) {
       return res.json({
         summary: {
@@ -77,7 +108,7 @@ class EpochController implements Controller {
           committeeSize: committee.members.length,
           duration: 0,
         },
-        members: committee.members,
+        members,
         powBlocks: [],
       });
     }
@@ -94,7 +125,7 @@ class EpochController implements Controller {
         duration: committee.endBlock.timestamp - committee.startBlock.timestamp,
         committeeSize: committee.members.length,
       },
-      members: committee.members,
+      members,
       powBlocks: block.powBlocks,
     });
   };
