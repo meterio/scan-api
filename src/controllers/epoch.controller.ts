@@ -75,6 +75,7 @@ class EpochController implements Controller {
           startKBlock: committee.startBlock.number,
           startTime: committee.startBlock.timestamp,
           committeeSize: committee.members.length,
+          duration: 0,
         },
         members: committee.members,
         powBlocks: [],
@@ -85,11 +86,12 @@ class EpochController implements Controller {
     return res.json({
       summary: {
         epoch: committee.epoch,
-        active: true,
+        active: false,
         startKBlock: committee.startBlock.number,
         startTime: committee.startBlock.timestamp,
         endKBlock: committee.endBlock.number,
         endTime: committee.endBlock.timestamp,
+        duration: committee.endBlock.timestamp - committee.startBlock.timestamp,
         committeeSize: committee.members.length,
       },
       members: committee.members,
