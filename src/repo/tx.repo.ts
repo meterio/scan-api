@@ -1,5 +1,3 @@
-import mongoose from 'mongoose';
-
 import { Tx } from '../model/tx.interface';
 import txModel from '../model/tx.model';
 import { formalizePageAndLimit } from '../utils/utils';
