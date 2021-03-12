@@ -188,21 +188,19 @@ txSchema.methods.getType = function () {
         if (c.to.toLowerCase() === AuctionModuleAddress) {
           return 'auction';
         }
-      } else {
-        const se = devkit.ScriptEngine;
-        if (se.IsScriptEngineData(c.data)) {
-          const scriptData = se.decodeScriptData(c.data);
-          if (scriptData.header.modId === se.ModuleID.Staking) {
-            return 'staking';
-          }
-          if (scriptData.header.modId === se.ModuleID.Auction) {
-            return 'auction';
-          }
-          if (scriptData.header.modId === se.ModuleID.AccountLock) {
-            return 'account lock';
-          }
+      }
+      const se = devkit.ScriptEngine;
+      if (se.IsScriptEngineData(c.data)) {
+        const scriptData = se.decodeScriptData(c.data);
+        if (scriptData.header.modId === se.ModuleID.Staking) {
+          return 'staking';
         }
-        return 'empty';
+        if (scriptData.header.modId === se.ModuleID.Auction) {
+          return 'auction';
+        }
+        if (scriptData.header.modId === se.ModuleID.AccountLock) {
+          return 'account lock';
+        }
       }
       return 'call';
     }
