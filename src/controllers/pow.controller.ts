@@ -37,7 +37,7 @@ class PowController implements Controller {
     const kblocks = await this.blockRepo.findKBlocks(page, limit);
     const count = await this.blockRepo.countKBlocks();
     if (!kblocks) {
-      return res.json({ totalPage: 0, rewards: [] });
+      return res.json({ totalRows: 0, rewards: [] });
     }
     let rewards = [];
     for (const kb of kblocks) {
@@ -87,7 +87,7 @@ class PowController implements Controller {
         });
       }
     }
-    return res.json({ totalPage: Math.ceil(count / limit), rewards });
+    return res.json({ totalRows: count, rewards });
   };
 
   private getPowRewardsByEpoch = async (req: Request, res: Response) => {

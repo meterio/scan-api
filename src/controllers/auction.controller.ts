@@ -38,10 +38,10 @@ class AuctionController implements Controller {
     const auctions = await this.auctionRepo.findAllPast(page, limit);
     const count = await this.auctionRepo.countAll();
     if (!auctions || auctions.length <= 0) {
-      return res.json({ totalPage: 0, auctions: [] });
+      return res.json({ totalRows: 0, auctions: [] });
     }
     return res.json({
-      totalPage: Math.ceil(count / limit),
+      totalRows: count,
       auctions: auctions.map((a) => a.toSummary()),
     });
   };
@@ -58,7 +58,7 @@ class AuctionController implements Controller {
     const auction = await this.auctionRepo.findByID(id);
     const bids = await this.bidRepo.findByAuctionID(id, page, limit);
     const count = await this.bidRepo.countByAuctionID(id);
-    return res.json({ totalPage: Math.ceil(count / limit), bids });
+    return res.json({ totalRows: count, bids });
   };
 }
 export default AuctionController;

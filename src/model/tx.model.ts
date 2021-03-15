@@ -8,7 +8,6 @@ import {
   AuctionModuleAddress,
   StakingModuleAddress,
 } from '../const/address';
-import { fromWei } from '../utils/utils';
 import { blockConciseSchema } from './blockConcise.model';
 import { Tx } from './tx.interface';
 

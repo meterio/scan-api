@@ -24,11 +24,11 @@ class TxController implements Controller {
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const count = await this.txRepo.count();
     if (count <= 0) {
-      return res.json({ totalPage: 0, txs: [] });
+      return res.json({ totalRows: 0, txs: [] });
     }
     const txs = await this.txRepo.findRecent(page, limit);
     return res.json({
-      totalPage: Math.ceil(count / limit),
+      totalRows: count,
       txs: txs.map((tx) => tx.toSummary()),
     });
   };
@@ -37,10 +37,22 @@ class TxController implements Controller {
     const { hash } = req.params;
     let tx = await this.txRepo.findByHash(hash);
     if (!tx) {
-      return res.json({ tx: {} });
+      return res.json({ tx: {}, summary: {} });
     }
     let txObj = tx.toJSON();
+    let events = [];
+    let transfers = [];
+    for (const [clauseIndex, o] of txObj.outputs.entries()) {
+      for (const [logIndex, e] of o.events.entries()) {
+        events.push({ ...e, clauseIndex, logIndex });
+      }
+      for (const [logIndex, t] of o.transfers.entries()) {
+        transfers.push({ ...t, clauseIndex, logIndex });
+      }
+    }
     delete txObj.outputs;
+    txObj.events = events;
+    txObj.transfers = transfers;
     return res.json({ summary: tx.toSummary(), tx: txObj });
   };
 }

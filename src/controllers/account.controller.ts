@@ -61,11 +61,11 @@ class AccountController implements Controller {
     const count = await this.accountRepo.count();
 
     if (count <= 0) {
-      return res.json({ totalPage: 0, accounts: [] });
+      return res.json({ totalRows: 0, accounts: [] });
     }
     const accounts = await this.accountRepo.findTopMTRAccounts(page, limit);
     return res.json({
-      totalPage: Math.ceil(count / limit),
+      totalRows: count,
       accounts: accounts.map(this.convertAccount),
     });
   };
@@ -75,11 +75,11 @@ class AccountController implements Controller {
     const count = await this.accountRepo.count();
 
     if (count <= 0) {
-      return res.json({ totalPage: 0, accounts: [] });
+      return res.json({ totalRows: 0, accounts: [] });
     }
     const accounts = await this.accountRepo.findTopMTRGAccounts(page, limit);
     return res.json({
-      totalPage: Math.ceil(count / limit),
+      totalRows: count,
       accounts: accounts.map(this.convertAccount),
     });
   };
@@ -122,10 +122,10 @@ class AccountController implements Controller {
     const count = await this.txRepo.countByAccount(address);
 
     if (!txs) {
-      return res.json({ totalPage: 0, txSummaries: [] });
+      return res.json({ totalRows: 0, txSummaries: [] });
     }
     return res.json({
-      totalPage: Math.ceil(count / limit),
+      totalRows: count,
       txSummaries: txs.map((tx) => tx.toSummary()),
     });
   };
@@ -137,10 +137,10 @@ class AccountController implements Controller {
     const count = await this.bidRepo.countByAddress(address);
 
     if (!bids) {
-      return res.json({ totalPage: 0, bids: [] });
+      return res.json({ totalRows: 0, bids: [] });
     }
     return res.json({
-      totalPage: Math.ceil(count / limit),
+      totalRows: count,
       bids: bids.map((b) => b.toSummary()),
     });
   };
@@ -156,9 +156,9 @@ class AccountController implements Controller {
     );
     const count = await this.transferRepo.countByAccount(address);
     if (!transfers) {
-      return res.json({ totalPage: 0, transfers: [] });
+      return res.json({ totalRows: 0, transfers: [] });
     }
-    return res.json({ totalPage: Math.ceil(count / limit), transfers });
+    return res.json({ totalRows: count, transfers });
   };
 
   private getERC20TransfersByAccount = async (req, res) => {
@@ -178,7 +178,7 @@ class AccountController implements Controller {
 
     const count = await this.transferRepo.countERC20TransferByAccount(address);
     if (!transfers) {
-      return res.json({ totalPage: 0, transfers: [], tokens: {} });
+      return res.json({ totalRows: 0, transfers: [], tokens: {} });
     }
     let jTransfers = [];
     for (let tr of transfers) {
@@ -192,7 +192,7 @@ class AccountController implements Controller {
       jTransfers.push(jTr);
     }
     return res.json({
-      totalPage: Math.ceil(count / limit),
+      totalRows: count,
       transfers: jTransfers,
     });
   };
@@ -206,7 +206,7 @@ class AccountController implements Controller {
       return res.json({ buckets: [] });
     }
     return res.json({
-      totalPage: Math.ceil(count / limit),
+      totalRows: count,
       buckets: bkts.map((b) => {
         return b.toJSON();
       }),
@@ -224,10 +224,10 @@ class AccountController implements Controller {
     );
 
     if (!proposed) {
-      return res.json({ totalPage: 0, proposed: [] });
+      return res.json({ totalRows: 0, proposed: [] });
     }
     return res.json({
-      totalPage: Math.ceil(count / limit),
+      totalRows: count,
       proposed: proposed.map((b) => b.toSummary()),
     });
   };
@@ -258,7 +258,7 @@ class AccountController implements Controller {
 
     if (delegators.length >= (page - 1) * limit) {
       return res.json({
-        totalPage: Math.ceil(delegators.length / limit),
+        totalRows: delegators.length,
         delegators: delegators.slice((page - 1) * limit, page * limit),
       });
     } else {

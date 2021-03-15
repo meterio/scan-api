@@ -161,7 +161,7 @@ class ValidatorController implements Controller {
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const count = await this.validatorRepo.countCandidatesByFilter(filter);
     if (count <= 0) {
-      return res.json({ totalPage: 0, candidates: [] });
+      return res.json({ totalRows: 0, candidates: [] });
     }
     const candidates = await this.validatorRepo.findCandidatesByFilter(
       filter,
@@ -169,7 +169,7 @@ class ValidatorController implements Controller {
       limit
     );
     return res.json({
-      totalPage: Math.ceil(count / limit),
+      totalRows: count,
       candidates: candidates.map(this.convertCandidate),
     });
   };
@@ -201,7 +201,7 @@ class ValidatorController implements Controller {
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const count = await this.validatorRepo.countDelegatesByFilter(filter);
     if (count <= 0) {
-      return res.json({ totalPage: 0, delegates: [] });
+      return res.json({ totalRows: 0, delegates: [] });
     }
     const delegates = await this.validatorRepo.findDelegatesByFilter(
       filter,
@@ -210,7 +210,7 @@ class ValidatorController implements Controller {
     );
     const delegateTotalStaked = await this.validatorRepo.getDelegateTotalStaked();
     return res.json({
-      totalPage: Math.ceil(count / limit),
+      totalRows: count,
       delegates: delegates.map((d) =>
         this.convertDelegate(d, delegateTotalStaked)
       ),
@@ -237,7 +237,7 @@ class ValidatorController implements Controller {
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const count = await this.validatorRepo.countJailedByFilter(filter);
     if (count <= 0) {
-      return res.json({ totalPage: 0, jailed: [] });
+      return res.json({ totalRows: 0, jailed: [] });
     }
     const jailed = await this.validatorRepo.findJailedByFilter(
       filter,
@@ -245,7 +245,7 @@ class ValidatorController implements Controller {
       limit
     );
     return res.json({
-      totalPage: Math.ceil(count / limit),
+      totalRows: count,
       jailed: jailed.map(this.convertJailed),
     });
   };
@@ -256,10 +256,10 @@ class ValidatorController implements Controller {
     const rewards = await this.epochRewardSummaryRepo.findAll(page, limit);
     const count = await this.epochRewardSummaryRepo.countAll();
     if (!rewards) {
-      return res.json({ totalPage: 0, rewards: [] });
+      return res.json({ totalRows: 0, rewards: [] });
     }
     return res.json({
-      totalPage: Math.ceil(count / limit),
+      totalRows: count,
       rewards,
     });
   };

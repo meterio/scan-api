@@ -108,11 +108,11 @@ class BlockController implements Controller {
     const nameMap = await this.getNameMap();
     const count = await this.blockRepo.count();
     if (count <= 0) {
-      return res.json({ totalPage: 0, blocks: [] });
+      return res.json({ totalRows: 0, blocks: [] });
     }
     const blocks = await this.blockRepo.findRecent(page, limit);
     res.json({
-      totalPage: Math.ceil(count / limit),
+      totalRows: count,
       blocks: blocks.map((b) => {
         return {
           ...b.toSummary(),
