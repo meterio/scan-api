@@ -42,16 +42,30 @@ class TxController implements Controller {
     let txObj = tx.toJSON();
     let events = [];
     let transfers = [];
-    for (const [clauseIndex, o] of txObj.outputs.entries()) {
-      for (const [logIndex, e] of o.events.entries()) {
+    console.log('OUTPUTS:', txObj.outputs, 'LEN:', txObj.outputs.length);
+
+    for (
+      let clauseIndex = 0;
+      clauseIndex < txObj.outputs.length;
+      clauseIndex++
+    ) {
+      const o = txObj.outputs[clauseIndex];
+      console.log('OUTPUT:', o);
+      for (let logIndex = 0; logIndex < o.events.length; logIndex++) {
+        const e = o.events[logIndex];
+        console.log('EVENT: ', e);
         events.push({ ...e, clauseIndex, logIndex });
       }
-      for (const [logIndex, t] of o.transfers.entries()) {
+      for (let logIndex = 0; logIndex < o.transfers.length; logIndex++) {
+        const t = o.transfers[logIndex];
+        console.log('TRANSFER: ', t);
         transfers.push({ ...t, clauseIndex, logIndex });
       }
     }
+    console.log('transfers: ', transfers);
     txObj.events = events;
     txObj.transfers = transfers;
+    console.log('tx:', txObj);
     return res.json({ summary: tx.toSummary(), tx: txObj });
   };
 }
