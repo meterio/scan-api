@@ -1,7 +1,6 @@
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
-import { RECENT_WINDOW } from '../const';
 import Controller from '../interfaces/controller.interface';
 import TxRepo from '../repo/tx.repo';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
@@ -42,7 +41,6 @@ class TxController implements Controller {
     let txObj = tx.toJSON();
     let events = [];
     let transfers = [];
-    console.log('OUTPUTS:', txObj.outputs, 'LEN:', txObj.outputs.length);
 
     for (
       let clauseIndex = 0;
@@ -50,22 +48,17 @@ class TxController implements Controller {
       clauseIndex++
     ) {
       const o = txObj.outputs[clauseIndex];
-      console.log('OUTPUT:', o);
       for (let logIndex = 0; logIndex < o.events.length; logIndex++) {
         const e = o.events[logIndex];
-        console.log('EVENT: ', e);
         events.push({ ...e, clauseIndex, logIndex });
       }
       for (let logIndex = 0; logIndex < o.transfers.length; logIndex++) {
         const t = o.transfers[logIndex];
-        console.log('TRANSFER: ', t);
         transfers.push({ ...t, clauseIndex, logIndex });
       }
     }
-    console.log('transfers: ', transfers);
     txObj.events = events;
     txObj.transfers = transfers;
-    console.log('tx:', txObj);
     return res.json({ summary: tx.toSummary(), tx: txObj });
   };
 }

@@ -7,6 +7,7 @@ import BlockController from './controllers/block.controller';
 import BucketController from './controllers/bucket.controller';
 import EpochController from './controllers/epoch.controller';
 import HomeController from './controllers/home.controller';
+import KnownController from './controllers/known.controller';
 import MetricController from './controllers/metric.controller';
 import PowController from './controllers/pow.controller';
 import SearchController from './controllers/search.controller';
@@ -27,6 +28,7 @@ const app = new App([
   new ValidatorController(),
   new AuctionController(),
   new EpochController(),
+  new KnownController(),
 ]);
 
 app.listen();
