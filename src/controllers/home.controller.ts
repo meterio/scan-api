@@ -20,7 +20,7 @@ class HomeController implements Controller {
   }
 
   private getHome = async (req: Request, res: Response) => {
-    return res.json({ 'scan-api': 'ok' });
+    return res.json({ name: 'scan-api' });
   };
 
   private getMetric = async (req, res) => {

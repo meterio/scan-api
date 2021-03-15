@@ -1,7 +1,7 @@
 {
-  "name": "scan-sync",
-  "version": "0.0.1",
-  "description": "Collect blocks/txs/metrics from meter network",
+  "name": "scan-api",
+  "version": "0.0.2",
+  "description": "API for meter scanv2",
   "license": "MIT",
   "readmeFilename": "README.md",
   "author": {
@@ -18,7 +18,8 @@
   "tags": [
     "typescript",
     "meter",
-    "sync"
+    "sync",
+    "api"
   ],
   "dependencies": {
     "@meterio/devkit": "^1.4.1",
