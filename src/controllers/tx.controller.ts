@@ -50,7 +50,6 @@ class TxController implements Controller {
         transfers.push({ ...t, clauseIndex, logIndex });
       }
     }
-    delete txObj.outputs;
     txObj.events = events;
     txObj.transfers = transfers;
     return res.json({ summary: tx.toSummary(), tx: txObj });
