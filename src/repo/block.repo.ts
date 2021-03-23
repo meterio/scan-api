@@ -21,7 +21,7 @@ export class BlockRepo {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.block
       .find()
-      .sort({ createdAt: -1 })
+      .sort({ number: -1 })
       .limit(limit)
       .skip(limit * page);
   }
@@ -38,7 +38,7 @@ export class BlockRepo {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.block
       .find({ beneficiary: address.toLowerCase() })
-      .sort({ createdAt: -1 })
+      .sort({ number: -1 })
       .limit(limit)
       .skip(limit * page);
   }
@@ -57,7 +57,7 @@ export class BlockRepo {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.block
       .find({ blockType: BlockType.KBlock })
-      .sort({ createdAt: -1 })
+      .sort({ number: -1 })
       .limit(limit)
       .skip(limit * page);
   }

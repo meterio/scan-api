@@ -5,6 +5,7 @@ import { try$ } from 'express-toolbox';
 import { ZeroAddress } from '../const';
 import Controller from '../interfaces/controller.interface';
 import BlockRepo from '../repo/block.repo';
+import CommitteeRepo from '../repo/committee.repo';
 import PowBlockRepo from '../repo/powBlock.repo';
 import TxRepo from '../repo/tx.repo';
 import { extractPageAndLimitQueryParam, fromWei } from '../utils/utils';
@@ -15,6 +16,7 @@ class PowController implements Controller {
   private powBlockRepo = new PowBlockRepo();
   private blockRepo = new BlockRepo();
   private txRepo = new TxRepo();
+  private committeeRepo = new CommitteeRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -34,7 +36,10 @@ class PowController implements Controller {
 
   private getPowRewards = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const kblocks = await this.blockRepo.findKBlocks(page, limit);
+    const committees = await this.committeeRepo.findAll(page, limit);
+    const numbers = committees.map((c) => c.kblockHeight);
+    let kblocks = await this.blockRepo.findByNumberList(numbers);
+    kblocks = kblocks.sort((a, b) => (a.number > b.number ? -1 : 1));
     const count = await this.blockRepo.countKBlocks();
     if (!kblocks) {
       return res.json({ totalRows: 0, rewards: [] });
