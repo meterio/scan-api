@@ -7,6 +7,10 @@ export interface Account {
   name?: string;
   mtrBalance: BigNumber;
   mtrgBalance: BigNumber;
+
+  mtrBounded?: BigNumber;
+  mtrgBounded?: BigNumber;
+
   mtrRank: number;
   mtrgRank: number;
 

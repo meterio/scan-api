@@ -86,17 +86,15 @@ class AccountController implements Controller {
     if (!account) {
       return {
         mtrBalance: 0,
-        mtrBalanceStr: '0 MTR',
+        mtrBounded: 0,
         mtrgBalance: 0,
-        mtrgBalanceStr: '0 MTRG',
+        mtrgBounded: 0,
         firstSeen: { number: -1, timestamp: 0 },
         lastUpdate: { number: -1, timestamp: 0 },
       };
     }
     return {
       ...account.toJSON(),
-      mtrBalanceStr: fromWei(account.mtrBalance) + ' MTR',
-      mtrgBalanceStr: fromWei(account.mtrgBalance) + ' MTRG',
     };
   };
 
