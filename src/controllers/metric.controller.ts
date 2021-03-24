@@ -5,7 +5,12 @@ import { Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { Document } from 'mongoose';
 
-import { MetricName, ValidatorStatus, enumVals } from '../const';
+import {
+  LockedMeterGovAddrs,
+  MetricName,
+  ValidatorStatus,
+  enumVals,
+} from '../const';
 import Controller from '../interfaces/controller.interface';
 import { Validator } from '../model/validator.interface';
 import AccountRepo from '../repo/account.repo';
@@ -67,7 +72,11 @@ class MetricController implements Controller {
     const buckets = map[MetricName.BUCKETS];
 
     let totalStaked = new BigNumber(0);
+    let totalCirculationStaked = new BigNumber(0);
     for (const b of JSON.parse(buckets)) {
+      if (!(b.owner in LockedMeterGovAddrs)) {
+        totalCirculationStaked = totalCirculationStaked.plus(b.totalVotes);
+      }
       totalStaked = totalStaked.plus(b.totalVotes);
     }
 
@@ -92,7 +101,8 @@ class MetricController implements Controller {
           Number(map[MetricName.CANDIDATE_COUNT]) -
           Number(map[MetricName.INVALID_NODES_COUNT]),
         invalidNodes: Number(map[MetricName.INVALID_NODES_COUNT]),
-        totalStaked: totalStaked,
+        totalStaked,
+        totalCirculationStaked,
         totalStakedStr: `${fromWei(totalStaked, 2)} MTRG`,
       },
     };
