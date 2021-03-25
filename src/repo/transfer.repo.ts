@@ -29,7 +29,7 @@ export class TransferRepo {
   }
 
   public async countByAccount(addr: string) {
-    return this.transfer.count({
+    return this.transfer.countDocuments({
       $or: [
         { from: { $regex: new RegExp(`^${addr}$`, 'i') } },
         { to: { $regex: new RegExp(`^${addr}$`, 'i') } },
@@ -56,7 +56,7 @@ export class TransferRepo {
   }
 
   public async countERC20TransferByAccount(addr: string) {
-    return this.transfer.count({
+    return this.transfer.countDocuments({
       $and: [
         { token: Token.ERC20 },
         {

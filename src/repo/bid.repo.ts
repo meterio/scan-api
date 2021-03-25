@@ -9,7 +9,7 @@ export class BidRepo {
   }
 
   public async countByAddress(address: string) {
-    return this.model.count({
+    return this.model.countDocuments({
       address: { $regex: new RegExp(`^${address}$`, 'i') },
     });
   }
@@ -38,7 +38,7 @@ export class BidRepo {
   }
 
   public async countByAuctionID(auctionID: string) {
-    return this.model.count({ auctionID });
+    return this.model.countDocuments({ auctionID });
   }
 
   public async findByAuctionID(
@@ -49,6 +49,38 @@ export class BidRepo {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.model
       .find({ auctionID })
+      .limit(limit)
+      .skip(limit * page);
+  }
+
+  public async countUserbidsByAuctionID(auctionID: string) {
+    return this.model.countDocuments({ auctionID, type: 'userbid' });
+  }
+
+  public async findUserbidsByAuctionID(
+    auctionID: string,
+    pageNum?: number,
+    limitNum?: number
+  ) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    return this.model
+      .find({ auctionID, type: 'userbid' })
+      .limit(limit)
+      .skip(limit * page);
+  }
+
+  public async findAutobidsByAuctionID(auctionID: string) {
+    return this.model.find({ auctionID, type: 'autobid' });
+  }
+
+  public async findAutobidsByEpoch(
+    epoch: number,
+    pageNum?: number,
+    limitNum?: number
+  ) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    return this.model
+      .find({ epoch, type: 'userbid' })
       .limit(limit)
       .skip(limit * page);
   }

@@ -27,7 +27,7 @@ export class BlockRepo {
   }
 
   public async countByBeneficiary(address: string) {
-    return this.block.count({ beneficiary: address });
+    return this.block.countDocuments({ beneficiary: address });
   }
 
   public async findByBeneficiary(
@@ -44,7 +44,7 @@ export class BlockRepo {
   }
 
   public async countKBlocks() {
-    return this.block.count({ blockType: BlockType.KBlock });
+    return this.block.countDocuments({ blockType: BlockType.KBlock });
   }
 
   public async findByNumberList(nums: number[]) {

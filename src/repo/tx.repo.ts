@@ -26,7 +26,7 @@ export class TxRepo {
     return this.tx.findOne({ hash });
   }
   public async countByAccount(addr: string) {
-    return this.tx.count({
+    return this.tx.countDocuments({
       $or: [
         { origin: { $regex: new RegExp(`^${addr}$`, 'i') } },
         {

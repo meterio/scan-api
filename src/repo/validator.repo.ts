@@ -66,7 +66,7 @@ export class ValidatorRepo {
   }
 
   public async countCandidatesByFilter(filter: string) {
-    return this.model.count({
+    return this.model.countDocuments({
       $or: [
         { name: { $regex: new RegExp(`.*${filter}.*`, 'i') } },
         { address: { $regex: new RegExp(`.*${filter}.*`, 'i') } },
@@ -108,7 +108,7 @@ export class ValidatorRepo {
   }
 
   public async countDelegatesByFilter(filter: string) {
-    return this.model.count({
+    return this.model.countDocuments({
       $or: [
         { name: { $regex: new RegExp(`.*${filter}.*`, 'i') } },
         { address: { $regex: new RegExp(`.*${filter}.*`, 'i') } },
@@ -151,7 +151,7 @@ export class ValidatorRepo {
   }
 
   public async countJailedByFilter(filter: string) {
-    return this.model.count({
+    return this.model.countDocuments({
       $or: [
         { name: { $regex: new RegExp(`.*${filter}.*`, 'i') } },
         { address: { $regex: new RegExp(`.*${filter}.*`, 'i') } },
@@ -203,11 +203,11 @@ export class ValidatorRepo {
   public async getDelegateTotalStaked() {
     const votes = await this.model.find(
       { status: ValidatorStatus.DELEGATE },
-      { totalVotes: true }
+      { votingPower: true }
     );
     let total = new BigNumber(0);
     for (const v of votes) {
-      total = total.plus(v.totalVotes);
+      total = total.plus(v.votingPower);
     }
     return total.toFixed();
   }

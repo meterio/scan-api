@@ -11,7 +11,7 @@ export class BucketRepo {
   }
 
   public async countByAccount(address: string) {
-    return this.model.count({
+    return this.model.countDocuments({
       owner: { $regex: new RegExp(`^${address}$`, 'i') },
     });
   }
