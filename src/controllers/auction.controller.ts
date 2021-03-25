@@ -109,7 +109,7 @@ class AuctionController implements Controller {
     }
     const autobidSummaries = Object.values(
       summariesByEpoch
-    ).sort((a: any, b: any) => (a.epoch < b.epoch ? -1 : 1));
+    ).sort((a: any, b: any) => (a.epoch < b.epoch ? 1 : -1));
     return res.json({ autobidSummaries });
   };
 
