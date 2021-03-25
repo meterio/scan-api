@@ -1,16 +1,19 @@
+import { stat } from 'fs';
+
 import * as devkit from '@meterio/devkit';
 import BigNumber from 'bignumber.js';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { Document } from 'mongoose';
 
-import { UNIT_SHANNON } from '../const';
+import { MetricName, UNIT_SHANNON } from '../const';
 import { Token } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { Validator } from '../model/validator.interface';
 import BucketRepo from '../repo/bucket.repo';
 import EpochRewardRepo from '../repo/epochReward.repo';
 import EpochRewardSummaryRepo from '../repo/epochRewardSummary.repo';
+import MetricRepo from '../repo/metric.repo';
 import ValidatorRepo from '../repo/validator.repo';
 import { extractPageAndLimitQueryParam, fromWei } from '../utils/utils';
 
@@ -21,6 +24,7 @@ class ValidatorController implements Controller {
   private bucketRepo = new BucketRepo();
   private epochRewardSummaryRepo = new EpochRewardSummaryRepo();
   private epochRewardRepo = new EpochRewardRepo();
+  private metricRepo = new MetricRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -31,6 +35,7 @@ class ValidatorController implements Controller {
     this.router.get(`${this.path}/candidate`, try$(this.getCandidates));
     this.router.get(`${this.path}/delegate`, try$(this.getDelegates));
     this.router.get(`${this.path}/jailed`, try$(this.getJailed));
+    this.router.get(`${this.path}/stats`, try$(this.getStats));
     this.router.get(`${this.path}/rewards`, try$(this.getEpochRewards));
     this.router.get(
       `${this.path}/rewards/:epoch`,
@@ -227,7 +232,7 @@ class ValidatorController implements Controller {
       totalPoints: v.totalPoints ? Number(v.totalPoints.toFixed()) : 0,
       bailAmount: `${fromWei(v.bailAmount, 2)} MTRG`,
       jailedTime: v.jailedTime,
-      infractins: v.infractions,
+      infractions: v.infractions,
     };
   };
 
@@ -248,6 +253,77 @@ class ValidatorController implements Controller {
       totalRows: count,
       jailed: jailed.map(this.convertJailed),
     });
+  };
+
+  private getStats = async (req: Request, res: Response) => {
+    const stats = await this.metricRepo.findByKey(MetricName.STATS);
+    const summaries = {};
+    const infractions = {};
+    for (const s of JSON.parse(stats.value)) {
+      summaries[s.address] = {
+        address: s.address,
+        name: s.name,
+        totalPoints: s.totalPoints,
+      };
+      if (!(s.address.toLowerCase() in infractions)) {
+        infractions[s.address] = [];
+      }
+      if (
+        s.infractions.missingLeader &&
+        s.infractions.missingLeader.counter > 0
+      ) {
+        for (const info of s.infractions.missingLeader.info) {
+          infractions[s.address.toLowerCase()].push({
+            type: 'leader',
+            epoch: info.epoch,
+            round: info.round,
+            explain: `missing leader on epoch ${info.epoch} and height ${info.round}`,
+          });
+        }
+      }
+      console.log(s.infractions.missingProposer);
+      if (
+        s.infractions.missingProposer &&
+        s.infractions.missingProposer.counter > 0
+      ) {
+        for (const info of s.infractions.missingProposer.info) {
+          infractions[s.address.toLowerCase()].push({
+            type: 'proposer',
+            epoch: info.epoch,
+            height: info.height,
+            explain: `missing proposer on epoch ${info.epoch} and height ${info.height}`,
+          });
+        }
+      }
+      if (
+        s.infractions.missingVoter &&
+        s.infractions.missingVoter.counter > 0
+      ) {
+        for (const info of s.infractions.missingVoter.info) {
+          infractions[s.address.toLowerCase()].push({
+            type: 'voter',
+            epoch: info.epoch,
+            height: info.height,
+            explain: `missing vote on epoch ${info.epoch} and height ${info.height}`,
+          });
+        }
+      }
+      if (
+        s.infractions.DoubleSigner &&
+        s.infractions.DoubleSigner.counter > 0
+      ) {
+        for (const info of s.infractions.DoubleSigner.info) {
+          infractions[s.address.toLowerCase()].push({
+            type: 'double',
+            epoch: info.epoch,
+            round: info.round,
+            height: info.height,
+            explain: `double sign on epoch ${info.epoch} and height ${info.height}`,
+          });
+        }
+      }
+    }
+    return res.json({ summaries: Object.values(summaries), infractions });
   };
 
   private getEpochRewards = async (req: Request, res: Response) => {
