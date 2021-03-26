@@ -10,6 +10,7 @@ import { MetricName, UNIT_SHANNON } from '../const';
 import { Token } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { Validator } from '../model/validator.interface';
+import BlockRepo from '../repo/block.repo';
 import BucketRepo from '../repo/bucket.repo';
 import EpochRewardRepo from '../repo/epochReward.repo';
 import EpochRewardSummaryRepo from '../repo/epochRewardSummary.repo';
@@ -17,6 +18,12 @@ import MetricRepo from '../repo/metric.repo';
 import ValidatorRepo from '../repo/validator.repo';
 import { extractPageAndLimitQueryParam, fromWei } from '../utils/utils';
 
+const MissingLeaderPenalty = 1000;
+const MissingProposerPenalty = 20;
+const MissingVoterPenalty = 2;
+const DoubleSignerPenalty = 2000;
+const PhaseOutEpoch = 4;
+const WipeOutEpoch = PhaseOutEpoch * 2;
 class ValidatorController implements Controller {
   public path = '/api/validators';
   public router = Router();
@@ -25,6 +32,7 @@ class ValidatorController implements Controller {
   private epochRewardSummaryRepo = new EpochRewardSummaryRepo();
   private epochRewardRepo = new EpochRewardRepo();
   private metricRepo = new MetricRepo();
+  private blockRepo = new BlockRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -257,6 +265,9 @@ class ValidatorController implements Controller {
 
   private getStats = async (req: Request, res: Response) => {
     const stats = await this.metricRepo.findByKey(MetricName.STATS);
+    const bests = await this.blockRepo.findRecent(1, 1);
+    const best = bests[0];
+    const epoch = best.epoch;
     const summaries = {};
     const infractions = {};
     for (const s of JSON.parse(stats.value)) {
@@ -273,11 +284,20 @@ class ValidatorController implements Controller {
         s.infractions.missingLeader.counter > 0
       ) {
         for (const info of s.infractions.missingLeader.info) {
+          const diff = epoch - info.epoch;
+          let weight = 1;
+          if (diff > WipeOutEpoch) {
+            weight = 0;
+          } else if (diff > PhaseOutEpoch) {
+            weight = 0.5;
+          }
           infractions[s.address.toLowerCase()].push({
-            type: 'leader',
+            type: 'missing leader',
             epoch: info.epoch,
             round: info.round,
-            explain: `missing leader on epoch ${info.epoch} and height ${info.round}`,
+            explain: `epoch ${info.epoch}, round ${info.round}`,
+            penalty: MissingLeaderPenalty,
+            actualPenalty: MissingLeaderPenalty * weight,
           });
         }
       }
@@ -287,11 +307,20 @@ class ValidatorController implements Controller {
         s.infractions.missingProposer.counter > 0
       ) {
         for (const info of s.infractions.missingProposer.info) {
+          const diff = epoch - info.epoch;
+          let weight = 1;
+          if (diff > WipeOutEpoch) {
+            weight = 0;
+          } else if (diff > PhaseOutEpoch) {
+            weight = 0.5;
+          }
           infractions[s.address.toLowerCase()].push({
-            type: 'proposer',
+            type: 'missing proposer',
             epoch: info.epoch,
             height: info.height,
-            explain: `missing proposer on epoch ${info.epoch} and height ${info.height}`,
+            explain: `epoch ${info.epoch}, height ${info.height}`,
+            penalty: MissingProposerPenalty,
+            actualPenalty: MissingProposerPenalty * weight,
           });
         }
       }
@@ -300,11 +329,20 @@ class ValidatorController implements Controller {
         s.infractions.missingVoter.counter > 0
       ) {
         for (const info of s.infractions.missingVoter.info) {
+          const diff = epoch - info.epoch;
+          let weight = 1;
+          if (diff > WipeOutEpoch) {
+            weight = 0;
+          } else if (diff > PhaseOutEpoch) {
+            weight = 0.5;
+          }
           infractions[s.address.toLowerCase()].push({
-            type: 'voter',
+            type: 'missing vote',
             epoch: info.epoch,
             height: info.height,
-            explain: `missing vote on epoch ${info.epoch} and height ${info.height}`,
+            explain: `epoch ${info.epoch}, height ${info.height}`,
+            penalty: MissingVoterPenalty,
+            actualPenalty: MissingVoterPenalty * weight,
           });
         }
       }
@@ -313,12 +351,21 @@ class ValidatorController implements Controller {
         s.infractions.DoubleSigner.counter > 0
       ) {
         for (const info of s.infractions.DoubleSigner.info) {
+          const diff = epoch - info.epoch;
+          let weight = 1;
+          if (diff > WipeOutEpoch) {
+            weight = 0;
+          } else if (diff > PhaseOutEpoch) {
+            weight = 0.5;
+          }
           infractions[s.address.toLowerCase()].push({
-            type: 'double',
+            type: 'double sign',
             epoch: info.epoch,
             round: info.round,
             height: info.height,
-            explain: `double sign on epoch ${info.epoch} and height ${info.height}`,
+            explain: `epoch ${info.epoch}, round ${info.round}, height ${info.height}`,
+            penalty: DoubleSignerPenalty,
+            actualPenalty: DoubleSignerPenalty * weight,
           });
         }
       }
