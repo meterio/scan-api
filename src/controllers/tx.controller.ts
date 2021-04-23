@@ -1,7 +1,9 @@
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
+import { TransferEvent } from '../const';
 import Controller from '../interfaces/controller.interface';
+import TokenProfileRepo from '../repo/tokenProfile.repo';
 import TxRepo from '../repo/tx.repo';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
 
@@ -9,6 +11,7 @@ class TxController implements Controller {
   public path = '/api/txs';
   public router = Router();
   private txRepo = new TxRepo();
+  private tokenProfileRepo = new TokenProfileRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -41,6 +44,7 @@ class TxController implements Controller {
     let txObj = tx.toJSON();
     let events = [];
     let transfers = [];
+    let tokens = {};
 
     for (
       let clauseIndex = 0;
@@ -51,6 +55,12 @@ class TxController implements Controller {
       for (let logIndex = 0; logIndex < o.events.length; logIndex++) {
         const e = o.events[logIndex];
         events.push({ ...e, clauseIndex, logIndex });
+        if (e.topics && e.topics[0] === TransferEvent.signature) {
+          const token = await this.tokenProfileRepo.findByAddress(e.address);
+          if (token) {
+            tokens[token.address.toLowerCase()] = token.toJSON();
+          }
+        }
       }
       for (let logIndex = 0; logIndex < o.transfers.length; logIndex++) {
         const t = o.transfers[logIndex];
@@ -59,7 +69,7 @@ class TxController implements Controller {
     }
     txObj.events = events;
     txObj.transfers = transfers;
-    return res.json({ summary: tx.toSummary(), tx: txObj });
+    return res.json({ summary: tx.toSummary(), tx: txObj, tokens });
   };
 }
 
