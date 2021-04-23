@@ -17,7 +17,7 @@ export class TxRepo {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.tx
       .find()
-      .sort({ createdAt: -1 })
+      .sort({ 'block.number': -1 })
       .limit(limit)
       .skip(limit * page);
   }
@@ -55,7 +55,7 @@ export class TxRepo {
           },
         ],
       })
-      .sort({ createdAt: -1 })
+      .sort({ 'block.number': -1 })
       .limit(limit)
       .skip(limit * page);
   }

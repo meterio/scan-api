@@ -6,9 +6,10 @@ import { TokenProfile } from './tokenProfile.interface';
 const tokenProfileSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    symbol: { type: String, required: true, unique: true },
+    symbol: { type: String, required: true },
     address: { type: String, required: true, unique: true },
-    officialSite: { type: String, required: true },
+    decimals: { type: Number, required: true, default: 18 },
+    officialSite: { type: String, required: false },
     totalSupply: {
       type: String,
       get: (num: string) => new BigNumber(num),

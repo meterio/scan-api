@@ -14,11 +14,13 @@ import {
 } from '../const';
 import Controller from '../interfaces/controller.interface';
 import KnownRepo from '../repo/known.repo';
+import TokenProfileRepo from '../repo/tokenProfile.repo';
 
 class KnownController implements Controller {
   public path = '/api/knowns';
   public router = Router();
   private knownRepo = new KnownRepo();
+  private tokenProfileRepo = new TokenProfileRepo();
   private knownMap = {};
 
   constructor() {
@@ -28,6 +30,7 @@ class KnownController implements Controller {
 
   private initializeRoutes() {
     this.router.get(`${this.path}/address`, try$(this.getKnownAddresses));
+    this.router.get(`${this.path}/token`, try$(this.getKnownTokens));
   }
 
   private getKnownAddresses = async (req: Request, res: Response) => {
@@ -50,6 +53,20 @@ class KnownController implements Controller {
       addresses[k.address.toLowerCase()] = k.name;
     }
     return res.json({ addresses });
+  };
+
+  private getKnownTokens = async (req: Request, res: Response) => {
+    const tokens = await this.tokenProfileRepo.findAll();
+    if (!tokens) {
+      return res.json({ tokens: [] });
+    }
+    return res.json({
+      tokens: tokens.map((t) => ({
+        address: t.address,
+        symbol: t.symbol,
+        decimals: t.decimals,
+      })),
+    });
   };
 }
 export default KnownController;
