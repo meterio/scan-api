@@ -185,20 +185,17 @@ class AccountController implements Controller {
     if (!transfers) {
       return res.json({ totalRows: 0, transfers: [] });
     }
-    let tokenAddres = {};
-    for (const tr of transfers) {
-      if (tr.token === Token.ERC20) {
-        tokenAddres[tr.tokenAddress.toLowerCase()] = '';
-      }
-    }
+    let tokenAddresses = transfers.map((tr) => tr.tokenAddress);
+    tokenAddresses = tokenAddresses.filter(
+      (v, index) => tokenAddresses.indexOf(v) === index
+    );
     const profiles = await this.tokenProfileRepo.findByAddressList(
-      Object.keys(tokenAddres)
+      tokenAddresses
     );
     let tokens = {};
     for (const p of profiles) {
       tokens[p.address] = p;
     }
-
     return res.json({
       totalRows: count,
       transfers: transfers.map((tr) => {
@@ -206,11 +203,12 @@ class AccountController implements Controller {
           symbol: '',
         };
         if (tr.token === Token.ERC20) {
-          erc20 = tokens[tr.tokenAddress];
+          erc20 = tokens[tr.tokenAddress.toLowerCase()];
         }
+
         return {
           ...tr.toJSON(),
-          token: erc20.symbol ? erc20.symbol : Token[tr.token],
+          token: erc20 && erc20.symbol ? erc20.symbol : Token[tr.token],
           erc20,
         };
       }),
