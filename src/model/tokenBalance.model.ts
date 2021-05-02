@@ -34,6 +34,15 @@ tokenBalanceSchema.set('toJSON', {
     return ret;
   },
 });
+tokenBalanceSchema.methods.toSummary = function () {
+  return {
+    address: this.address,
+    tokenAddress: this.tokenAddress,
+    balance: this.balance,
+    symbol: this.symbol,
+    lastUpdate: this.lastUpdate,
+  };
+};
 
 const model = mongoose.model<TokenBalance & mongoose.Document>(
   'TokenBalance',

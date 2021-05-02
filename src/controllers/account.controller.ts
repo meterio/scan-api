@@ -7,6 +7,7 @@ import AccountRepo from '../repo/account.repo';
 import BidRepo from '../repo/bid.repo';
 import BlockRepo from '../repo/block.repo';
 import BucketRepo from '../repo/bucket.repo';
+import TokenBalanceRepo from '../repo/tokenBalance.repo';
 import TokenProfileRepo from '../repo/tokenProfile.repo';
 import TransferRepo from '../repo/transfer.repo';
 import TxRepo from '../repo/tx.repo';
@@ -21,6 +22,7 @@ class AccountController implements Controller {
   private bucketRepo = new BucketRepo();
   private blockRepo = new BlockRepo();
   private tokenProfileRepo = new TokenProfileRepo();
+  private tokenBalanceRepo = new TokenBalanceRepo();
   private bidRepo = new BidRepo();
 
   constructor() {
@@ -33,6 +35,10 @@ class AccountController implements Controller {
     this.router.get(`${this.path}/:address`, try$(this.getAccount));
     this.router.get(`${this.path}/:address/txs`, try$(this.getTxsByAccount));
     this.router.get(`${this.path}/:address/bids`, try$(this.getBidsByAccount));
+    this.router.get(
+      `${this.path}/:address/tokens`,
+      try$(this.getTokensByAccount)
+    );
     this.router.get(
       `${this.path}/:address/transfers`,
       try$(this.getTransfersByAccount)
@@ -102,7 +108,15 @@ class AccountController implements Controller {
     const { address } = req.params;
     const account = await this.accountRepo.findByAddress(address);
     const actJson = this.convertAccount(account);
-
+    if (account.code) {
+      const tokenProfile = await this.tokenProfileRepo.findByAddress(address);
+      if (tokenProfile) {
+        actJson.isERC20 = true;
+        actJson.tokenName = tokenProfile.name;
+        actJson.tokenSymbol = tokenProfile.symbol;
+        actJson.tokenDecimals = tokenProfile.decimals;
+      }
+    }
     return res.json({
       account: {
         address,
@@ -139,6 +153,16 @@ class AccountController implements Controller {
       totalRows: count,
       bids: bids.map((b) => b.toSummary()),
     });
+  };
+
+  private getTokensByAccount = async (req, res) => {
+    const { address } = req.params;
+    const tokens = await this.tokenBalanceRepo.findAllByAddress(address);
+
+    if (!tokens) {
+      return res.json({ tokens: [] });
+    }
+    return res.json({ tokens: tokens.map((t) => t.toSummary()) });
   };
 
   private getTransfersByAccount = async (req, res) => {

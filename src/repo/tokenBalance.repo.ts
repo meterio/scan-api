@@ -11,7 +11,14 @@ export class TokenBalanceRepo {
   }
 
   public async findByAddress(address: string, tokenAddress: string) {
-    return this.model.findOne({ address, tokenAddress });
+    return this.model.findOne({
+      address: address.toLowerCase(),
+      tokenAddress: tokenAddress.toLowerCase(),
+    });
+  }
+
+  public async findAllByAddress(address: string) {
+    return this.model.find({ address: address.toLowerCase() });
   }
 
   public async exist(address: string, tokenAddress: string) {
