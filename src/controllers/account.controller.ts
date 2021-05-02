@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
+import { Token } from '../const';
 import Controller from '../interfaces/controller.interface';
 import AccountRepo from '../repo/account.repo';
 import BidRepo from '../repo/bid.repo';
@@ -108,6 +109,11 @@ class AccountController implements Controller {
     const { address } = req.params;
     const account = await this.accountRepo.findByAddress(address);
     const actJson = this.convertAccount(account);
+    if (!account) {
+      return res.json({
+        account: { address, mtr: 0, mtrg: 0, mtrBounded: 0, mtrgBounded: 0 },
+      });
+    }
     if (account.code) {
       const tokenProfile = await this.tokenProfileRepo.findByAddress(address);
       if (tokenProfile) {
@@ -117,6 +123,7 @@ class AccountController implements Controller {
         actJson.tokenDecimals = tokenProfile.decimals;
       }
     }
+    delete actJson['code'];
     return res.json({
       account: {
         address,
@@ -178,7 +185,29 @@ class AccountController implements Controller {
     if (!transfers) {
       return res.json({ totalRows: 0, transfers: [] });
     }
-    return res.json({ totalRows: count, transfers });
+    let tokenAddres = {};
+    for (const tr of transfers) {
+      if (tr.token === Token.ERC20) {
+        tokenAddres[tr.tokenAddress.toLowerCase()] = '';
+      }
+    }
+    const profiles = await this.tokenProfileRepo.findByAddressList(
+      Object.keys(tokenAddres)
+    );
+    let tokens = {};
+    for (const p of profiles) {
+      tokens[p.address] = p;
+    }
+
+    return res.json({
+      totalRows: count,
+      transfers: transfers.map((tr) => {
+        if (tr.token === Token.ERC20) {
+          tr['erc20'] = tokens[tr.tokenAddress];
+        }
+        return tr;
+      }),
+    });
   };
 
   private getERC20TransfersByAccount = async (req, res) => {
