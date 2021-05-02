@@ -202,10 +202,17 @@ class AccountController implements Controller {
     return res.json({
       totalRows: count,
       transfers: transfers.map((tr) => {
+        let erc20 = {
+          symbol: '',
+        };
         if (tr.token === Token.ERC20) {
-          tr['erc20'] = tokens[tr.tokenAddress];
+          erc20 = tokens[tr.tokenAddress];
         }
-        return tr;
+        return {
+          ...tr.toJSON(),
+          token: erc20.symbol ? erc20.symbol : Token[tr.token],
+          erc20,
+        };
       }),
     });
   };
