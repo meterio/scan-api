@@ -1,3 +1,5 @@
+import { toChecksumAddress } from '@meterio/devkit/dist/cry';
+
 import { LIMIT_WINDOW, Token } from '../const';
 import { RECENT_WINDOW } from '../const';
 import { Transfer } from '../model/transfer.interface';
@@ -30,10 +32,7 @@ export class TransferRepo {
 
   public async countByAccount(addr: string) {
     return this.transfer.countDocuments({
-      $or: [
-        { from: { $regex: new RegExp(`^${addr}$`, 'i') } },
-        { to: { $regex: new RegExp(`^${addr}$`, 'i') } },
-      ],
+      $or: [{ from: addr.toLowerCase() }, { to: addr.toLowerCase() }],
     });
   }
 
@@ -45,10 +44,7 @@ export class TransferRepo {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.transfer
       .find({
-        $or: [
-          { from: { $regex: new RegExp(`^${addr}$`, 'i') } },
-          { to: { $regex: new RegExp(`^${addr}$`, 'i') } },
-        ],
+        $or: [{ from: addr.toLowerCase() }, { to: addr.toLowerCase() }],
       })
       .sort({ createdAt: -1 })
       .limit(limit)
@@ -60,10 +56,7 @@ export class TransferRepo {
       $and: [
         { token: Token.ERC20 },
         {
-          $or: [
-            { from: { $regex: new RegExp(`^${addr}$`, 'i') } },
-            { to: { $regex: new RegExp(`^${addr}$`, 'i') } },
-          ],
+          $or: [{ from: addr.toLowerCase() }, { to: addr.toLowerCase() }],
         },
       ],
     });
@@ -80,10 +73,7 @@ export class TransferRepo {
         $and: [
           { token: Token.ERC20 },
           {
-            $or: [
-              { from: { $regex: new RegExp(`^${addr}$`, 'i') } },
-              { to: { $regex: new RegExp(`^${addr}$`, 'i') } },
-            ],
+            $or: [{ from: addr.toLowerCase() }, { to: addr.toLowerCase() }],
           },
         ],
       })

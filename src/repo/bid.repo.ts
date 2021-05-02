@@ -10,7 +10,7 @@ export class BidRepo {
 
   public async countByAddress(address: string) {
     return this.model.countDocuments({
-      address: { $regex: new RegExp(`^${address}$`, 'i') },
+      address: address.toLowerCase(),
     });
   }
 
@@ -22,7 +22,7 @@ export class BidRepo {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.model
       .find({
-        address: { $regex: new RegExp(`^${address}$`, 'i') },
+        address: address.toLowerCase(),
       })
       .sort({ timestamp: -1 })
       .limit(limit)

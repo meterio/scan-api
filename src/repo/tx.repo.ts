@@ -25,13 +25,14 @@ export class TxRepo {
   public async findByHash(hash: string) {
     return this.tx.findOne({ hash });
   }
+
   public async countByAccount(addr: string) {
     return this.tx.countDocuments({
       $or: [
-        { origin: { $regex: new RegExp(`^${addr}$`, 'i') } },
+        { origin: addr.toLowerCase() },
         {
           clauses: {
-            $elemMatch: { to: { $regex: new RegExp(`^${addr}$`, 'i') } },
+            $elemMatch: { to: addr.toLowerCase() },
           },
         },
       ],
@@ -47,10 +48,10 @@ export class TxRepo {
     return this.tx
       .find({
         $or: [
-          { origin: { $regex: new RegExp(`^${addr}$`, 'i') } },
+          { origin: { $regex: addr.toLowerCase() } },
           {
             clauses: {
-              $elemMatch: { to: { $regex: new RegExp(`^${addr}$`, 'i') } },
+              $elemMatch: { to: addr.toLowerCase() },
             },
           },
         ],

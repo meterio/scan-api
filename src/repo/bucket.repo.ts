@@ -12,7 +12,7 @@ export class BucketRepo {
 
   public async countByAccount(address: string) {
     return this.model.countDocuments({
-      owner: { $regex: new RegExp(`^${address}$`, 'i') },
+      owner: address.toLowerCase(),
     });
   }
 
@@ -24,7 +24,7 @@ export class BucketRepo {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.model
       .find({
-        owner: { $regex: new RegExp(`^${address}$`, 'i') },
+        owner: address.toLowerCase(),
       })
       .sort({ createTime: -1 })
       .limit(limit)
