@@ -128,6 +128,8 @@ class AccountController implements Controller {
         actJson.tokenName = tokenProfile.name;
         actJson.tokenSymbol = tokenProfile.symbol;
         actJson.tokenDecimals = tokenProfile.decimals;
+        actJson.circulation = tokenProfile.circulation.toFixed();
+        actJson.holdersCount = tokenProfile.holdersCount.toFixed();
       }
     } else {
       actJson.isContract = false;
@@ -174,16 +176,28 @@ class AccountController implements Controller {
 
   private getTokenHoldersByAccount = async (req, res) => {
     const { tokenAddress } = req.params;
-    console.log('TOKEN ADDRESS: ', tokenAddress);
     const tokens = await this.tokenBalanceRepo.findAllByTokenAddress(
       tokenAddress
     );
 
-    console.log(tokens);
     if (!tokens) {
       return res.json({ holders: [] });
     }
-    return res.json({ holders: tokens.map((t) => t.toJSON()) });
+    let total = new BigNumber(0);
+    for (const t of tokens) {
+      if (t.balance.isGreaterThan(0)) {
+        total = total.plus(t.balance);
+      }
+    }
+    let sorted = tokens
+      .filter((t) => t.balance.isGreaterThan(0))
+      .sort((a, b) => (a.balance.isGreaterThan(b.balance) ? 1 : -1));
+    return res.json({
+      holders: sorted.map((t) => ({
+        ...t.toJSON(),
+        percentage: t.balance.dividedBy(total),
+      })),
+    });
   };
 
   private getTokensByAccount = async (req, res) => {

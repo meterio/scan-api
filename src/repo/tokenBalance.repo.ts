@@ -48,6 +48,7 @@ export class TokenBalanceRepo {
       balance: new BigNumber(0),
       tokenAddress,
       lastUpdate,
+      rank: 99999999,
     });
   }
 }

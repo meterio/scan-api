@@ -7,4 +7,7 @@ export interface TokenProfile {
   decimals: number;
   officialSite: string;
   totalSupply: BigNumber;
+  circulation: BigNumber;
+  holdersCount: BigNumber;
+  transfersCount: BigNumber;
 }

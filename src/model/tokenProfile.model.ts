@@ -16,6 +16,24 @@ const tokenProfileSchema = new mongoose.Schema(
       set: (bnum: BigNumber) => bnum.toFixed(0),
       required: true,
     },
+    circulation: {
+      type: String,
+      get: (num: string) => new BigNumber(num),
+      set: (bnum: BigNumber) => bnum.toFixed(0),
+      required: true,
+    },
+    holdersCount: {
+      type: String,
+      get: (num: string) => new BigNumber(num),
+      set: (bnum: BigNumber) => bnum.toFixed(0),
+      required: true,
+    },
+    transfersCount: {
+      type: String,
+      get: (num: string) => new BigNumber(num),
+      set: (bnum: BigNumber) => bnum.toFixed(0),
+      required: true,
+    },
 
     createdAt: { type: Number, index: true },
     updatedAt: { type: Number },
