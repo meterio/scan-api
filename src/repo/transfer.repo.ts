@@ -13,6 +13,10 @@ export class TransferRepo {
     return this.transfer.find();
   }
 
+  public async count() {
+    return this.transfer.estimatedDocumentCount();
+  }
+
   public async findRecent(count: number) {
     return this.transfer.find().sort({ createdAt: -1 }).limit(count);
   }

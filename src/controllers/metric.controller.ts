@@ -17,6 +17,7 @@ import AccountRepo from '../repo/account.repo';
 import BlockRepo from '../repo/block.repo';
 import HeadRepo from '../repo/head.repo';
 import MetricRepo from '../repo/metric.repo';
+import TransferRepo from '../repo/transfer.repo';
 import TxRepo from '../repo/tx.repo';
 import ValidatorRepo from '../repo/validator.repo';
 import { fromWei } from '../utils/utils';
@@ -28,6 +29,7 @@ class MetricController implements Controller {
   private headRepo = new HeadRepo();
   private blockRepo = new BlockRepo();
   private txRepo = new TxRepo();
+  private transferRepo = new TransferRepo();
   private accountRepo = new AccountRepo();
   private validatorRepo = new ValidatorRepo();
 
@@ -68,7 +70,7 @@ class MetricController implements Controller {
           (100 * (last.timestamp - first.timestamp)) / (recentBlocks.length - 1)
         ) / 100;
     }
-    const txsCount = await this.txRepo.count();
+    const txsCount = await this.transferRepo.count();
     const buckets = map[MetricName.BUCKETS];
 
     let totalStaked = new BigNumber(0);

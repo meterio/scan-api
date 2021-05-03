@@ -179,6 +179,9 @@ class AccountController implements Controller {
     const tokens = await this.tokenBalanceRepo.findAllByTokenAddress(
       tokenAddress
     );
+    console.log('TOKEN ADDRESS: ', tokenAddress);
+    const profile = await this.tokenProfileRepo.findByAddress(tokenAddress);
+    console.log('PROFILE: ', profile);
 
     if (!tokens) {
       return res.json({ holders: [] });
@@ -191,8 +194,9 @@ class AccountController implements Controller {
     }
     let sorted = tokens
       .filter((t) => t.balance.isGreaterThan(0))
-      .sort((a, b) => (a.balance.isGreaterThan(b.balance) ? 1 : -1));
+      .sort((a, b) => (a.balance.isGreaterThan(b.balance) ? -1 : 1));
     return res.json({
+      token: !profile ? {} : profile.toJSON(),
       holders: sorted.map((t) => ({
         ...t.toJSON(),
         percentage: t.balance.dividedBy(total),
