@@ -21,6 +21,16 @@ export class TokenBalanceRepo {
     return this.model.find({ address: address.toLowerCase() });
   }
 
+  public async findAllByTokenAddress(tokenAddress: string) {
+    return this.model.find({ tokenAddress: tokenAddress.toLowerCase() });
+  }
+
+  public async countAllByTokenAddress(tokenAddress: string) {
+    return this.model.countDocuments({
+      tokenAddress: tokenAddress.toLowerCase(),
+    });
+  }
+
   public async exist(address: string, tokenAddress: string) {
     return this.model.exists({
       address: address.toLowerCase(),

@@ -47,7 +47,7 @@ tokenBalanceSchema.methods.toSummary = function () {
 const model = mongoose.model<TokenBalance & mongoose.Document>(
   'TokenBalance',
   tokenBalanceSchema,
-  'tokenBalances'
+  'tokenBalance'
 );
 
 export default model;

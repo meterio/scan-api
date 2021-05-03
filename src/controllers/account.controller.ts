@@ -41,6 +41,10 @@ class AccountController implements Controller {
       try$(this.getTokensByAccount)
     );
     this.router.get(
+      `${this.path}/:tokenAddress/holders`,
+      try$(this.getTokenHoldersByAccount)
+    );
+    this.router.get(
       `${this.path}/:address/transfers`,
       try$(this.getTransfersByAccount)
     );
@@ -160,6 +164,19 @@ class AccountController implements Controller {
       totalRows: count,
       bids: bids.map((b) => b.toSummary()),
     });
+  };
+
+  private getTokenHoldersByAccount = async (req, res) => {
+    const { address } = req.params;
+    console.log(address);
+    const tokens = await this.tokenBalanceRepo.findAllByAddress(address);
+
+    console.log(tokens);
+    if (!tokens) {
+      console.log('TOKEN IS EMPTY');
+      return res.json({ tokens: [] });
+    }
+    return res.json({ tokens: tokens.map((t) => t.toSummary()) });
   };
 
   private getTokensByAccount = async (req, res) => {
