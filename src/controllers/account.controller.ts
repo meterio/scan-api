@@ -1,9 +1,11 @@
 import BigNumber from 'bignumber.js';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
+import { Document } from 'mongoose';
 
 import { Token } from '../const';
 import Controller from '../interfaces/controller.interface';
+import { Transfer } from '../model/transfer.interface';
 import AccountRepo from '../repo/account.repo';
 import BidRepo from '../repo/bid.repo';
 import BlockRepo from '../repo/block.repo';
@@ -120,12 +122,16 @@ class AccountController implements Controller {
     }
     if (account.code) {
       const tokenProfile = await this.tokenProfileRepo.findByAddress(address);
+      actJson.isContract = true;
       if (tokenProfile) {
         actJson.isERC20 = true;
         actJson.tokenName = tokenProfile.name;
         actJson.tokenSymbol = tokenProfile.symbol;
         actJson.tokenDecimals = tokenProfile.decimals;
       }
+    } else {
+      actJson.isContract = false;
+      actJson.isERC20 = false;
     }
     delete actJson['code'];
     return res.json({
@@ -167,16 +173,17 @@ class AccountController implements Controller {
   };
 
   private getTokenHoldersByAccount = async (req, res) => {
-    const { address } = req.params;
-    console.log(address);
-    const tokens = await this.tokenBalanceRepo.findAllByAddress(address);
+    const { tokenAddress } = req.params;
+    console.log('TOKEN ADDRESS: ', tokenAddress);
+    const tokens = await this.tokenBalanceRepo.findAllByTokenAddress(
+      tokenAddress
+    );
 
     console.log(tokens);
     if (!tokens) {
-      console.log('TOKEN IS EMPTY');
-      return res.json({ tokens: [] });
+      return res.json({ holders: [] });
     }
-    return res.json({ tokens: tokens.map((t) => t.toSummary()) });
+    return res.json({ holders: tokens.map((t) => t.toJSON()) });
   };
 
   private getTokensByAccount = async (req, res) => {
@@ -189,19 +196,29 @@ class AccountController implements Controller {
       console.log('TOKEN IS EMPTY');
       return res.json({ tokens: [] });
     }
-    return res.json({ tokens: tokens.map((t) => t.toSummary()) });
+    return res.json({ tokens: tokens.map((t) => t.toJSON()) });
   };
 
   private getTransfersByAccount = async (req, res) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
-    const transfers = await this.transferRepo.findByAccount(
-      address,
-      page,
-      limit
-    );
-    const count = await this.transferRepo.countByAccount(address);
+    const account = await this.accountRepo.findByAddress(address);
+
+    const isContract = !!account && !!account.code;
+    let transfers: (Transfer & Document)[] = [];
+    let count = 0;
+    if (!isContract) {
+      transfers = await this.transferRepo.findByAccount(address, page, limit);
+      count = await this.transferRepo.countByAccount(address);
+    } else {
+      transfers = await this.transferRepo.findByTokenAddress(
+        address,
+        page,
+        limit
+      );
+      count = await this.transferRepo.countByTokenAddress(address);
+    }
     if (!transfers) {
       return res.json({ totalRows: 0, transfers: [] });
     }

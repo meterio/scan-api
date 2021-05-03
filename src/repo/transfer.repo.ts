@@ -51,6 +51,23 @@ export class TransferRepo {
       .skip(limit * page);
   }
 
+  public async countByTokenAddress(addr: string) {
+    return this.transfer.countDocuments({ tokenAddress: addr.toLowerCase() });
+  }
+
+  public async findByTokenAddress(
+    addr: string,
+    pageNum?: number,
+    limitNum?: number
+  ) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    return this.transfer
+      .find({ tokenAddress: addr.toLowerCase() })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(limit * page);
+  }
+
   public async countERC20TransferByAccount(addr: string) {
     return this.transfer.countDocuments({
       $and: [

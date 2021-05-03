@@ -8,5 +8,4 @@ export interface TokenBalance {
   balance: BigNumber;
 
   lastUpdate: BlockConcise;
-  toSummary(): Object;
 }
