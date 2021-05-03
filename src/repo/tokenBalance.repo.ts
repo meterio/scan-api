@@ -22,7 +22,10 @@ export class TokenBalanceRepo {
   }
 
   public async exist(address: string, tokenAddress: string) {
-    return this.model.exists({ address, tokenAddress });
+    return this.model.exists({
+      address: address.toLowerCase(),
+      tokenAddress: tokenAddress.toLowerCase(),
+    });
   }
 
   public async create(

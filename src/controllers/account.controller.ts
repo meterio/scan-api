@@ -164,9 +164,12 @@ class AccountController implements Controller {
 
   private getTokensByAccount = async (req, res) => {
     const { address } = req.params;
+    console.log(address);
     const tokens = await this.tokenBalanceRepo.findAllByAddress(address);
 
+    console.log(tokens);
     if (!tokens) {
+      console.log('TOKEN IS EMPTY');
       return res.json({ tokens: [] });
     }
     return res.json({ tokens: tokens.map((t) => t.toSummary()) });
