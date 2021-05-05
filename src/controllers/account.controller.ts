@@ -299,11 +299,17 @@ class AccountController implements Controller {
       page,
       limit
     );
-    const profiles = await this.tokenProfileRepo.findAll();
-    let tokens = {};
-    for (const p of profiles) {
-      tokens[p.address] = p;
-    }
+    let tokenAddresses = transfers.map((t) => t.tokenAddress);
+    tokenAddresses = tokenAddresses.filter(
+      (addr, index) => tokenAddresses.indexOf(addr) === index
+    );
+
+    let profileMap = {};
+    (await this.tokenProfileRepo.findByAddressList(tokenAddresses)).forEach(
+      (p) => {
+        profileMap[p.address] = p;
+      }
+    );
 
     const count = await this.transferRepo.countERC20TransferByAccount(address);
     if (!transfers) {
@@ -313,10 +319,12 @@ class AccountController implements Controller {
     for (let tr of transfers) {
       const addr = tr.tokenAddress.toLowerCase();
       let jTr = tr.toJSON();
-      if (addr in tokens) {
-        jTr.symbol = tokens[addr].symbol.toUpperCase();
+      if (addr in profileMap) {
+        jTr.symbol = profileMap[addr].symbol;
+        jTr.decimals = profileMap[addr].decimals || 18;
       } else {
-        jTr.symbol = '';
+        jTr.symbol = 'ERC20';
+        jTr.decimals = 18;
       }
       jTransfers.push(jTr);
     }
