@@ -215,21 +215,25 @@ class AccountController implements Controller {
     let profileMap = {};
     (
       await this.tokenProfileRepo.findByAddressList(
-        tokens.map((t) => t.tokenAddress)
+        tokens
+          .filter((t) => t.balance.isGreaterThan(0))
+          .map((t) => t.tokenAddress)
       )
     ).forEach((p) => {
       profileMap[p.address] = p;
     });
     return res.json({
-      tokens: tokens.map((t) => {
-        const profile = profileMap[t.tokenAddress];
-        let result = t.toJSON();
-        if (profile) {
-          result.symbol = profile.symbol;
-          result.decimals = profile.decimals;
-        }
-        return result;
-      }),
+      tokens: tokens
+        .filter((t) => t.balance.isGreaterThan(0))
+        .map((t) => {
+          const profile = profileMap[t.tokenAddress];
+          let result = t.toJSON();
+          if (profile) {
+            result.symbol = profile.symbol;
+            result.decimals = profile.decimals;
+          }
+          return result;
+        }),
     });
   };
 
