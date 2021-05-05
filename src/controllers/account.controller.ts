@@ -209,12 +209,28 @@ class AccountController implements Controller {
     console.log(address);
     const tokens = await this.tokenBalanceRepo.findAllByAddress(address);
 
-    console.log(tokens);
     if (!tokens) {
-      console.log('TOKEN IS EMPTY');
       return res.json({ tokens: [] });
     }
-    return res.json({ tokens: tokens.map((t) => t.toJSON()) });
+    let profileMap = {};
+    (
+      await this.tokenProfileRepo.findByAddressList(
+        tokens.map((t) => t.tokenAddress)
+      )
+    ).forEach((p) => {
+      profileMap[p.address] = p;
+    });
+    return res.json({
+      tokens: tokens.map((t) => {
+        const profile = profileMap[t.tokenAddress];
+        let result = t.toJSON();
+        if (profile) {
+          result.symbol = profile.symbol;
+          result.decimals = profile.decimals;
+        }
+        return result;
+      }),
+    });
   };
 
   private getTransfersByAccount = async (req, res) => {

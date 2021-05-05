@@ -14,6 +14,7 @@ const tokenBalanceSchema = new mongoose.Schema(
       set: (bnum: BigNumber) => bnum.toFixed(0),
       required: true,
     },
+    symbol: { type: String, required: false },
     rank: { type: Number, required: true, default: 99999999 },
     lastUpdate: blockConciseSchema,
 

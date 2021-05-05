@@ -6,6 +6,7 @@ export interface TokenBalance {
   address: string;
   tokenAddress: string;
   balance: BigNumber;
+  symbol?: string;
   rank: number;
 
   lastUpdate: BlockConcise;
