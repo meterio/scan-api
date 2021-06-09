@@ -61,6 +61,27 @@ export class TxRepo {
       .skip(limit * page);
   }
 
+  public async findSectionByAccount(
+    addr: string,
+    startblock: number,
+    endblock: number,
+    sort: string
+  ) {
+    return this.tx
+      .find({
+        $and: [
+          { origin: { $regex: addr.toLowerCase() } },
+          {
+            'block.number': {
+              $gte: startblock,
+              $lt: endblock,
+            },
+          },
+        ],
+      })
+      .sort({ 'block.number': sort === 'asc' ? 1 : -1 });
+  }
+
   public async findByHashs(hashs: string[]) {
     return this.tx.find({ hash: { $in: hashs } });
   }
