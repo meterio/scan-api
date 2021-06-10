@@ -61,7 +61,7 @@ export class TxRepo {
       .skip(limit * page);
   }
 
-  public async findSectionByAccount(
+  public async findByAccountInRange(
     addr: string,
     startblock: number,
     endblock: number,

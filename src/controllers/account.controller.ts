@@ -171,19 +171,17 @@ class AccountController implements Controller {
       endblock = Infinity;
     }
 
-    const txs = await this.txRepo.findSectionByAccount(
+    const txs = await this.txRepo.findByAccountInRange(
       address,
       Number(startblock),
       Number(endblock),
       sort
     );
-    const count = await this.txRepo.countByAccount(address);
 
     if (!txs) {
       return res.json({ totalRows: 0, txSummaries: [] });
     }
     return res.json({
-      totalRows: count,
       txSummaries: txs.map((tx) => tx.toSummary()),
     });
   };
