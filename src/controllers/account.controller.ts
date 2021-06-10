@@ -37,6 +37,10 @@ class AccountController implements Controller {
     this.router.get(`${this.path}/top/mtrg`, try$(this.getTopMTRGAccounts));
     this.router.get(`${this.path}/:address`, try$(this.getAccount));
     this.router.get(`${this.path}/:address/txs`, try$(this.getTxsByAccount));
+    this.router.get(
+      `${this.path}/:address/txlist`,
+      try$(this.getTxlistByAccount)
+    );
     this.router.get(`${this.path}/:address/bids`, try$(this.getBidsByAccount));
     this.router.get(
       `${this.path}/:address/tokens`,
@@ -155,6 +159,29 @@ class AccountController implements Controller {
     }
     return res.json({
       totalRows: count,
+      txSummaries: txs.map((tx) => tx.toSummary()),
+    });
+  };
+
+  private getTxlistByAccount = async (req, res) => {
+    const { address } = req.params;
+    let { startblock, endblock, sort } = req.query;
+
+    if (endblock === 'latest') {
+      endblock = Infinity;
+    }
+
+    const txs = await this.txRepo.findByAccountInRange(
+      address,
+      Number(startblock),
+      Number(endblock),
+      sort
+    );
+
+    if (!txs) {
+      return res.json({ totalRows: 0, txSummaries: [] });
+    }
+    return res.json({
       txSummaries: txs.map((tx) => tx.toSummary()),
     });
   };
