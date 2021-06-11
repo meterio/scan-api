@@ -167,17 +167,19 @@ class AccountController implements Controller {
     const { address } = req.params;
     let { startblock, endblock, sort } = req.query;
 
-    let start = 0,
-      end = 0;
+    let start = Number(startblock);
+    let end = 0;
     if (endblock === 'latest') {
       end = Infinity;
+    } else {
+      end = Number(endblock);
     }
 
-    try {
-      start = Number(startblock);
-      end = Number(endblock);
-    } catch (e) {
+    if (isNaN(start)) {
       start = 0;
+    }
+
+    if (isNaN(end)) {
       end = Infinity;
     }
 
