@@ -70,7 +70,16 @@ export class TxRepo {
     return this.tx
       .find({
         $and: [
-          { origin: { $regex: addr.toLowerCase() } },
+          {
+            $or: [
+              { origin: { $regex: addr.toLowerCase() } },
+              {
+                clauses: {
+                  $elemMatch: { to: addr.toLowerCase() },
+                },
+              },
+            ],
+          },
           {
             'block.number': {
               $gte: startblock,
