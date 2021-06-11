@@ -1,7 +1,6 @@
 import axios from 'axios';
 import BigNumber from 'bignumber.js';
-import { json } from 'envalid';
-import { Router } from 'express';
+import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { Document } from 'mongoose';
 
@@ -157,7 +156,7 @@ class MetricController implements Controller {
     };
   };
 
-  private getAllMetric = async (req, res) => {
+  private getAllMetric = async (req: Request, res: Response) => {
     const posData = await this.getPosData();
     const powData = await this.getPowData();
     const tokenData = await this.getTokenData();
@@ -175,22 +174,22 @@ class MetricController implements Controller {
     });
   };
 
-  private getPowMetric = async (req, res) => {
+  private getPowMetric = async (req: Request, res: Response) => {
     const powData = await this.getPowData();
     return res.json(powData);
   };
 
-  private getPosMetric = async (req, res) => {
+  private getPosMetric = async (req: Request, res: Response) => {
     const posData = await this.getPosData();
     return res.json(posData);
   };
 
-  private getTokenMetric = async (req, res) => {
+  private getTokenMetric = async (req: Request, res: Response) => {
     const tokenData = await this.getTokenData();
     return res.json(tokenData);
   };
 
-  private getHeadMetric = async (req, res) => {
+  private getHeadMetric = async (req: Request, res: Response) => {
     const heads = await this.headRepo.findAll();
     if (!heads || heads.length <= 0) {
       return res.json({
@@ -204,14 +203,14 @@ class MetricController implements Controller {
     return res.json({ heads: result });
   };
 
-  private getInvalidNodesMetric = async (req, res) => {
+  private getInvalidNodesMetric = async (req: Request, res: Response) => {
     const map = await this.getMetricMap();
     const invalidNodes = map[MetricName.INVALID_NODES];
     const parsed = JSON.parse(invalidNodes);
     return res.json({ invalidNodes: parsed });
   };
 
-  private getCommitteeMetric = async (req, res) => {
+  private getCommitteeMetric = async (req: Request, res: Response) => {
     const committeeData = await this.getCommitteeData();
     return res.json(committeeData);
   };
@@ -350,7 +349,7 @@ class MetricController implements Controller {
     };
   }
 
-  private getChart = async (req, res) => {
+  private getChart = async (req: Request, res: Response) => {
     const end = Math.floor(+new Date() / 1000);
     const start = end - 7 * 24 * 3600;
     const step = '24h';

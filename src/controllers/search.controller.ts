@@ -1,12 +1,10 @@
 import { isAddress } from '@meterio/devkit/dist/cry';
-import { Router } from 'express';
+import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
-import { MetricName, enumVals } from '../const';
 import Controller from '../interfaces/controller.interface';
 import AccountRepo from '../repo/account.repo';
 import BlockRepo from '../repo/block.repo';
-import MetricRepo from '../repo/metric.repo';
 import TxRepo from '../repo/tx.repo';
 
 class SearchController implements Controller {
@@ -24,7 +22,7 @@ class SearchController implements Controller {
     this.router.get(`${this.path}/:hash`, try$(this.searchByHash));
   }
 
-  private searchByHash = async (req, res) => {
+  private searchByHash = async (req: Request, res: Response) => {
     const { hash } = req.params;
 
     let number = -1;

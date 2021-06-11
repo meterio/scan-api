@@ -148,7 +148,7 @@ class AccountController implements Controller {
     });
   };
 
-  private getTxsByAccount = async (req, res) => {
+  private getTxsByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const txs = await this.txRepo.findByAccount(address, page, limit);
@@ -163,19 +163,29 @@ class AccountController implements Controller {
     });
   };
 
-  private getTxlistByAccount = async (req, res) => {
+  private getTxlistByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     let { startblock, endblock, sort } = req.query;
 
+    let start = 0,
+      end = 0;
     if (endblock === 'latest') {
-      endblock = Infinity;
+      end = Infinity;
+    }
+
+    try {
+      start = Number(startblock);
+      end = Number(endblock);
+    } catch (e) {
+      start = 0;
+      end = Infinity;
     }
 
     const txs = await this.txRepo.findByAccountInRange(
       address,
-      Number(startblock),
-      Number(endblock),
-      sort
+      start,
+      end,
+      sort.toString()
     );
 
     if (!txs) {
@@ -186,7 +196,7 @@ class AccountController implements Controller {
     });
   };
 
-  private getBidsByAccount = async (req, res) => {
+  private getBidsByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const bids = await this.bidRepo.findByAddress(address, page, limit);
@@ -201,7 +211,7 @@ class AccountController implements Controller {
     });
   };
 
-  private getTokenHoldersByAccount = async (req, res) => {
+  private getTokenHoldersByAccount = async (req: Request, res: Response) => {
     const { tokenAddress } = req.params;
     const tokens = await this.tokenBalanceRepo.findAllByTokenAddress(
       tokenAddress
@@ -231,7 +241,7 @@ class AccountController implements Controller {
     });
   };
 
-  private getTokensByAccount = async (req, res) => {
+  private getTokensByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     console.log(address);
     const tokens = await this.tokenBalanceRepo.findAllByAddress(address);
@@ -264,7 +274,7 @@ class AccountController implements Controller {
     });
   };
 
-  private getTransfersByAccount = async (req, res) => {
+  private getTransfersByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
@@ -317,7 +327,7 @@ class AccountController implements Controller {
     });
   };
 
-  private getERC20TransfersByAccount = async (req, res) => {
+  private getERC20TransfersByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
@@ -361,7 +371,7 @@ class AccountController implements Controller {
     });
   };
 
-  private getBucketsByAccount = async (req, res) => {
+  private getBucketsByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const bkts = await this.bucketRepo.findByAccount(address, page, limit);
@@ -377,7 +387,7 @@ class AccountController implements Controller {
     });
   };
 
-  private getProposedByAccount = async (req, res) => {
+  private getProposedByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const count = await this.blockRepo.countByBeneficiary(address);
@@ -396,7 +406,7 @@ class AccountController implements Controller {
     });
   };
 
-  private getDelegatorsByAccount = async (req, res) => {
+  private getDelegatorsByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const bkts = await this.bucketRepo.findByAccount(address, page, limit);

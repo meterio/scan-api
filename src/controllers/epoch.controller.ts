@@ -27,7 +27,7 @@ class EpochController implements Controller {
     this.router.get(`${this.path}/:epoch`, try$(this.getEpochDetail));
   }
 
-  private getRecentEpochs = async (req, res) => {
+  private getRecentEpochs = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const count = await this.committeeRepo.countAll();
     if (count <= 0) {
