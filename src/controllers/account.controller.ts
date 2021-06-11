@@ -37,6 +37,10 @@ class AccountController implements Controller {
     this.router.get(`${this.path}/top/mtrg`, try$(this.getTopMTRGAccounts));
     this.router.get(`${this.path}/:address`, try$(this.getAccount));
     this.router.get(`${this.path}/:address/txs`, try$(this.getTxsByAccount));
+    this.router.get(
+      `${this.path}/:address/txlist`,
+      try$(this.getTxsByAccountInRange)
+    );
     this.router.get(`${this.path}/:address/bids`, try$(this.getBidsByAccount));
     this.router.get(
       `${this.path}/:address/tokens`,
@@ -144,7 +148,7 @@ class AccountController implements Controller {
     });
   };
 
-  private getTxsByAccount = async (req, res) => {
+  private getTxsByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const txs = await this.txRepo.findByAccount(address, page, limit);
@@ -159,7 +163,25 @@ class AccountController implements Controller {
     });
   };
 
-  private getBidsByAccount = async (req, res) => {
+  private getTxsByAccountInRange = async (req: Request, res: Response) => {
+    const { address } = req.params;
+    const { startblock, endblock, sort } = req.query;
+    const txs = await this.txRepo.findByAccountInRange(
+      address,
+      Number(startblock),
+      Number(endblock),
+      sort.toString()
+    );
+
+    if (!txs) {
+      return res.json({ txSummaries: [] });
+    }
+    return res.json({
+      txSummaries: txs.map((tx) => tx.toSummary()),
+    });
+  };
+
+  private getBidsByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const bids = await this.bidRepo.findByAddress(address, page, limit);
@@ -174,7 +196,7 @@ class AccountController implements Controller {
     });
   };
 
-  private getTokenHoldersByAccount = async (req, res) => {
+  private getTokenHoldersByAccount = async (req: Request, res: Response) => {
     const { tokenAddress } = req.params;
     const tokens = await this.tokenBalanceRepo.findAllByTokenAddress(
       tokenAddress
@@ -204,7 +226,7 @@ class AccountController implements Controller {
     });
   };
 
-  private getTokensByAccount = async (req, res) => {
+  private getTokensByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     console.log(address);
     const tokens = await this.tokenBalanceRepo.findAllByAddress(address);
@@ -237,7 +259,7 @@ class AccountController implements Controller {
     });
   };
 
-  private getTransfersByAccount = async (req, res) => {
+  private getTransfersByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
@@ -290,7 +312,7 @@ class AccountController implements Controller {
     });
   };
 
-  private getERC20TransfersByAccount = async (req, res) => {
+  private getERC20TransfersByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
@@ -334,7 +356,7 @@ class AccountController implements Controller {
     });
   };
 
-  private getBucketsByAccount = async (req, res) => {
+  private getBucketsByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const bkts = await this.bucketRepo.findByAccount(address, page, limit);
@@ -350,7 +372,7 @@ class AccountController implements Controller {
     });
   };
 
-  private getProposedByAccount = async (req, res) => {
+  private getProposedByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const count = await this.blockRepo.countByBeneficiary(address);
@@ -369,7 +391,7 @@ class AccountController implements Controller {
     });
   };
 
-  private getDelegatorsByAccount = async (req, res) => {
+  private getDelegatorsByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const bkts = await this.bucketRepo.findByAccount(address, page, limit);

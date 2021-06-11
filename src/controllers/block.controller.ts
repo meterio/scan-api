@@ -1,10 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { HttpError, try$ } from 'express-toolbox';
-import { Document } from 'mongoose';
 
-import { RECENT_WINDOW } from '../const';
 import Controller from '../interfaces/controller.interface';
-import { Block } from '../model/block.interface';
 import AccountRepo from '../repo/account.repo';
 import BlockRepo from '../repo/block.repo';
 import TxRepo from '../repo/tx.repo';
@@ -63,7 +60,7 @@ class BlockController implements Controller {
     return res.json({ block: ans });
   };
 
-  private getBlockTxs = async (req, res) => {
+  private getBlockTxs = async (req: Request, res: Response) => {
     let blk: any;
     const revision = req.params.revision;
     if (revision === 'best') {
@@ -103,7 +100,7 @@ class BlockController implements Controller {
     return nameMap;
   };
 
-  private getRecentBlocks = async (req, res) => {
+  private getRecentBlocks = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const nameMap = await this.getNameMap();
     const count = await this.blockRepo.count();

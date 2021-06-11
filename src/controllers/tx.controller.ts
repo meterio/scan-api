@@ -35,7 +35,7 @@ class TxController implements Controller {
     });
   };
 
-  private getTxByHash = async (req, res) => {
+  private getTxByHash = async (req: Request, res: Response) => {
     const { hash } = req.params;
     let tx = await this.txRepo.findByHash(hash);
     if (!tx) {

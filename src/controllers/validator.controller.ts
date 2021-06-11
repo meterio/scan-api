@@ -1,6 +1,3 @@
-import { stat } from 'fs';
-
-import * as devkit from '@meterio/devkit';
 import BigNumber from 'bignumber.js';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';

@@ -1,5 +1,5 @@
 import { isAddress } from '@meterio/devkit/dist/cry';
-import { Router } from 'express';
+import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
 import { MetricName, enumVals } from '../const';
@@ -24,7 +24,7 @@ class SearchController implements Controller {
     this.router.get(`${this.path}/:hash`, try$(this.searchByHash));
   }
 
-  private searchByHash = async (req, res) => {
+  private searchByHash = async (req: Request, res: Response) => {
     const { hash } = req.params;
 
     let number = -1;

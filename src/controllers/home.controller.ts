@@ -23,11 +23,11 @@ class HomeController implements Controller {
     return res.json({ name: 'scan-api' });
   };
 
-  private getMetric = async (req, res) => {
+  private getMetric = async (req: Request, res: Response) => {
     return res.json({});
   };
 
-  private getBuckets = async (req, res) => {
+  private getBuckets = async (req: Request, res: Response) => {
     const buckets = await this.bucketRepo.findAll();
     return res.json({ buckets });
   };
