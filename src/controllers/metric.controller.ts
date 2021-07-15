@@ -4,12 +4,7 @@ import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { Document } from 'mongoose';
 
-import {
-  LockedMeterGovAddrs,
-  MetricName,
-  ValidatorStatus,
-  enumVals,
-} from '../const';
+import { MetricName, ValidatorStatus, enumVals } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { Validator } from '../model/validator.interface';
 import AccountRepo from '../repo/account.repo';
