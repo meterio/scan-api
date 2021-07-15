@@ -70,16 +70,9 @@ class MetricController implements Controller {
         ) / 100;
     }
     const txsCount = await this.transferRepo.count();
-    const buckets = map[MetricName.BUCKETS];
 
-    let totalStaked = new BigNumber(0);
-    let totalCirculationStaked = new BigNumber(0);
-    for (const b of JSON.parse(buckets)) {
-      if (!(b.owner in LockedMeterGovAddrs)) {
-        totalCirculationStaked = totalCirculationStaked.plus(b.totalVotes);
-      }
-      totalStaked = totalStaked.plus(b.totalVotes);
-    }
+    const totalStaked = map[MetricName.MTRG_STAKED];
+    const totalStakedLocked = map[MetricName.MTRG_STAKED_LOCKED];
 
     const nonZeroCount = await this.accountRepo.countNonZero();
     return {
@@ -103,7 +96,9 @@ class MetricController implements Controller {
           Number(map[MetricName.INVALID_NODES_COUNT]),
         invalidNodes: Number(map[MetricName.INVALID_NODES_COUNT]),
         totalStaked,
-        totalCirculationStaked,
+        totalCirculationStaked: new BigNumber(totalStaked)
+          .minus(totalStakedLocked)
+          .toFixed(0),
         totalStakedStr: `${fromWei(totalStaked, 2)} MTRG`,
       },
     };
