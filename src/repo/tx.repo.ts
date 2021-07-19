@@ -48,7 +48,7 @@ export class TxRepo {
     return this.tx
       .find({
         $or: [
-          { origin: { $regex: addr.toLowerCase() } },
+          { origin: addr.toLowerCase() },
           {
             clauses: {
               $elemMatch: { to: addr.toLowerCase() },
@@ -72,7 +72,7 @@ export class TxRepo {
         $and: [
           {
             $or: [
-              { origin: { $regex: addr.toLowerCase() } },
+              { origin: addr.toLowerCase() },
               {
                 clauses: {
                   $elemMatch: { to: addr.toLowerCase() },
