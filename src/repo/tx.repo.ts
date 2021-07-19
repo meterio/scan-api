@@ -30,11 +30,7 @@ export class TxRepo {
     return this.tx.countDocuments({
       $or: [
         { origin: addr.toLowerCase() },
-        {
-          clauses: {
-            $elemMatch: { to: addr.toLowerCase() },
-          },
-        },
+        { 'clauses.to': { $in: [addr.toLowerCase()] } },
       ],
     });
   }
@@ -49,11 +45,7 @@ export class TxRepo {
       .find({
         $or: [
           { origin: addr.toLowerCase() },
-          {
-            clauses: {
-              $elemMatch: { to: addr.toLowerCase() },
-            },
-          },
+          { 'clauses.to': { $in: [addr.toLowerCase()] } },
         ],
       })
       .sort({ 'block.number': -1 })
@@ -74,9 +66,7 @@ export class TxRepo {
             $or: [
               { origin: addr.toLowerCase() },
               {
-                clauses: {
-                  $elemMatch: { to: addr.toLowerCase() },
-                },
+                'clauses.to': { $in: [addr.toLowerCase()] },
               },
             ],
           },
