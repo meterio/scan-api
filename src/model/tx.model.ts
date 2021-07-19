@@ -235,9 +235,11 @@ txSchema.methods.toSummary = function () {
     totalTransferMTRG: this.totalTransferMTRG.toFixed(),
     token: token == 0 ? 'MTR' : 'MTRG',
     reverted: this.reverted,
-    groupedTransfers: this.groupedTransfers,
     majorTo: this.majorTo,
     toCount: this.toCount,
+    groupedTransferCount: this.groupedTransfers
+      ? this.groupedTransfers.length
+      : 0,
 
     // calculated
     totalClauseAmount,
