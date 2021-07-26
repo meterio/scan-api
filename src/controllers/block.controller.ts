@@ -52,7 +52,7 @@ class BlockController implements Controller {
       txs = await this.txRepo.findByHashs(blk.txHashs);
     }
     let ans = blk.toSummary();
-    ans.txSummaries = txs.map((tx) => tx.toSummary());
+    ans.txSummaries = txs.map((tx) => tx.toSummary(undefined));
 
     const nameMap = await this.getNameMap();
     ans.beneficiaryName = nameMap[ans.beneficiary] || '';

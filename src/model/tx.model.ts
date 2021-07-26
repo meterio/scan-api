@@ -210,7 +210,7 @@ txSchema.methods.getType = function () {
   return 'transfer';
 };
 
-txSchema.methods.toSummary = function () {
+txSchema.methods.toSummary = function (addr) {
   const token = this.clauseCount > 0 ? this.clauses[0].token : 0;
 
   let totalClauseAmount = '0';
@@ -219,6 +219,18 @@ txSchema.methods.toSummary = function () {
   } else {
     totalClauseAmount = this.totalClauseMTRG.toFixed();
   }
+
+  let relatedTransfers = [];
+  if (!addr) {
+    relatedTransfers = [];
+  } else {
+    relatedTransfers = this.groupedTransfers.filter(
+      (t) =>
+        t.sender.toLowerCase() === addr.toLowerCase() ||
+        t.recipient.toLowerCase() === addr.toLowerCase()
+    );
+  }
+
   return {
     hash: this.hash,
     block: this.block,
@@ -240,7 +252,7 @@ txSchema.methods.toSummary = function () {
     groupedTransferCount: this.groupedTransfers
       ? this.groupedTransfers.length
       : 0,
-
+    relatedTransfers,
     // calculated
     totalClauseAmount,
   };

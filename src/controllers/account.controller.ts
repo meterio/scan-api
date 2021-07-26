@@ -150,16 +150,24 @@ class AccountController implements Controller {
 
   private getTxsByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
+    let start = process.hrtime();
     const { page, limit } = extractPageAndLimitQueryParam(req);
+    console.log(`extract cost ${process.hrtime(start)[0]}`);
+
+    start = process.hrtime();
     const txs = await this.txRepo.findByAccount(address, page, limit);
+    console.log(`txs cost ${process.hrtime(start)[0]}`);
+
+    start = process.hrtime();
     const count = await this.txRepo.countByAccount(address);
+    console.log(`count cost ${process.hrtime(start)[0]}`);
 
     if (!txs) {
       return res.json({ totalRows: 0, txSummaries: [] });
     }
     return res.json({
       totalRows: count,
-      txSummaries: txs.map((tx) => tx.toSummary()),
+      txSummaries: txs.map((tx) => tx.toSummary(address)),
     });
   };
 
@@ -194,7 +202,7 @@ class AccountController implements Controller {
       return res.json({ totalRows: 0, txSummaries: [] });
     }
     return res.json({
-      txSummaries: txs.map((tx) => tx.toSummary()),
+      txSummaries: txs.map((tx) => tx.toSummary(address)),
     });
   };
 

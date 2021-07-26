@@ -31,7 +31,7 @@ class TxController implements Controller {
     const txs = await this.txRepo.findRecent(page, limit);
     return res.json({
       totalRows: count,
-      txs: txs.map((tx) => tx.toSummary()),
+      txs: txs.map((tx) => tx.toSummary(undefined)),
     });
   };
 
@@ -69,7 +69,7 @@ class TxController implements Controller {
     }
     txObj.events = events;
     txObj.transfers = transfers;
-    return res.json({ summary: tx.toSummary(), tx: txObj, tokens });
+    return res.json({ summary: tx.toSummary(undefined), tx: txObj, tokens });
   };
 }
 

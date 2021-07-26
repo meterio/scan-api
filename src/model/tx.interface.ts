@@ -71,5 +71,5 @@ export interface Tx {
   majorTo?: string;
   toCount: number;
 
-  toSummary(): object;
+  toSummary(addr): object;
 }
