@@ -28,12 +28,13 @@ export class TxRepo {
 
   public async countByAccount(addr: string) {
     return this.tx.countDocuments({
-      $or: [
-        { origin: addr.toLowerCase() },
-        { 'clauses.to': addr.toLowerCase() },
-        // { 'groupedTransfers.sender': { $in: [addr.toLowerCase()] } },
-        { 'groupedTransfers.recipient': addr.toLowerCase() },
-      ],
+      relatedAddrs: addr.toLowerCase(),
+      // $or: [
+      // { origin: addr.toLowerCase() },
+      // { 'clauses.to': addr.toLowerCase() },
+      // { 'groupedTransfers.sender': { $in: [addr.toLowerCase()] } },
+      // { 'groupedTransfers.recipient': addr.toLowerCase() },
+      // ],
     });
   }
 
@@ -45,12 +46,13 @@ export class TxRepo {
     const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
     return this.tx
       .find({
-        $or: [
-          { origin: addr.toLowerCase() },
-          { 'clauses.to': addr.toLowerCase() },
-          // { 'groupedTransfers.sender': { $in: [addr.toLowerCase()] } },
-          { 'groupedTransfers.recipient': addr.toLowerCase() },
-        ],
+        relatedAddrs: addr.toLowerCase(),
+        // $or: [
+        // { origin: addr.toLowerCase() },
+        // { 'clauses.to': addr.toLowerCase() },
+        // { 'groupedTransfers.sender': { $in: [addr.toLowerCase()] } },
+        // { 'groupedTransfers.recipient': addr.toLowerCase() },
+        // ],
       })
       .sort({ 'block.number': -1 })
       .limit(limit)

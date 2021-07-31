@@ -60,7 +60,7 @@ const txOutputSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const groupedTransferSchema = new mongoose.Schema(
+const transferSchema = new mongoose.Schema(
   {
     sender: { type: String, required: true },
     recipient: { type: String, required: true },
@@ -140,9 +140,16 @@ const txSchema = new mongoose.Schema(
       set: (bnum: BigNumber) => bnum.toFixed(0),
       required: true,
     },
-    groupedTransfers: [groupedTransferSchema],
+    groupedTransfers: [transferSchema],
     majorTo: { type: String, required: false },
     toCount: { type: Number, required: true },
+
+    // related address
+    relatedAddrs: [{ type: String, required: true }],
+    erc20RelatedAddrs: [{ type: String, required: true }],
+
+    // system contract transfers
+    sysContractTransfers: [transferSchema],
 
     createdAt: { type: Number, index: true },
   },
@@ -221,10 +228,11 @@ txSchema.methods.toSummary = function (addr) {
   }
 
   let relatedTransfers = [];
-  if (!addr) {
-    relatedTransfers = [];
-  } else {
-    relatedTransfers = this.groupedTransfers.filter(
+  if (!!addr) {
+    let transfers = []
+      .concat(this.groupedTransfers)
+      .concat(this.sysContractTransfers);
+    relatedTransfers = transfers.filter(
       (t) =>
         t.sender.toLowerCase() === addr.toLowerCase() ||
         t.recipient.toLowerCase() === addr.toLowerCase()
