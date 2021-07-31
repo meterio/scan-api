@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 
 import { EpochRewardSummary } from './epochRewardSummary.interface';
 
-const epochRewardSummarySchema = new mongoose.Schema({
+const epochRewardSummarySchema = new mongoose.Schema<EpochRewardSummary>({
   epoch: { type: Number, required: true, unique: true },
   blockNum: { type: Number, required: true },
   timestamp: { type: Number, required: true },

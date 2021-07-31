@@ -2,9 +2,9 @@ import BigNumber from 'bignumber.js';
 import * as mongoose from 'mongoose';
 
 import { BlockType, enumKeys } from '../const';
-import { Block } from './block.interface';
+import { Block, CommitteeMember, PowBlock, QC } from './block.interface';
 
-export const committeeMemberSchema = new mongoose.Schema(
+export const committeeMemberSchema = new mongoose.Schema<CommitteeMember>(
   {
     index: { type: Number, required: true },
     netAddr: { type: String, required: true },
@@ -13,7 +13,7 @@ export const committeeMemberSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const qcSchema = new mongoose.Schema(
+const qcSchema = new mongoose.Schema<QC>(
   {
     qcHeight: { type: Number, required: true },
     qcRound: { type: Number, required: true },
@@ -23,7 +23,7 @@ const qcSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const powBlockSchema = new mongoose.Schema(
+const powBlockSchema = new mongoose.Schema<PowBlock>(
   {
     hash: { type: String, required: true },
     prevBlock: { type: String, required: true },
@@ -33,7 +33,7 @@ const powBlockSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const blockSchema = new mongoose.Schema(
+const blockSchema = new mongoose.Schema<Block>(
   {
     hash: { type: String, required: true, index: { unique: true } },
     number: { type: Number, required: true, index: { unique: true } },

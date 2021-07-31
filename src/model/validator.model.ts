@@ -2,9 +2,9 @@ import BigNumber from 'bignumber.js';
 import * as mongoose from 'mongoose';
 
 import { ValidatorStatus, enumKeys } from '../const';
-import { Validator } from './validator.interface';
+import { Distributor, Validator } from './validator.interface';
 
-const distributorSchema = new mongoose.Schema(
+const distributorSchema = new mongoose.Schema<Distributor>(
   {
     address: { type: String, required: true },
     shares: { type: Number, required: true },
@@ -12,7 +12,7 @@ const distributorSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const validatorSchema = new mongoose.Schema({
+const validatorSchema = new mongoose.Schema<Validator>({
   pubKey: { type: String, required: true, unique: true },
 
   // updatable attributes

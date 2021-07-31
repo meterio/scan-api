@@ -67,9 +67,14 @@ class TxController implements Controller {
         transfers.push({ ...t, clauseIndex, logIndex });
       }
     }
-    txObj.events = events;
-    txObj.transfers = transfers;
-    return res.json({ summary: tx.toSummary(undefined), tx: txObj, tokens });
+    let txNewObj = { ...txObj, events, transfers };
+    // txObj.events = events;
+    // txObj.transfers = transfers;
+    return res.json({
+      summary: tx.toSummary(undefined),
+      tx: txNewObj,
+      tokens,
+    });
   };
 }
 

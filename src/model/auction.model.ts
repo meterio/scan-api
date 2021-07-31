@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 
 import { Auction } from './auction.interface';
 
-const auctionSchema = new mongoose.Schema({
+const auctionSchema = new mongoose.Schema<Auction>({
   id: { type: String, required: true, unique: true },
   startHeight: { type: Number, required: true },
   startEpoch: { type: Number, required: true },

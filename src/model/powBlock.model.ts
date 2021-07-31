@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 
 import { PowBlock } from './powBlock.interface';
 
-const powBlockSchema = new mongoose.Schema(
+const powBlockSchema = new mongoose.Schema<PowBlock>(
   {
     hash: { type: String, required: true, index: { unique: true } },
     confirmations: { type: Number, required: true },

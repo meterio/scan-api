@@ -4,7 +4,7 @@ import * as mongoose from 'mongoose';
 import { Token, enumKeys } from '../const';
 import { Bucket } from './bucket.interface';
 
-const bucketSchema = new mongoose.Schema({
+const bucketSchema = new mongoose.Schema<Bucket>({
   id: { type: String, required: true, unique: true },
   owner: { type: String, required: true },
   value: {

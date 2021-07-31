@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 
 import { Bid } from './bid.interface';
 
-const bidSchema = new mongoose.Schema({
+const bidSchema = new mongoose.Schema<Bid>({
   id: { type: String, required: true, unique: true },
   address: { type: String, required: true, index: true },
   amount: { type: String, required: true },
@@ -37,7 +37,7 @@ const bidSchema = new mongoose.Schema({
   },
 });
 
-bidSchema.methods.toSummary = function () {
+bidSchema.methods.toSummary = function (doc: Bid & mongoose.Document) {
   return {
     epoch: this.epoch,
     blockNum: this.blockNum,

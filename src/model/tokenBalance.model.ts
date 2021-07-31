@@ -4,7 +4,7 @@ import * as mongoose from 'mongoose';
 import { blockConciseSchema } from './blockConcise.model';
 import { TokenBalance } from './tokenBalance.interface';
 
-const tokenBalanceSchema = new mongoose.Schema(
+const tokenBalanceSchema = new mongoose.Schema<TokenBalance>(
   {
     address: { type: String, required: true },
     tokenAddress: { type: String, required: true },

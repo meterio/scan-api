@@ -1,9 +1,9 @@
 import BigNumber from 'bignumber.js';
 import * as mongoose from 'mongoose';
 
-import { ValidatorReward } from './validatorReward.interface';
+import { RewardInfo, ValidatorReward } from './validatorReward.interface';
 
-const rewardInfoSchema = new mongoose.Schema(
+const rewardInfoSchema = new mongoose.Schema<RewardInfo>(
   {
     address: { type: String, required: true },
     amount: {
@@ -16,7 +16,7 @@ const rewardInfoSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const validatorRewardSchema = new mongoose.Schema({
+const validatorRewardSchema = new mongoose.Schema<ValidatorReward>({
   epoch: { type: Number, required: true, unique: true },
   baseReward: {
     type: String,

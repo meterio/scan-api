@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 
 import { Known } from './known.interface';
 
-const knownSchema = new mongoose.Schema({
+const knownSchema = new mongoose.Schema<Known>({
   ecdsaPK: { type: String, required: true, unique: true },
   blsPK: { type: String, required: true },
 
@@ -22,6 +22,10 @@ knownSchema.set('toJSON', {
   },
 });
 
-const model = mongoose.model<Known & mongoose.Document>('Known', knownSchema, 'knowns');
+const model = mongoose.model<Known & mongoose.Document>(
+  'Known',
+  knownSchema,
+  'knowns'
+);
 
 export default model;

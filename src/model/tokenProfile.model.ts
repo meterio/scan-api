@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 
 import { TokenProfile } from './tokenProfile.interface';
 
-const tokenProfileSchema = new mongoose.Schema(
+const tokenProfileSchema = new mongoose.Schema<TokenProfile>(
   {
     name: { type: String, required: true },
     symbol: { type: String, required: true },

@@ -4,7 +4,7 @@ import * as mongoose from 'mongoose';
 import { Account } from './account.interface';
 import { blockConciseSchema } from './blockConcise.model';
 
-const accountSchema = new mongoose.Schema(
+const accountSchema = new mongoose.Schema<Account>(
   {
     address: { type: String, required: true },
     name: { type: String, required: false },

@@ -9,9 +9,16 @@ import {
   StakingModuleAddress,
 } from '../const/address';
 import { blockConciseSchema } from './blockConcise.model';
-import { Tx } from './tx.interface';
+import {
+  Clause,
+  PosEvent,
+  PosTransfer,
+  Transfer,
+  Tx,
+  TxOutput,
+} from './tx.interface';
 
-const clauseSchema = new mongoose.Schema(
+const clauseSchema = new mongoose.Schema<Clause>(
   {
     to: { type: String, required: false },
     value: {
@@ -32,7 +39,7 @@ const clauseSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const posEventSchema = new mongoose.Schema(
+const posEventSchema = new mongoose.Schema<PosEvent>(
   {
     address: { type: String, required: true },
     topics: [{ type: String, required: true }],
@@ -41,7 +48,15 @@ const posEventSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const posTransferSchema = new mongoose.Schema(
+posEventSchema.set('toJSON', {
+  transform: (doc, ret, options) => {
+    delete ret.__v;
+    delete ret._id;
+    return ret;
+  },
+});
+
+const posTransferSchema = new mongoose.Schema<PosTransfer>(
   {
     sender: { type: String, required: true },
     recipient: { type: String, required: true },
@@ -51,7 +66,15 @@ const posTransferSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const txOutputSchema = new mongoose.Schema(
+posTransferSchema.set('toJSON', {
+  transform: (doc, ret, options) => {
+    delete ret.__v;
+    delete ret._id;
+    return ret;
+  },
+});
+
+const txOutputSchema = new mongoose.Schema<TxOutput>(
   {
     contractAddress: { type: String, required: false },
     events: [posEventSchema],
@@ -60,7 +83,7 @@ const txOutputSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const transferSchema = new mongoose.Schema(
+const transferSchema = new mongoose.Schema<Transfer>(
   {
     sender: { type: String, required: true },
     recipient: { type: String, required: true },
@@ -75,7 +98,7 @@ const transferSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const txSchema = new mongoose.Schema(
+const txSchema = new mongoose.Schema<Tx>(
   {
     hash: { type: String, required: true, index: { unique: true } },
 

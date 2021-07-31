@@ -8,6 +8,7 @@ export interface TokenBalance {
   balance: BigNumber;
   symbol?: string;
   rank: number;
+  decimals: number;
 
   lastUpdate: BlockConcise;
 }

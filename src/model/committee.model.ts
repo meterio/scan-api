@@ -4,7 +4,7 @@ import { committeeMemberSchema } from './block.model';
 import { blockConciseSchema } from './blockConcise.model';
 import { Committee } from './committee.interface';
 
-const committeeSchema = new mongoose.Schema({
+const committeeSchema = new mongoose.Schema<Committee>({
   epoch: { type: Number, required: true, index: true },
   kblockHeight: { type: Number, required: true },
   startBlock: { type: blockConciseSchema, required: true },
