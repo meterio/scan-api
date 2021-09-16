@@ -46,8 +46,10 @@ class BlockController implements Controller {
       );
     }
 
-    const blk = await this.blockRepo.findBestInTimeRange(start, end);
-    if (blk) {
+    const blks = await this.blockRepo.findInTimeRange(start, end);
+    if (blks && blks.length > 1) {
+      const sorted = blks.sort((a, b) => (a.timestamp < b.timestamp ? -1 : 1));
+      const blk = sorted[0];
       return res.json({
         number: blk.number,
         hash: blk.hash,

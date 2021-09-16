@@ -97,10 +97,8 @@ export class BlockRepo {
     return this.block.deleteOne({ hash });
   }
 
-  public async findBestInTimeRange(start: number, end: number) {
-    return this.block
-      .findOne({ timestamp: { $gte: start, $lte: end } })
-      .sort({ timestamp: -1 });
+  public async findInTimeRange(start: number, end: number) {
+    return this.block.find({ timestamp: { $gte: start, $lte: end } });
   }
 }
 
