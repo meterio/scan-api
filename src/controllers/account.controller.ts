@@ -1,7 +1,11 @@
+import * as fs from 'fs';
+import * as path from 'path';
+
 import BigNumber from 'bignumber.js';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { Document } from 'mongoose';
+import solc from 'solc';
 
 import { Token } from '../const';
 import Controller from '../interfaces/controller.interface';
@@ -14,7 +18,9 @@ import TokenBalanceRepo from '../repo/tokenBalance.repo';
 import TokenProfileRepo from '../repo/tokenProfile.repo';
 import TransferRepo from '../repo/transfer.repo';
 import TxRepo from '../repo/tx.repo';
+import { downloadByVersion } from '../utils/downloader';
 import { extractPageAndLimitQueryParam, fromWei } from '../utils/utils';
+import { getBytecodeWithoutMetadata, stampDate } from '../utils/verify';
 
 class AccountController implements Controller {
   public path = '/api/accounts';
@@ -36,6 +42,7 @@ class AccountController implements Controller {
     this.router.get(`${this.path}/top/mtr`, try$(this.getTopMTRAccounts));
     this.router.get(`${this.path}/top/mtrg`, try$(this.getTopMTRGAccounts));
     this.router.get(`${this.path}/:address`, try$(this.getAccount));
+    this.router.get(`${this.path}/:address/verify`, try$(this.verifyContract));
     this.router.get(`${this.path}/:address/txs`, try$(this.getTxsByAccount));
     this.router.get(
       `${this.path}/:address/txlist`,
@@ -71,6 +78,161 @@ class AccountController implements Controller {
       try$(this.getDelegatorsByAccount)
     );
   }
+
+  private verifyContract = async (req: Request, res: Response) => {
+    // const { sourceCode, optimizer } = req.body;
+    // const { address } = req.params;
+    const address = '0xa81942e45bf1486dF0A32E5e267a234dE1Ad4Ae7';
+
+    const meterify = require('meterify').meterify;
+    const Web3 = require('web3');
+    const web3 = meterify(new Web3(), 'http://shoal.meter.io');
+
+    let code = '0x';
+    try {
+      code = await web3.eth.getCode(address);
+      if (!code) {
+        return res.json({ status: 'error' });
+      }
+    } catch (e) {
+      console.log('could not get code');
+      console.log(e);
+      return res.json({ status: 'error' });
+    }
+
+    const optimizer = '1';
+    const sourceCode = fs.readFileSync('/tmp/Storage.sol').toString();
+    const version = '0.6.9';
+    console.log('source code: ', sourceCode);
+    try {
+      let start = +new Date();
+      const input = {
+        language: 'Solidity',
+        settings: {
+          optimizer: { enabled: optimizer === '1', runs: 200 },
+          outputSelection: {
+            '*': {
+              '*': ['*'],
+            },
+          },
+        },
+        sources: {
+          'test.sol': {
+            content: sourceCode,
+          },
+        },
+      };
+
+      console.log(`Load specific version: ${version} starts`);
+      const outputPath = await downloadByVersion(version);
+      if (!outputPath) {
+        console.log('could not download');
+      }
+
+      console.log(
+        `Download solc-js file takes: ${(+new Date() - start) / 1000} seconds`
+      );
+      start = +new Date();
+      console.log('using ', outputPath);
+      const solcjs = solc.setupMethods(require(outputPath));
+      console.log(
+        `load solc-js version takes: ${(+new Date() - start) / 1000} seconds`
+      );
+      start = +new Date();
+      const output = JSON.parse(solcjs.compile(JSON.stringify(input)));
+      console.log(output.contracts['test.sol'].Storage);
+      console.log(`compile takes ${(+new Date() - start) / 1000} seconds`);
+
+      let check: { error: string; warnings: string[] } = {} as any;
+      if (output.errors) {
+        check = output.errors.reduce((check, err) => {
+          if (err.severity === 'warning') {
+            if (!check.warnings) check.warnings = [];
+            check.warnings.push(err.message);
+          }
+          if (err.severity === 'error') {
+            check.error = err.message;
+          }
+          return check;
+        }, {});
+      }
+
+      let data = {};
+      let verified = false;
+      let sc;
+      console.log('CODE:\n', code);
+      if (check.error) {
+        data = { result: { verified: false }, err_msg: check.error };
+      } else {
+        if (output.contracts) {
+          let hexBytecode = code.substring(2);
+          for (var contractName in output.contracts['test.sol']) {
+            console.log('contract: ', contractName);
+            const byteCode =
+              output.contracts['test.sol'][contractName].evm.bytecode.object;
+            const deployedBytecode =
+              output.contracts['test.sol'][contractName].evm.deployedBytecode
+                .object;
+            const processed_compiled_bytecode =
+              getBytecodeWithoutMetadata(deployedBytecode);
+            // const processed_blockchain_bytecode = helper.getBytecodeWithoutMetadata(hexBytecode.slice(0, curCode.length));
+            const constructor_arguments = hexBytecode.slice(byteCode.length);
+            // console.log(`contract name:`, contractName)
+            // console.log(`processed_blockchain_bytecode: length:${processed_blockchain_bytecode.length}`);
+            // console.log(`processed_compiled_bytecode: length:${processed_compiled_bytecode.length}`);
+            // console.log(processed_compiled_bytecode.localeCompare(processed_blockchain_bytecode))
+
+            console.log('deployed bytecode: \n', deployedBytecode);
+            console.log('byteCode:\n', byteCode);
+            console.log('hexBytecode:\n', hexBytecode);
+            console.log('constructor arguments:\n', constructor_arguments);
+            console.log(
+              'Processed_compield_bytecode:\n',
+              processed_compiled_bytecode
+            );
+            console.log(hexBytecode.indexOf(deployedBytecode) > -1);
+            console.log(deployedBytecode.length > 0);
+            if (
+              hexBytecode.indexOf(deployedBytecode) > -1 &&
+              deployedBytecode.length > 0
+            ) {
+              verified = true;
+              let abi = output.contracts['test.sol'][contractName].abi;
+              const breifVersion = path
+                .basename(outputPath)
+                .match(/^soljson-(.*).js$/)[1];
+              sc = {
+                address: address,
+                abi: abi,
+                source_code: stampDate(sourceCode),
+                verification_date: +new Date(),
+                compiler_version: breifVersion,
+                optimizer: optimizer === '1' ? 'enabled' : 'disabled',
+                name: contractName,
+                function_hash:
+                  output.contracts['test.sol'][contractName].evm
+                    .methodIdentifiers,
+                constructor_arguments: constructor_arguments,
+              };
+              break;
+            }
+          }
+        }
+        data = {
+          result: { verified },
+          warning_msg: check.warnings,
+          smart_contract: sc,
+        };
+      }
+      console.log(
+        `Source code verification result: ${verified}, sending back result`
+      );
+      res.status(200).send(data);
+    } catch (e) {
+      console.log('Error: ', e);
+    }
+  };
+
   private getTopMTRAccounts = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const count = await this.accountRepo.count();

@@ -22,10 +22,41 @@ class BlockController implements Controller {
   }
 
   private initializeRoutes() {
+    this.router.get(
+      `${this.path}/bestin/:startTs/:endTs`,
+      try$(this.getBestInTimeRange)
+    );
     this.router.get(`${this.path}/recent`, try$(this.getRecentBlocks));
     this.router.get(`${this.path}/:revision`, try$(this.getBlockByRevision));
     this.router.get(`${this.path}/:revision/txs`, try$(this.getBlockTxs));
   }
+
+  private getBestInTimeRange = async (req: Request, res: Response) => {
+    const { startTs, endTs } = req.params;
+    const start = Number(startTs);
+    const end = Number(endTs);
+
+    if (isNaN(start) || isNaN(end)) {
+      throw new HttpError(400, 'invalid start or end timestamp');
+    }
+    if (start > end) {
+      throw new HttpError(
+        400,
+        'start timestamp should be smaller than end timestamp'
+      );
+    }
+
+    const blk = await this.blockRepo.findBestInTimeRange(start, end);
+    if (blk) {
+      return res.json({
+        number: blk.number,
+        hash: blk.hash,
+        timestamp: blk.timestamp,
+        startTs: start,
+        endTs: end,
+      });
+    }
+  };
 
   private getBlockByRevision = async (req: Request, res: Response) => {
     let blk: any;

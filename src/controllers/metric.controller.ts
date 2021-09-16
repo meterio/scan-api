@@ -148,9 +148,13 @@ class MetricController implements Controller {
 
   private getAllMetric = async (req: Request, res: Response) => {
     const posData = await this.getPosData();
+    console.log('got pos data:', posData);
     const powData = await this.getPowData();
+    console.log('got pow data: ', powData);
     const tokenData = await this.getTokenData();
+    console.log('got token data: ', tokenData);
     let committeeData = await this.getCommitteeData();
+    console.log('got committee data: ', committeeData);
 
     delete committeeData.committee.invalidMembers;
     delete committeeData.committee.healthyMembers;
@@ -227,6 +231,7 @@ class MetricController implements Controller {
     if (!roles || !roles.data || !roles.data.data) {
       return emptyResponse;
     }
+    console.log('roles length:', roles.data.data.result.length);
     for (const r of roles.data.data.result) {
       const ip = r.metric.instance;
       const name = r.metric.name;
@@ -270,6 +275,7 @@ class MetricController implements Controller {
 
     let visited = {};
     let size = 0;
+    console.log('block.committee length:', block.committee.length);
     for (const m of block.committee) {
       const ip = m.netAddr.toLowerCase().split(':')[0];
       if (visited[ip]) {

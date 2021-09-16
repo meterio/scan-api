@@ -96,6 +96,12 @@ export class BlockRepo {
   public async delete(hash: string) {
     return this.block.deleteOne({ hash });
   }
+
+  public async findBestInTimeRange(start: number, end: number) {
+    return this.block
+      .findOne({ timestamp: { $gte: start, $lte: end } })
+      .sort({ timestamp: -1 });
+  }
 }
 
 export default BlockRepo;
