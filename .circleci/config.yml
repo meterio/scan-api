@@ -1,0 +1,26 @@
+version: 2.1
+
+jobs:
+  build_docker:
+    docker:
+      - image: docker:17.05.0-ce-git
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: |
+          docker build -t meterio/scan-api:testnet . ;
+          docker tag meterio/scan-api:testnet meterio/scan-api:mainnet
+      - run: |
+          docker login -u "${DOCKERHUB_USER}" --password "${DOCKERHUB_PWD}" ;
+          docker push meterio/scan-api:testnet ;
+          docker push meterio/scan-api:mainnet ;
+
+workflows:
+  build_docker:
+    jobs:
+      - build_docker:
+          context: dockerhub
+          filters:
+            branches:
+              only:
+                - master
