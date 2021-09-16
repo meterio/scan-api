@@ -56,6 +56,12 @@ class BlockController implements Controller {
         endTs: end,
       });
     }
+    return res.json({
+      number: 0,
+      timestamp: 1593907199,
+      startTs: start,
+      endTs: end,
+    });
   };
 
   private getBlockByRevision = async (req: Request, res: Response) => {
