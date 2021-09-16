@@ -5,12 +5,23 @@ import { keccak256 } from '@meterio/devkit/dist/cry';
 import axios from 'axios';
 
 const DOWNLOAD_DIR = '/tmp';
+const CACHE_TTL = 1 * 3600;
+let listCache: object | undefined;
+let listUpdatedAt = 0;
 
 export const getVersionList = async () => {
   console.log('Retrieving available version list...');
 
+  if (listCache !== undefined) {
+    if (new Date().getTime() / 1000 - listUpdatedAt <= CACHE_TTL) {
+      console.log('cache not expired, use cache directly');
+    }
+    return listCache;
+  }
   const res = await axios.get('https://solc-bin.ethereum.org/bin/list.json');
   if (res.status === 200) {
+    listCache = res.data;
+    listUpdatedAt = new Date().getTime() / 1000;
     return res.data;
   }
 };
@@ -36,8 +47,6 @@ export const downloadBinary = async (outputName, filepath, expectedHash) => {
   const res = await axios.get(`https://solc-bin.ethereum.org/bin/${filepath}`, {
     responseType: 'blob',
   });
-  console.log('res.status type:', typeof res.status);
-  console.log('res.status val:', res.status);
   if (res.status === 200) {
     fs.writeFileSync(outputName, res.data);
     const content = fs.readFileSync(outputName);
@@ -84,7 +93,7 @@ export const downloadByVersion = async (version: string) => {
     const content = fs.readFileSync(outputName);
     const hash = keccak256(content);
     if (expectedHash === '0x' + hash.toString('hex')) {
-      console.log('already downloaded, skip for now');
+      console.log(`already downloaded ${outputName}, skip for now`);
       console.log('Saved in ', outputName);
       return outputName;
     }

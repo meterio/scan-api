@@ -42,7 +42,7 @@ class AccountController implements Controller {
     this.router.get(`${this.path}/top/mtr`, try$(this.getTopMTRAccounts));
     this.router.get(`${this.path}/top/mtrg`, try$(this.getTopMTRGAccounts));
     this.router.get(`${this.path}/:address`, try$(this.getAccount));
-    this.router.get(`${this.path}/:address/verify`, try$(this.verifyContract));
+    this.router.post(`${this.path}/:address/verify`, try$(this.verifyContract));
     this.router.get(`${this.path}/:address/txs`, try$(this.getTxsByAccount));
     this.router.get(
       `${this.path}/:address/txlist`,
@@ -80,30 +80,47 @@ class AccountController implements Controller {
   }
 
   private verifyContract = async (req: Request, res: Response) => {
-    // const { sourceCode, optimizer } = req.body;
-    // const { address } = req.params;
-    const address = '0xa81942e45bf1486dF0A32E5e267a234dE1Ad4Ae7';
+    const { sourceCode, optimizer, version } = req.body;
+    // const optimizer = '1';
+    // const sourceCode = fs.readFileSync('/tmp/Storage.sol').toString();
+    // const version = '0.6.9';
+    const { address } = req.params;
+    console.log('sourceCode: ', sourceCode);
+    console.log('optimizer: ', optimizer);
+    console.log('version: ', version);
 
+    const { MODE } = process.env;
+    console.log('mode:', MODE);
+    const providerUrl =
+      MODE === 'mainnet' ? 'http://mainnet.meter.io' : 'http://shoal.meter.io';
+    console.log('provider url: ', providerUrl);
     const meterify = require('meterify').meterify;
     const Web3 = require('web3');
-    const web3 = meterify(new Web3(), 'http://shoal.meter.io');
+    const web3 = meterify(new Web3(), providerUrl);
 
     let code = '0x';
     try {
       code = await web3.eth.getCode(address);
       if (!code) {
-        return res.json({ status: 'error' });
+        return res.json({
+          result: {
+            verified: false,
+            error:
+              'no code deployed on this address, maybe its not a contract address',
+          },
+        });
       }
     } catch (e) {
       console.log('could not get code');
       console.log(e);
-      return res.json({ status: 'error' });
+      return res.json({
+        result: {
+          verified: false,
+          error: 'could not get code due to:' + (e as Error).message,
+        },
+      });
     }
 
-    const optimizer = '1';
-    const sourceCode = fs.readFileSync('/tmp/Storage.sol').toString();
-    const version = '0.6.9';
-    console.log('source code: ', sourceCode);
     try {
       let start = +new Date();
       const input = {
@@ -132,6 +149,12 @@ class AccountController implements Controller {
       console.log(
         `Download solc-js file takes: ${(+new Date() - start) / 1000} seconds`
       );
+      if (!outputPath) {
+        return res.json({
+          result: { verified: false, error: 'invalid version ' + version },
+        });
+      }
+
       start = +new Date();
       console.log('using ', outputPath);
       const solcjs = solc.setupMethods(require(outputPath));
@@ -219,7 +242,7 @@ class AccountController implements Controller {
           }
         }
         data = {
-          result: { verified },
+          result: { verified, error: check.error },
           warning_msg: check.warnings,
           smart_contract: sc,
         };
@@ -227,9 +250,12 @@ class AccountController implements Controller {
       console.log(
         `Source code verification result: ${verified}, sending back result`
       );
-      res.status(200).send(data);
+      res.status(200).json(data);
     } catch (e) {
       console.log('Error: ', e);
+      return res.json({
+        result: { verified: false, error: (e as Error).message },
+      });
     }
   };
 
