@@ -23,10 +23,32 @@ import { downloadBinary, getVersionList } from './utils/downloader';
 // const j = '1023945120943092184309';
 // console.log(commaSeparated(j));
 
-(async () => {
-  const list = await getVersionList();
-  const picked = list.builds[3];
-  const { path, version, keccak256 } = picked;
+// (async () => {
+//   const list = await getVersionList();
+//   const picked = list.builds[3];
+//   const { path, version, keccak256 } = picked;
 
-  await downloadBinary(`/tmp/${version}.js`, path, keccak256);
+//   await downloadBinary(`/tmp/${version}.js`, path, keccak256);
+// })();
+
+(async () => {
+  const address = '0xa81942e45bf1486dF0A32E5e267a234dE1Ad4Ae7';
+  const version = '0.6.9';
+  const optimizer = '1';
+  const sourceCode = fs
+    .readFileSync(path.join(__dirname, 'Storage.sol'))
+    .toString();
+
+  console.log('ready to post');
+  const res = await axios.post(
+    `https://api.meter.io:4000/api/accounts/${address}/verify`,
+    { version, optimizer, sourceCode }
+  );
+  console.log('posted');
+  if (res.status == 200) {
+    console.log(res.data);
+  } else {
+    console.log('status: ', res.status);
+    console.log('error: ', res);
+  }
 })();
