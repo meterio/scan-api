@@ -26,10 +26,35 @@ class BlockController implements Controller {
       `${this.path}/bestin/:startTs/:endTs`,
       try$(this.getBestInTimeRange)
     );
+    this.router.get(
+      `${this.path}/at/:timestamp`,
+      try$(this.getExactMatchWithTimestamp)
+    );
     this.router.get(`${this.path}/recent`, try$(this.getRecentBlocks));
     this.router.get(`${this.path}/:revision`, try$(this.getBlockByRevision));
     this.router.get(`${this.path}/:revision/txs`, try$(this.getBlockTxs));
   }
+
+  private getExactMatchWithTimestamp = async (req: Request, res: Response) => {
+    const { timestamp } = req.params;
+    const ts = Number(timestamp);
+    if (isNaN(ts)) {
+      throw new HttpError(400, `invalid timestamp: ${timestamp}`);
+    }
+    const blk = await this.blockRepo.findByTimestamp(ts);
+    if (blk) {
+      return res.json({
+        number: blk.number,
+        hash: blk.hash,
+        timestamp: blk.timestamp,
+      });
+    }
+    return res.json({
+      number: 0,
+      hash: '0x',
+      timestamp: ts,
+    });
+  };
 
   private getBestInTimeRange = async (req: Request, res: Response) => {
     const { startTs, endTs } = req.params;

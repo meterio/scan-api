@@ -1,3 +1,5 @@
+import { urlToHttpOptions } from 'url';
+
 import { BlockType } from '../const';
 import { Block } from '../model/block.interface';
 import blockModel from '../model/block.model';
@@ -99,6 +101,10 @@ export class BlockRepo {
 
   public async findInTimeRange(start: number, end: number) {
     return this.block.find({ timestamp: { $gte: start, $lte: end } });
+  }
+
+  public async findByTimestamp(timestamp: number) {
+    return this.block.findOne({ timestamp });
   }
 }
 
