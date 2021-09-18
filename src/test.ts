@@ -32,13 +32,36 @@ import { downloadBinary, getVersionList } from './utils/downloader';
 // })();
 
 (async () => {
-  const address = '0xa81942e45bf1486dF0A32E5e267a234dE1Ad4Ae7';
+  const address = '0x8A419EF4941355476CF04933E90BF3BBF2F73814';
   const version = '0.6.9';
   const optimizer = '1';
-  const sourceCode = fs
-    .readFileSync(path.join(__dirname, 'Storage.sol'))
-    .toString();
+  // const sourceCode = fs
+  // .readFileSync(path.join(__dirname, 'Storage.sol'))
+  // .toString();
+  const sourceCode = `// SPDX-License-Identifier: GPL-3.0
 
+  pragma solidity >=0.6.9;
+  
+  contract Storage {
+    uint256 number;
+  
+    /**
+     * @dev Store value in variable
+     * @param num value to store
+     */
+    function store(uint256 num) public {
+      number = num;
+    }
+  
+    /**
+     * @dev Return value
+     * @return value of 'number'
+     */
+    function retrieve() public view returns (uint256) {
+      return number;
+    }
+  }
+  `;
   console.log('ready to post');
   const res = await axios.post(
     `https://api.meter.io:4000/api/accounts/${address}/verify`,

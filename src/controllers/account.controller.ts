@@ -185,7 +185,10 @@ class AccountController implements Controller {
       let sc;
       console.log('CODE:\n', code);
       if (check.error) {
-        data = { result: { verified: false }, err_msg: check.error };
+        data = {
+          result: { verified: false, error: check.error },
+          err_msg: check.error,
+        };
       } else {
         if (output.contracts) {
           let hexBytecode = code.substring(2);
@@ -240,9 +243,18 @@ class AccountController implements Controller {
               break;
             }
           }
+        } else {
+          return res.json({
+            result: { verified: false, error: 'no contracts compiled' },
+          });
         }
         data = {
-          result: { verified, error: check.error },
+          result: {
+            verified,
+            error: !verified
+              ? 'deployed bytecode doest not match contract compiled bytecode'
+              : undefined,
+          },
           warning_msg: check.warnings,
           smart_contract: sc,
         };
