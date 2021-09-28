@@ -1,26 +1,77 @@
 version: 2.1
 orbs:
-  slack: circleci/slack@4.0
+  docker: circleci/docker@1.7.0
+  slack: circleci/slack@4.4.4
 jobs:
   build_docker:
-    docker:
-      - image: docker:17.05.0-ce-git
+    environment:
+      DOCKER_REPO: meterio/scan-api
+      DOCKER_TAGS: 'testnet,mainnet'
+    executor: docker/docker
     steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
       - checkout
-      - setup_remote_docker
-      - run: |
-          docker build -t meterio/scan-api:testnet . ;
-          docker tag meterio/scan-api:testnet meterio/scan-api:mainnet
-      - run: |
-          docker login -u "${DOCKERHUB_USER}" --password "${DOCKERHUB_PWD}" ;
-          docker push meterio/scan-api:testnet ;
-          docker push meterio/scan-api:mainnet ;
+      - docker/check
+      - docker/build:
+          image: $DOCKER_REPO
+          tag: $DOCKER_TAGS
+      - docker/push:
+          image: $DOCKER_REPO
+          tag: $DOCKER_TAGS
       - slack/notify:
           event: fail
           template: basic_fail_1
       - slack/notify:
           event: pass
-          template: success_tagged_deploy_1
+          custom: |
+            {
+              "text": "$DOCKER_REPO image with tags $DOCKER_TAGS publish succeeded!",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "Docker build succeeded. :white_check_mark:",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type":"mrkdwn",
+                      "text": "*Image*: `$DOCKER_REPO` with tags `$DOCKER_TAGS`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Project*: $CIRCLE_PROJECT_REPONAME on `$CIRCLE_BRANCH` branch"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit*: $CIRCLE_SHA1"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Author*: $CIRCLE_USERNAME"
+                    }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Job"
+                      },
+                      "url": "${CIRCLE_BUILD_URL}"
+                    }
+                  ]
+                }
+              ]
+            }
 
 workflows:
   build_docker:
