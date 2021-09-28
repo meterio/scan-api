@@ -1,5 +1,6 @@
 version: 2.1
-
+orbs:
+  slack: circleci/slack@4.0
 jobs:
   build_docker:
     docker:
@@ -14,12 +15,20 @@ jobs:
           docker login -u "${DOCKERHUB_USER}" --password "${DOCKERHUB_PWD}" ;
           docker push meterio/scan-api:testnet ;
           docker push meterio/scan-api:mainnet ;
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+      - slack/notify:
+          event: pass
+          template: success_tagged_deploy_1
 
 workflows:
   build_docker:
     jobs:
       - build_docker:
-          context: dockerhub
+          context:
+            - dockerhub
+            - slack-secrets
           filters:
             branches:
               only:
