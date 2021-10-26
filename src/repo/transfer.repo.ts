@@ -83,6 +83,12 @@ export class TransferRepo {
     });
   }
 
+  public async countTokenTransfer(addr: string) {
+    return this.transfer.countDocuments({
+      tokenAddress: addr.toLowerCase(),
+    });
+  }
+
   public async findERC20TransferByAccount(
     addr: string,
     pageNum?: number,
