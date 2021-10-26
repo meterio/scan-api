@@ -11,6 +11,7 @@ import KnownController from './controllers/known.controller';
 import MetricController from './controllers/metric.controller';
 import PowController from './controllers/pow.controller';
 import SearchController from './controllers/search.controller';
+import TokenController from './controllers/token.controller';
 import TransferController from './controllers/transfer.controller';
 import TxController from './controllers/tx.controller';
 import ValidatorController from './controllers/validator.controller';
@@ -29,6 +30,7 @@ const app = new App([
   new AuctionController(),
   new EpochController(),
   new KnownController(),
+  new TokenController(),
 ]);
 
 app.listen();
