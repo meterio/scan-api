@@ -15,6 +15,7 @@ import TokenController from './controllers/token.controller';
 import TransferController from './controllers/transfer.controller';
 import TxController from './controllers/tx.controller';
 import ValidatorController from './controllers/validator.controller';
+import VerifyController from './controllers/verify.controller';
 
 const app = new App([
   new BucketController(),
@@ -31,6 +32,7 @@ const app = new App([
   new EpochController(),
   new KnownController(),
   new TokenController(),
+  new VerifyController(),
 ]);
 
 app.listen();
