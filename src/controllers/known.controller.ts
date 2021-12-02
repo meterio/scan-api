@@ -15,12 +15,16 @@ import {
 import Controller from '../interfaces/controller.interface';
 import KnownRepo from '../repo/known.repo';
 import TokenProfileRepo from '../repo/tokenProfile.repo';
+import KnownEventRepo from '../repo/knownEvent.repo';
+import KnownMethodRepo from '../repo/knownMethod.repo';
 
 class KnownController implements Controller {
   public path = '/api/knowns';
   public router = Router();
   private knownRepo = new KnownRepo();
   private tokenProfileRepo = new TokenProfileRepo();
+  private knownEventRepo = new KnownEventRepo();
+  private knownMethodRepo = new KnownMethodRepo();
   private knownMap = {};
 
   constructor() {
@@ -31,6 +35,54 @@ class KnownController implements Controller {
   private initializeRoutes() {
     this.router.get(`${this.path}/address`, try$(this.getKnownAddresses));
     this.router.get(`${this.path}/token`, try$(this.getKnownTokens));
+    this.router.post(`${this.path}/saveMethodAndEvent`, try$(this.saveMethodAndEvent));
+    this.router.get(`${this.path}/getAllMethodAndEvent`, try$(this.getAllMethodAndEvent));
+  }
+
+  private getAllMethodAndEvent = async (req: Request, res: Response) => {
+    try {
+      const events = await this.knownEventRepo.findAll();
+      const methods = await this.knownMethodRepo.findAll();
+
+      res.json({
+        status: true,
+        events,
+        methods
+      })
+    } catch(e) {
+      return res.json({
+        status: false,
+        message: e.message
+      })
+    }
+  }
+
+  private saveMethodAndEvent = async (req: Request, res: Response) => {
+    const { events, methods } = req.body;
+    const err = [];
+    try {
+      if (events.length > 0) {
+        await this.knownEventRepo.bulkInsert(events);
+      }
+    } catch(e) {
+      err.push(e.message);
+    }
+    try {
+      if (methods.length > 0) {
+        await this.knownMethodRepo.bulkInsert(methods);
+      }
+    } catch(e) {
+      err.push(e.message);
+    }
+    if (err.length > 0) {
+      return res.json({
+        status: false,
+        message: err.join(',')
+      })
+    }
+    res.json({
+      status: true
+    })
   }
 
   private getKnownAddresses = async (req: Request, res: Response) => {
