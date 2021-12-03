@@ -16,6 +16,8 @@ knownEventSchema.set('toJSON', {
   },
 });
 
+knownEventSchema.index({ signature: 1 },{ unique: true });
+
 const model = mongoose.model<KnownEvent & mongoose.Document>(
   'KnownEvent',
   knownEventSchema,

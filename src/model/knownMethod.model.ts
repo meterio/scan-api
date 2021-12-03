@@ -16,6 +16,8 @@ knownMethodSchema.set('toJSON', {
   },
 });
 
+knownMethodSchema.index({ signature: 1 },{ unique: true });
+
 const model = mongoose.model<KnownMethod & mongoose.Document>(
   'KnownMethod',
   knownMethodSchema,
