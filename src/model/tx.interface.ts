@@ -76,5 +76,5 @@ export interface Tx {
 
   sysContractTransfers: Transfer[]; // system contract events converted to transfers
 
-  toSummary(addr): object;
+  toSummary(addr, methods): object;
 }

@@ -21,6 +21,7 @@ import TxRepo from '../repo/tx.repo';
 import { downloadByVersion } from '../utils/downloader';
 import { extractPageAndLimitQueryParam, fromWei } from '../utils/utils';
 import { getBytecodeWithoutMetadata, stampDate } from '../utils/verify';
+import KnownMethodRepo from '../repo/knownMethod.repo';
 
 class AccountController implements Controller {
   public path = '/api/accounts';
@@ -33,6 +34,7 @@ class AccountController implements Controller {
   private tokenProfileRepo = new TokenProfileRepo();
   private tokenBalanceRepo = new TokenBalanceRepo();
   private bidRepo = new BidRepo();
+  private knownMethod = new KnownMethodRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -365,9 +367,10 @@ class AccountController implements Controller {
     if (!txs) {
       return res.json({ totalRows: 0, txSummaries: [] });
     }
+    const methods = await this.knownMethod.findAll();
     return res.json({
       totalRows: count,
-      txSummaries: txs.map((tx) => tx.toSummary(address)),
+      txSummaries: txs.map((tx) => tx.toSummary(address, methods)),
     });
   };
 
@@ -401,8 +404,9 @@ class AccountController implements Controller {
     if (!txs) {
       return res.json({ totalRows: 0, txSummaries: [] });
     }
+    const methods = await this.knownMethod.findAll();
     return res.json({
-      txSummaries: txs.map((tx) => tx.toSummary(address)),
+      txSummaries: txs.map((tx) => tx.toSummary(address, methods)),
     });
   };
 
