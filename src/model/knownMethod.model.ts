@@ -3,7 +3,8 @@ import * as mongoose from 'mongoose';
 import { KnownMethod } from './knownMethod.interface';
 
 const knownMethodSchema = new mongoose.Schema<KnownMethod>({
-  signature: { type: String, required: true, unique: true },
+  signature: { type: String, required: true },
+  contractAddress: { type: String, require: true },
   name: { type: String, required: true },
   abi: { type: String, required: true },
 });
@@ -16,7 +17,7 @@ knownMethodSchema.set('toJSON', {
   },
 });
 
-knownMethodSchema.index({ signature: 1 },{ unique: true });
+knownMethodSchema.index({ signature: 1, contractAddress: 1 },{ unique: true });
 
 const model = mongoose.model<KnownMethod & mongoose.Document>(
   'KnownMethod',

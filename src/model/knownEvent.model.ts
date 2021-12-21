@@ -3,7 +3,8 @@ import * as mongoose from 'mongoose';
 import { KnownEvent } from './knownEvent.interface';
 
 const knownEventSchema = new mongoose.Schema<KnownEvent>({
-  signature: { type: String, required: true, unique: true },
+  signature: { type: String, required: true },
+  contractAddress: { type: String, require: true },
   name: { type: String, required: true },
   abi: { type: String, required: true },
 });
@@ -16,7 +17,7 @@ knownEventSchema.set('toJSON', {
   },
 });
 
-knownEventSchema.index({ signature: 1 },{ unique: true });
+knownEventSchema.index({ signature: 1, contractAddress: 1 },{ unique: true });
 
 const model = mongoose.model<KnownEvent & mongoose.Document>(
   'KnownEvent',
