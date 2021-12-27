@@ -115,14 +115,13 @@ class MetricController implements Controller {
 
   private getTokenData = async () => {
     let map = await this.getMetricMap();
-    let avgDailyReward = '0 MTRG';
+    let avgDailyReward = `0 ${BALANCE_SYM}`;
     try {
       let s = map[MetricName.PRESENT_AUCTION];
       let present = JSON.parse(s);
       if (present.releasedMTRG && Number(present.releasedMTRG)) {
         avgDailyReward =
-          new BigNumber(present.releasedMTRG).dividedBy(1e18).toFixed(0) +
-          ' MTRG';
+          new BigNumber(present.releasedMTRG).dividedBy(1e18).toFixed(0) + ` ${BALANCE_SYM}`;
       }
     } catch (e) {}
 

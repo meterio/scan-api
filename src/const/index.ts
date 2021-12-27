@@ -12,5 +12,5 @@ export const RECENT_WINDOW = 5;
 export const LIMIT_WINDOW = 10;
 export const UNIT_SHANNON = 1e9;
 export const UNIT_WEI = 1e18;
-export const ENERGY_SYM = 'MTR';
-export const BALANCE_SYM = 'MTRG';
+export const ENERGY_SYM = 'STPT';
+export const BALANCE_SYM = 'VERSE';

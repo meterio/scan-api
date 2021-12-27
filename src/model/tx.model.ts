@@ -2,7 +2,7 @@ import * as devkit from '@meterio/devkit';
 import BigNumber from 'bignumber.js';
 import * as mongoose from 'mongoose';
 
-import { Token, ZeroAddress, enumKeys } from '../const';
+import { Token, ZeroAddress, enumKeys, ENERGY_SYM, BALANCE_SYM } from '../const';
 import {
   AccountLockModuleAddress,
   AuctionModuleAddress,
@@ -295,7 +295,7 @@ txSchema.methods.toSummary = function (addr, m) {
     totalClauseMTRG: this.totalClauseMTRG.toFixed(),
     totalTransferMTR: this.totalTransferMTR.toFixed(),
     totalTransferMTRG: this.totalTransferMTRG.toFixed(),
-    token: token == 0 ? 'MTR' : 'MTRG',
+    token: token == 0 ? ENERGY_SYM : BALANCE_SYM,
     reverted: this.reverted,
     majorTo: this.majorTo,
     toCount: this.toCount,

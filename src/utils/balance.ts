@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js';
 
 import { fromWei } from './utils';
+import { ENERGY_SYM, BALANCE_SYM } from '../const';
 
 export class Balance {
   private addr: string;
@@ -39,6 +40,6 @@ export class Balance {
   }
 
   public String() {
-    return `{ MTR: ${fromWei(this.mtr)}, MTRG: ${fromWei(this.mtrg)} }`;
+    return `{ ${ENERGY_SYM}: ${fromWei(this.mtr)}, ${BALANCE_SYM}: ${fromWei(this.mtrg)} }`;
   }
 }

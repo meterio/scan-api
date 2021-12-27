@@ -81,7 +81,7 @@ class ValidatorController implements Controller {
       delegators.push({
         amount: amount.toFixed(),
         address: addr,
-        amountStr: fromWei(amount, 2) + ' MTRG',
+        amountStr: fromWei(amount, 2) + ` ${BALANCE_SYM}`,
         percent: amount.dividedBy(total).times(100).toFixed(2) + '%',
       });
     }
