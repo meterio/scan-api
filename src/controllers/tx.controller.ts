@@ -101,8 +101,9 @@ class TxController implements Controller {
     let txNewObj = { ...txObj, events, transfers, clauses };
     // txObj.events = events;
     // txObj.transfers = transfers;
+    const methods = await this.knownMethodRepo.findAll();
     return res.json({
-      summary: tx.toSummary(undefined, []),
+      summary: tx.toSummary(undefined, methods),
       tx: txNewObj,
       tokens,
     });
