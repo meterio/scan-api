@@ -1,7 +1,7 @@
 import BigNumber from 'bignumber.js';
 import * as mongoose from 'mongoose';
 
-import { Token, enumKeys } from '../const';
+import { BALANCE_SYM, ENERGY_SYM, Token, enumKeys } from '../const';
 import { fromWei } from '../utils/utils';
 import {
   AuctionDist,
@@ -109,15 +109,15 @@ auctionSummarySchema.methods.toSummary = function () {
     bidCount: this.txs ? this.txs.length : 0,
     distCount: this.dist ? this.dist.length : 0,
     released: this.releasedMTRG.toFixed(),
-    releasedStr: `${fromWei(this.releasedMTRG)} MTRG`,
+    releasedStr: `${fromWei(this.releasedMTRG)} ${BALANCE_SYM}`,
     received: this.receivedMTR.toFixed(),
-    receivedStr: `${fromWei(this.receivedMTR)} MTR`,
+    receivedStr: `${fromWei(this.receivedMTR)} ${ENERGY_SYM}`,
     reserved: this.reservedMTRG.toFixed(),
-    reservedStr: `${fromWei(this.reservedMTRG)} MTRG`,
+    reservedStr: `${fromWei(this.reservedMTRG)} ${BALANCE_SYM}`,
     reservedPrice: this.reservedPrice.toFixed(),
     actualPrice: this.actualPrice.toFixed(),
     leftover: this.leftoverMTRG.toFixed(),
-    leftoeverStr: `${fromWei(this.leftoverMTRG)} MTRG`,
+    leftoeverStr: `${fromWei(this.leftoverMTRG)} ${BALANCE_SYM}`,
   };
 };
 
