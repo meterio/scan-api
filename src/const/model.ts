@@ -1,6 +1,6 @@
 export enum Token {
   STPT = 0,
-  VERSE,
+  STPD,
   ERC20,
 }
 

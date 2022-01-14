@@ -13,4 +13,4 @@ export const LIMIT_WINDOW = 10;
 export const UNIT_SHANNON = 1e9;
 export const UNIT_WEI = 1e18;
 export const ENERGY_SYM = 'STPT';
-export const BALANCE_SYM = 'VERSE';
+export const BALANCE_SYM = 'STPD';
