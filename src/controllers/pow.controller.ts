@@ -2,7 +2,7 @@ import BigNumber from 'bignumber.js';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
-import { ZeroAddress } from '../const';
+import { ENERGY_SYM, ZeroAddress } from '../const';
 import Controller from '../interfaces/controller.interface';
 import BlockRepo from '../repo/block.repo';
 import CommitteeRepo from '../repo/committee.repo';
@@ -64,7 +64,7 @@ class PowController implements Controller {
           details.push({
             address: addr,
             subTotal: rewardMap[addr].toFixed(),
-            subTotalStr: `${fromWei(rewardMap[addr])} MTR`,
+            subTotalStr: `${fromWei(rewardMap[addr])} ${ENERGY_SYM}`,
           });
         }
         let powStart = 0;
@@ -87,7 +87,7 @@ class PowController implements Controller {
           timestamp: kb.timestamp,
           epoch: kb.epoch,
           totalAmount: total.toFixed(),
-          totalAmountStr: `${fromWei(total)} MTR`,
+          totalAmountStr: `${fromWei(total)} ${ENERGY_SYM}`,
           details,
         });
       }
@@ -105,7 +105,7 @@ class PowController implements Controller {
         timestamp: 0,
         epoch: epoch,
         totalAmount: 0,
-        totalAmountStr: `0 MTR`,
+        totalAmountStr: `0 ${ENERGY_SYM}`,
         details: [],
       });
     }
@@ -129,7 +129,7 @@ class PowController implements Controller {
         details.push({
           address: addr,
           subTotal: rewardMap[addr].toFixed(),
-          subTotalStr: `${fromWei(rewardMap[addr])} MTR`,
+          subTotalStr: `${fromWei(rewardMap[addr])} ${ENERGY_SYM}`,
         });
       }
       return res.json({
@@ -138,7 +138,7 @@ class PowController implements Controller {
         timestamp: kb.timestamp,
         epoch: kb.epoch,
         totalAmount: total.toFixed(),
-        totalAmountStr: `${fromWei(total)} MTR`,
+        totalAmountStr: `${fromWei(total)} ${ENERGY_SYM}`,
         details,
       });
     }

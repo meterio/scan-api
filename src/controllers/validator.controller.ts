@@ -3,7 +3,7 @@ import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { Document } from 'mongoose';
 
-import { MetricName, UNIT_SHANNON } from '../const';
+import { BALANCE_SYM, MetricName, UNIT_SHANNON } from '../const';
 import { Token } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { Validator } from '../model/validator.interface';
@@ -130,16 +130,18 @@ class ValidatorController implements Controller {
         jailed: 0,
       });
     }
-    const candidateTotalStaked = await this.validatorRepo.getCandidateTotalStaked();
-    const delegateTotalStaked = await this.validatorRepo.getDelegateTotalStaked();
+    const candidateTotalStaked =
+      await this.validatorRepo.getCandidateTotalStaked();
+    const delegateTotalStaked =
+      await this.validatorRepo.getDelegateTotalStaked();
     const candidates = await this.validatorRepo.countCandidatesByFilter('');
     const delegates = await this.validatorRepo.countDelegatesByFilter('');
     const jailed = await this.validatorRepo.countJailedByFilter('');
     return res.json({
       totalStaked: candidateTotalStaked,
-      totalStakedStr: `${fromWei(candidateTotalStaked)} MTRG`,
+      totalStakedStr: `${fromWei(candidateTotalStaked)} ${BALANCE_SYM}`,
       totalDelegateStaked: delegateTotalStaked,
-      totalDelegateStakedStr: `${fromWei(delegateTotalStaked)} MTRG`,
+      totalDelegateStakedStr: `${fromWei(delegateTotalStaked)} ${BALANCE_SYM}`,
       onlineNode: 0, // FIXME: fake stub
       totalNode: delegates,
       delegates,
@@ -160,7 +162,7 @@ class ValidatorController implements Controller {
         .times(100)
         .toPrecision(2)}%`,
       totalVotes: v.totalVotes.toFixed(),
-      totalVotesStr: `${fromWei(v.totalVotes, 2)} MTRG`,
+      totalVotesStr: `${fromWei(v.totalVotes, 2)} ${BALANCE_SYM}`,
       totalPoints: v.totalPoints ? Number(v.totalPoints.toFixed()) : 0,
     };
   };
@@ -192,7 +194,7 @@ class ValidatorController implements Controller {
       // pubKey: v.pubKey,
 
       votingPower: v.votingPower.toFixed(),
-      votingPowerStr: `${fromWei(v.votingPower, 2)} MTRG`,
+      votingPowerStr: `${fromWei(v.votingPower, 2)} ${BALANCE_SYM}`,
       'commission%': `${new BigNumber(v.delegateCommission)
         .dividedBy(UNIT_SHANNON)
         .times(100)
@@ -218,7 +220,8 @@ class ValidatorController implements Controller {
       page,
       limit
     );
-    const delegateTotalStaked = await this.validatorRepo.getDelegateTotalStaked();
+    const delegateTotalStaked =
+      await this.validatorRepo.getDelegateTotalStaked();
     return res.json({
       totalRows: count,
       delegates: delegates.map((d) =>
@@ -235,7 +238,7 @@ class ValidatorController implements Controller {
       // pubKey: v.pubKey,
 
       totalPoints: v.totalPoints ? Number(v.totalPoints.toFixed()) : 0,
-      bailAmount: `${fromWei(v.bailAmount, 2)} MTRG`,
+      bailAmount: `${fromWei(v.bailAmount, 2)} ${BALANCE_SYM}`,
       jailedTime: v.jailedTime,
       infractions: v.infractions,
     };

@@ -4,6 +4,7 @@ import { HttpError, try$ } from 'express-toolbox';
 import Controller from '../interfaces/controller.interface';
 import AccountRepo from '../repo/account.repo';
 import BlockRepo from '../repo/block.repo';
+import KnownMethodRepo from '../repo/knownMethod.repo';
 import TxRepo from '../repo/tx.repo';
 import ValidatorRepo from '../repo/validator.repo';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
@@ -16,6 +17,7 @@ class BlockController implements Controller {
   private txRepo = new TxRepo();
   private accountRepo = new AccountRepo();
   private validatorRepo = new ValidatorRepo();
+  private knownMethodRepo = new KnownMethodRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -116,7 +118,8 @@ class BlockController implements Controller {
       txs = await this.txRepo.findByHashs(blk.txHashs);
     }
     let ans = blk.toSummary();
-    ans.txSummaries = txs.map((tx) => tx.toSummary(undefined));
+    const methods = await this.knownMethodRepo.findAll();
+    ans.txSummaries = txs.map((tx) => tx.toSummary(undefined, methods));
 
     const nameMap = await this.getNameMap();
     ans.beneficiaryName = nameMap[ans.beneficiary] || '';

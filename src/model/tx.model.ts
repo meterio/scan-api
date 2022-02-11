@@ -240,7 +240,7 @@ txSchema.methods.getType = function () {
   return 'transfer';
 };
 
-txSchema.methods.toSummary = function (addr) {
+txSchema.methods.toSummary = function (addr, m) {
   const token = this.clauseCount > 0 ? this.clauses[0].token : 0;
 
   let totalClauseAmount = '0';
@@ -262,11 +262,30 @@ txSchema.methods.toSummary = function (addr) {
     );
   }
 
+  let knowMethod = {};
+  if (this.clauses.length > 0) {
+    let signature = this.clauses[0].data.length > 10 ? this.clauses[0].data.substring(0, 10) : '';
+    const contractAddress = this.clauses[0].to;
+    if (signature !== '') {
+      knowMethod = m.find(item => item.signature === signature && item.contractAddress === contractAddress);
+      if (!knowMethod) {
+        knowMethod = {
+          signature: signature === '0xffffffff' ? 'scriptEngine' : signature
+        }
+      }
+    } else {
+      knowMethod = {
+        signature: '--'
+      }
+    }
+  }
+
   return {
     hash: this.hash,
     block: this.block,
     origin: this.origin,
     clauseCount: this.clauses ? this.clauses.length : 0,
+    knowMethod,
     type: this.getType(),
     paid: this.paid.toFixed(),
     gasUsed: this.gasUsed,
