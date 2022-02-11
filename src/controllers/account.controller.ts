@@ -423,8 +423,11 @@ class AccountController implements Controller {
 
   private getTokenHoldersByAccount = async (req: Request, res: Response) => {
     const { tokenAddress } = req.params;
-    const tokens = await this.tokenBalanceRepo.findAllByTokenAddress(
-      tokenAddress
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+    const tokens = await this.tokenBalanceRepo.findByTokenAddress(
+      tokenAddress,
+      page,
+      limit
     );
     console.log('TOKEN ADDRESS: ', tokenAddress);
     const profile = await this.tokenProfileRepo.findByAddress(tokenAddress);

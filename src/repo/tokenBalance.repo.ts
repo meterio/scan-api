@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js';
 
 import { BlockConcise } from '../model/blockConcise.interface';
 import tokenBalanceModel from '../model/tokenBalance.model';
+import { formalizePageAndLimit } from '../utils/utils';
 
 export class TokenBalanceRepo {
   private model = tokenBalanceModel;
@@ -23,6 +24,20 @@ export class TokenBalanceRepo {
 
   public async findAllByTokenAddress(tokenAddress: string) {
     return this.model.find({ tokenAddress: tokenAddress.toLowerCase() });
+  }
+
+  public async findByTokenAddress(
+    tokenAddress: string,
+    pageNum?: number,
+    limitNum?: number
+  ) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    console.log(page, limit);
+    return this.model
+      .find({ tokenAddress: tokenAddress.toLowerCase() })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(limit * page);
   }
 
   public async countAllByTokenAddress(tokenAddress: string) {
