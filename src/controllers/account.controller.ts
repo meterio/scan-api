@@ -461,7 +461,8 @@ class AccountController implements Controller {
   private getTokensByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     console.log(address);
-    const tokens = await this.tokenBalanceRepo.findAllByAddress(address);
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+    const tokens = await this.tokenBalanceRepo.findByAddressWithPageLimit(address, page, limit);
 
     if (!tokens) {
       return res.json({ tokens: [] });

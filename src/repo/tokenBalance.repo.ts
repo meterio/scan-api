@@ -22,6 +22,19 @@ export class TokenBalanceRepo {
     return this.model.find({ address: address.toLowerCase() });
   }
 
+  public async findByAddressWithPageLimit(
+    address: string,
+    pageNum?: number,
+    limitNum?: number
+  ) {
+    const { page, limit } = formalizePageAndLimit(pageNum, limitNum);
+    return this.model
+      .find({ address: address.toLowerCase() })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(limit * page);
+  }
+
   public async findAllByTokenAddress(tokenAddress: string) {
     return this.model.find({ tokenAddress: tokenAddress.toLowerCase() });
   }
