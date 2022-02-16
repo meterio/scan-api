@@ -22,6 +22,7 @@ import { downloadByVersion } from '../utils/downloader';
 import { extractPageAndLimitQueryParam, fromWei } from '../utils/utils';
 import { getBytecodeWithoutMetadata, stampDate } from '../utils/verify';
 import KnownMethodRepo from '../repo/knownMethod.repo';
+import { count } from 'console';
 
 class AccountController implements Controller {
   public path = '/api/accounts';
@@ -465,7 +466,7 @@ class AccountController implements Controller {
     const tokens = await this.tokenBalanceRepo.findByAddressWithPageLimit(address, page, limit);
 
     if (!tokens) {
-      return res.json({ tokens: [] });
+      return res.json({ totalRows: 0,  tokens: [] });
     }
     let profileMap = {};
     (
@@ -477,7 +478,10 @@ class AccountController implements Controller {
     ).forEach((p) => {
       profileMap[p.address] = p;
     });
+    const count = this.tokenBalanceRepo.countAllByTokenAddress(address);
+    
     return res.json({
+      totalRows: count,
       tokens: tokens
         .filter((t) => t.balance.isGreaterThan(0))
         .map((t) => {
