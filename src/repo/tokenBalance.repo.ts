@@ -59,6 +59,12 @@ export class TokenBalanceRepo {
     });
   }
 
+  public async countAllByAddress(address: string) {
+    return this.model.countDocuments({
+      address: address.toLowerCase(),
+    });
+  }
+
   public async exist(address: string, tokenAddress: string) {
     return this.model.exists({
       address: address.toLowerCase(),
