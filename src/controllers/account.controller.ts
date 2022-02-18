@@ -478,7 +478,7 @@ class AccountController implements Controller {
     ).forEach((p) => {
       profileMap[p.address] = p;
     });
-    const count = this.tokenBalanceRepo.countAllByTokenAddress(address);
+    const count = await this.tokenBalanceRepo.countAllByTokenAddress(address);
     
     return res.json({
       totalRows: count,
