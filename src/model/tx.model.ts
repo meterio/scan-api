@@ -265,9 +265,10 @@ txSchema.methods.toSummary = function (addr, m) {
   let knowMethod = {};
   if (this.clauses.length > 0) {
     let signature = this.clauses[0].data.length > 10 ? this.clauses[0].data.substring(0, 10) : '';
-    const contractAddress = this.clauses[0].to;
+    // const contractAddress = this.clauses[0].to;
     if (signature !== '') {
-      knowMethod = m.find(item => item.signature === signature && item.contractAddress === contractAddress);
+      // knowMethod = m.find(item => item.signature === signature && item.contractAddress === contractAddress);
+      knowMethod = m.find(item => item.signature === signature);
       if (!knowMethod) {
         knowMethod = {
           signature: signature === '0xffffffff' ? 'scriptEngine' : signature

@@ -63,8 +63,9 @@ class TxController implements Controller {
       let knownMethod;
       if (txObj.clauses[clauseIndex].data.length > 10) {
         const methodNameSignature = txObj.clauses[clauseIndex].data.substring(0, 10);
-        const contractAddress = txObj.clauses[clauseIndex].to;
-        knownMethod = knownMethods.find(item => item.signature === methodNameSignature && item.contractAddress === contractAddress);
+        // const contractAddress = txObj.clauses[clauseIndex].to;
+        // knownMethod = knownMethods.find(item => item.signature === methodNameSignature && item.contractAddress === contractAddress);
+        knownMethod = knownMethods.find(item => item.signature === methodNameSignature);
         if (!knownMethod) {
           knownMethod = {
             signature: methodNameSignature
@@ -72,13 +73,14 @@ class TxController implements Controller {
         }
       }
       clauses.push({ ...txObj.clauses[clauseIndex], knownMethod })
-      
+
       const o = txObj.outputs[clauseIndex];
       for (let logIndex = 0; logIndex < o.events.length; logIndex++) {
         const e = o.events[logIndex];
         let knownEvent;
         if (e.topics.length > 0) {
-          knownEvent = knownEvents.find(item => item.signature === e.topics[0] && item.contractAddress === e.address);
+          // knownEvent = knownEvents.find(item => item.signature === e.topics[0] && item.contractAddress === e.address);
+          knownEvent = knownEvents.find(item => item.signature === e.topics[0]);
           if (!knownEvent) {
             knownEvent = {
               signature: e.topics[0]
