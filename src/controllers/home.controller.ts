@@ -1,3 +1,4 @@
+import axios from 'axios';
 import BigNumber from 'bignumber.js';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
@@ -29,9 +30,20 @@ class HomeController implements Controller {
       `${this.path}/mtrg/totalsupply`,
       try$(this.getMTRGTotalsupplyRaw)
     );
+    this.router.get(`${this.path}/probe/:ip`, try$(this.probe));
     this.router.get(`${this.path}`, try$(this.getHome));
   }
 
+  private probe = async (req: Request, res: Response) => {
+    const { ip } = req.params;
+    try {
+      const result = await axios.get(`http://${ip}:8670/probe`);
+      res.json({ result: result.data });
+    } catch (e) {
+      console.log('ERROR: ', e);
+      res.json({ result: null });
+    }
+  };
   private getHome = async (req: Request, res: Response) => {
     return res.json({ name: 'scan-api', version: pkg.version });
   };
