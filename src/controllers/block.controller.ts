@@ -2,13 +2,16 @@ import { Request, Response, Router } from 'express';
 import { HttpError, try$ } from 'express-toolbox';
 
 import Controller from '../interfaces/controller.interface';
-import AccountRepo from '../repo/account.repo';
-import BlockRepo from '../repo/block.repo';
-import KnownMethodRepo from '../repo/knownMethod.repo';
-import TxRepo from '../repo/tx.repo';
-import ValidatorRepo from '../repo/validator.repo';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
 import { isHexBytes, isUInt } from '../utils/validator';
+
+import {
+  AccountRepo,
+  BlockRepo,
+  KnownMethodRepo,
+  TxRepo,
+  ValidatorRepo
+} from '@meterio/scan-db';
 
 class BlockController implements Controller {
   public path = '/api/blocks';
@@ -174,7 +177,7 @@ class BlockController implements Controller {
     if (count <= 0) {
       return res.json({ totalRows: 0, blocks: [] });
     }
-    const blocks = await this.blockRepo.findRecent(page, limit);
+    const blocks = await this.blockRepo.findRecentWithPage(page, limit);
     res.json({
       totalRows: count,
       blocks: blocks.map((b) => {

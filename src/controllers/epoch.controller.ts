@@ -2,10 +2,9 @@ import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
 import Controller from '../interfaces/controller.interface';
-import BlockRepo from '../repo/block.repo';
-import CommitteeRepo from '../repo/committee.repo';
-import KnownRepo from '../repo/known.repo';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
+
+import { BlockRepo, CommitteeRepo, KnownRepo } from '@meterio/scan-db';
 
 class EpochController implements Controller {
   public path = '/api/epochs';

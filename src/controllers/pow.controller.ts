@@ -1,14 +1,17 @@
-import BigNumber from 'bignumber.js';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
 import { ENERGY_SYM, ZeroAddress } from '../const';
 import Controller from '../interfaces/controller.interface';
-import BlockRepo from '../repo/block.repo';
-import CommitteeRepo from '../repo/committee.repo';
-import PowBlockRepo from '../repo/powBlock.repo';
-import TxRepo from '../repo/tx.repo';
 import { extractPageAndLimitQueryParam, fromWei } from '../utils/utils';
+
+import {
+  BlockRepo,
+  CommitteeRepo,
+  PowBlockRepo,
+  TxRepo,
+  BigNumber
+} from '@meterio/scan-db';
 
 class PowController implements Controller {
   public path = '/api/pow';

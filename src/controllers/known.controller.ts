@@ -13,10 +13,13 @@ import {
   ValidatorBenefitAddress,
 } from '../const';
 import Controller from '../interfaces/controller.interface';
-import KnownRepo from '../repo/known.repo';
-import TokenProfileRepo from '../repo/tokenProfile.repo';
-import KnownEventRepo from '../repo/knownEvent.repo';
-import KnownMethodRepo from '../repo/knownMethod.repo';
+
+import {
+  KnownRepo,
+  TokenProfileRepo,
+  KnownEventRepo,
+  KnownMethodRepo
+} from '@meterio/scan-db';
 
 class KnownController implements Controller {
   public path = '/api/knowns';
@@ -49,7 +52,7 @@ class KnownController implements Controller {
         events,
         methods
       })
-    } catch(e) {
+    } catch (e) {
       return res.json({
         status: false,
         message: e.message
@@ -64,14 +67,14 @@ class KnownController implements Controller {
       if (events.length > 0) {
         await this.knownEventRepo.bulkInsert(events);
       }
-    } catch(e) {
+    } catch (e) {
       err.push(e.message);
     }
     try {
       if (methods.length > 0) {
         await this.knownMethodRepo.bulkInsert(methods);
       }
-    } catch(e) {
+    } catch (e) {
       err.push(e.message);
     }
     if (err.length > 0) {

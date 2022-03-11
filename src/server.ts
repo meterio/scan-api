@@ -12,7 +12,7 @@ import MetricController from './controllers/metric.controller';
 import PowController from './controllers/pow.controller';
 import SearchController from './controllers/search.controller';
 import TokenController from './controllers/token.controller';
-import TransferController from './controllers/transfer.controller';
+import MovementController from './controllers/movement.controller';
 import TxController from './controllers/tx.controller';
 import ValidatorController from './controllers/validator.controller';
 
@@ -25,7 +25,7 @@ const app = new App([
   new TxController(),
   new AccountController(),
   new PowController(),
-  new TransferController(),
+  new MovementController(),
   new ValidatorController(),
   new AuctionController(),
   new EpochController(),

@@ -1,17 +1,16 @@
-import BigNumber from 'bignumber.js';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
 import Controller from '../interfaces/controller.interface';
-import TokenProfileRepo from '../repo/tokenProfile.repo';
-import TransferRepo from '../repo/transfer.repo';
+
+import { TokenProfileRepo, MovementRepo, BigNumber } from '@meterio/scan-db';
 
 class TokenController implements Controller {
   public path = '/api/token';
   public router = Router();
 
   private tokenProfileRepo = new TokenProfileRepo();
-  private transferRepo = new TransferRepo();
+  private movementRepo = new MovementRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -26,7 +25,7 @@ class TokenController implements Controller {
 
     const tokenProfile = await this.tokenProfileRepo.findByAddress(address);
     if (tokenProfile.transfersCount.isZero()) {
-      const transfersCount = await this.transferRepo.countTokenTransfer(
+      const transfersCount = await this.movementRepo.countTokenTransfer(
         address
       );
       console.log('transfersCount: ', transfersCount);

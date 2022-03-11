@@ -3,9 +3,9 @@ import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
 import Controller from '../interfaces/controller.interface';
-import AuctionRepo from '../repo/auction.repo';
-import BidRepo from '../repo/bid.repo';
 import { extractPageAndLimitQueryParam, fromWei } from '../utils/utils';
+
+import { AuctionRepo, BidRepo } from '@meterio/scan-db';
 
 class AuctionController implements Controller {
   public path = '/api/auctions';

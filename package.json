@@ -23,6 +23,7 @@
   ],
   "dependencies": {
     "@meterio/devkit": "^1.4.1",
+    "@meterio/scan-db": "0.0.10",
     "axios": "^0.21.1",
     "bignumber.js": "^9.0.0",
     "bunyan": "^1.8.14",

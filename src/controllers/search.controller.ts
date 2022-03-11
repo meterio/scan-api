@@ -3,9 +3,12 @@ import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
 import Controller from '../interfaces/controller.interface';
-import AccountRepo from '../repo/account.repo';
-import BlockRepo from '../repo/block.repo';
-import TxRepo from '../repo/tx.repo';
+
+import {
+  AccountRepo,
+  BlockRepo,
+  TxRepo
+} from '@meterio/scan-db';
 
 class SearchController implements Controller {
   public path = '/api/search';

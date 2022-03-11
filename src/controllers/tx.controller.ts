@@ -3,11 +3,14 @@ import { try$ } from 'express-toolbox';
 
 import { TransferEvent } from '../const';
 import Controller from '../interfaces/controller.interface';
-import TokenProfileRepo from '../repo/tokenProfile.repo';
-import TxRepo from '../repo/tx.repo';
-import KnownEventRepo from '../repo/knownEvent.repo';
-import KnownMethodRepo from '../repo/knownMethod.repo';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
+
+import {
+  TokenProfileRepo,
+  TxRepo,
+  KnownEventRepo,
+  KnownMethodRepo
+} from '@meterio/scan-db';
 
 class TxController implements Controller {
   public path = '/api/txs';

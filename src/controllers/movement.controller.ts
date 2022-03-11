@@ -3,12 +3,13 @@ import { try$ } from 'express-toolbox';
 
 import { RECENT_WINDOW } from '../const';
 import Controller from '../interfaces/controller.interface';
-import TransferRepo from '../repo/transfer.repo';
 
-class TransferController implements Controller {
+import { MovementRepo } from '@meterio/scan-db';
+
+class MovementController implements Controller {
   public path = '/api/transfers';
   public router = Router();
-  private transferRepo = new TransferRepo();
+  private movementRepo = new MovementRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -28,9 +29,9 @@ class TransferController implements Controller {
       console.log('Invalid count param: ', req.query.count);
     }
 
-    const transfers = await this.transferRepo.findRecent(count);
+    const transfers = await this.movementRepo.findRecentWithLimit(count);
     return res.json({ transfers });
   };
 }
 
-export default TransferController;
+export default MovementController;

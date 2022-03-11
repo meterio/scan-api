@@ -1,4 +1,3 @@
-import BigNumber from 'bignumber.js';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { Document } from 'mongoose';
@@ -6,14 +5,18 @@ import { Document } from 'mongoose';
 import { BALANCE_SYM, MetricName, UNIT_SHANNON } from '../const';
 import { Token } from '../const';
 import Controller from '../interfaces/controller.interface';
-import { Validator } from '../model/validator.interface';
-import BlockRepo from '../repo/block.repo';
-import BucketRepo from '../repo/bucket.repo';
-import EpochRewardRepo from '../repo/epochReward.repo';
-import EpochRewardSummaryRepo from '../repo/epochRewardSummary.repo';
-import MetricRepo from '../repo/metric.repo';
-import ValidatorRepo from '../repo/validator.repo';
 import { extractPageAndLimitQueryParam, fromWei } from '../utils/utils';
+
+import {
+  BlockRepo,
+  BucketRepo,
+  EpochRewardRepo,
+  EpochRewardSummaryRepo,
+  MetricRepo,
+  ValidatorRepo,
+  BigNumber,
+  Validator
+} from '@meterio/scan-db';
 
 const MissingLeaderPenalty = 1000;
 const MissingProposerPenalty = 20;
@@ -265,7 +268,7 @@ class ValidatorController implements Controller {
 
   private getStats = async (req: Request, res: Response) => {
     const stats = await this.metricRepo.findByKey(MetricName.STATS);
-    const bests = await this.blockRepo.findRecent(1, 1);
+    const bests = await this.blockRepo.findRecentWithPage(1, 1);
     const best = bests[0];
     const epoch = best.epoch;
     const summaries = {};
@@ -376,7 +379,7 @@ class ValidatorController implements Controller {
   private getEpochRewards = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
-    const rewards = await this.epochRewardSummaryRepo.findAll(page, limit);
+    const rewards = await this.epochRewardSummaryRepo.findAllWithPage(page, limit);
     const count = await this.epochRewardSummaryRepo.countAll();
     if (!rewards) {
       return res.json({ totalRows: 0, rewards: [] });

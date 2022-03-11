@@ -1,4 +1,4 @@
-import BigNumber from 'bignumber.js';
+import { BigNumber } from '@meterio/scan-db';
 import { Request } from 'express';
 
 import { LIMIT_WINDOW, UNIT_WEI } from '../const';
@@ -78,7 +78,7 @@ export const toWei = (val: string | number | BigNumber) => {
 
 class Metric {
   private duration = BigInt(0);
-  constructor(readonly name: string) {}
+  constructor(readonly name: string) { }
   public start() {
     const s = process.hrtime.bigint();
     return () => {

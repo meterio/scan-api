@@ -6,15 +6,18 @@ import { Document } from 'mongoose';
 
 import { BALANCE_SYM, MetricName, ValidatorStatus, enumVals } from '../const';
 import Controller from '../interfaces/controller.interface';
-import { Validator } from '../model/validator.interface';
-import AccountRepo from '../repo/account.repo';
-import BlockRepo from '../repo/block.repo';
-import HeadRepo from '../repo/head.repo';
-import MetricRepo from '../repo/metric.repo';
-import TransferRepo from '../repo/transfer.repo';
-import TxRepo from '../repo/tx.repo';
-import ValidatorRepo from '../repo/validator.repo';
 import { fromWei } from '../utils/utils';
+
+import {
+  AccountRepo,
+  BlockRepo,
+  HeadRepo,
+  MetricRepo,
+  TxRepo,
+  ValidatorRepo,
+  MovementRepo,
+  Validator
+} from '@meterio/scan-db';
 
 class MetricController implements Controller {
   public path = '/api/metrics';
@@ -23,7 +26,7 @@ class MetricController implements Controller {
   private headRepo = new HeadRepo();
   private blockRepo = new BlockRepo();
   private txRepo = new TxRepo();
-  private transferRepo = new TransferRepo();
+  private movementRepo = new MovementRepo();
   private accountRepo = new AccountRepo();
   private validatorRepo = new ValidatorRepo();
 
@@ -54,7 +57,7 @@ class MetricController implements Controller {
 
   private getPosData = async () => {
     let map = await this.getMetricMap();
-    const recentBlocks = await this.blockRepo.findRecent(20);
+    const recentBlocks = await this.blockRepo.findRecentWithPage(20);
     let avgBlockTime = 2;
     if (recentBlocks && recentBlocks.length > 2) {
       const last = recentBlocks[0];
@@ -64,7 +67,7 @@ class MetricController implements Controller {
           (100 * (last.timestamp - first.timestamp)) / (recentBlocks.length - 1)
         ) / 100;
     }
-    const txsCount = await this.transferRepo.count();
+    const txsCount = await this.movementRepo.count();
 
     const totalStaked = map[MetricName.MTRG_STAKED];
     const totalStakedLocked = map[MetricName.MTRG_STAKED_LOCKED];
@@ -124,7 +127,7 @@ class MetricController implements Controller {
           new BigNumber(present.releasedMTRG).dividedBy(1e18).toFixed(0) +
           ' MTRG';
       }
-    } catch (e) {}
+    } catch (e) { }
 
     return {
       mtr: {
