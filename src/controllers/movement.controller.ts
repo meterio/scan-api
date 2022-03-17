@@ -1,10 +1,9 @@
+import { MovementRepo } from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
 import { RECENT_WINDOW } from '../const';
 import Controller from '../interfaces/controller.interface';
-
-import { MovementRepo } from '@meterio/scan-db';
 
 class MovementController implements Controller {
   public path = '/api/transfers';

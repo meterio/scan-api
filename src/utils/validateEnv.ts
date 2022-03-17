@@ -8,7 +8,7 @@ function validateEnv() {
     MONGO_PWD: str(),
     MONGO_SSL_CA: str(),
 
-    MODE: str(),
+    NETWORK: str(),
     // server
     PORT: port(),
   });

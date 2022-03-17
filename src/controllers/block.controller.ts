@@ -1,17 +1,16 @@
+import {
+  AccountRepo,
+  BlockRepo,
+  KnownMethodRepo,
+  TxRepo,
+  ValidatorRepo,
+} from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { HttpError, try$ } from 'express-toolbox';
 
 import Controller from '../interfaces/controller.interface';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
 import { isHexBytes, isUInt } from '../utils/validator';
-
-import {
-  AccountRepo,
-  BlockRepo,
-  KnownMethodRepo,
-  TxRepo,
-  ValidatorRepo
-} from '@meterio/scan-db';
 
 class BlockController implements Controller {
   public path = '/api/blocks';

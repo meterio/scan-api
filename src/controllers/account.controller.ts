@@ -1,24 +1,23 @@
+import {
+  AccountRepo,
+  BidRepo,
+  BigNumber,
+  BlockRepo,
+  BucketRepo,
+  KnownMethodRepo,
+  Movement,
+  MovementRepo,
+  Token,
+  TokenBalanceRepo,
+  TokenProfileRepo,
+  TxRepo,
+} from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { Document } from 'mongoose';
 
 import Controller from '../interfaces/controller.interface';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
-
-import {
-  AccountRepo,
-  BidRepo,
-  BlockRepo,
-  BucketRepo,
-  TokenBalanceRepo,
-  TokenProfileRepo,
-  TxRepo,
-  KnownMethodRepo,
-  MovementRepo,
-  BigNumber,
-  Movement,
-  Token
-} from '@meterio/scan-db';
 
 class AccountController implements Controller {
   public path = '/api/accounts';
@@ -266,7 +265,11 @@ class AccountController implements Controller {
     const { address } = req.params;
     console.log(address);
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const tokens = await this.tokenBalanceRepo.findByAddressWithPageLimit(address, page, limit);
+    const tokens = await this.tokenBalanceRepo.findByAddressWithPageLimit(
+      address,
+      page,
+      limit
+    );
 
     if (!tokens) {
       return res.json({ totalRows: 0, tokens: [] });
@@ -378,18 +381,18 @@ class AccountController implements Controller {
       return res.json({ totalRows: 0, transfers: [], tokens: {} });
     }
     let jTransfers = [];
-    for (let tr of transfers) {
-      const addr = tr.tokenAddress.toLowerCase();
-      let jTr = tr.toJSON();
-      if (addr in profileMap) {
-        jTr.symbol = profileMap[addr].symbol;
-        jTr.decimals = profileMap[addr].decimals || 18;
-      } else {
-        jTr.symbol = 'ERC20';
-        jTr.decimals = 18;
-      }
-      jTransfers.push(jTr);
-    }
+    // for (let tr of transfers) {
+    //   const addr = tr.tokenAddress.toLowerCase();
+    //   let jTr = tr.toJSON();
+    //   if (addr in profileMap) {
+    //     jTr.symbol = profileMap[addr].symbol;
+    //     jTr.decimals = profileMap[addr].decimals || 18;
+    //   } else {
+    //     jTr.symbol = 'ERC20';
+    //     jTr.decimals = 18;
+    //   }
+    //   jTransfers.push(jTr);
+    // }
     return res.json({
       totalRows: count,
       transfers: jTransfers,

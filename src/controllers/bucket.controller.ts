@@ -1,9 +1,8 @@
+import { BucketRepo } from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
 import Controller from '../interfaces/controller.interface';
-
-import { BucketRepo } from '@meterio/scan-db';
 
 class BucketController implements Controller {
   public path = '/api/buckets';

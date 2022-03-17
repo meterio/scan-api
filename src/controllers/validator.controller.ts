@@ -1,3 +1,13 @@
+import {
+  BigNumber,
+  BlockRepo,
+  BucketRepo,
+  EpochRewardRepo,
+  EpochRewardSummaryRepo,
+  MetricRepo,
+  Validator,
+  ValidatorRepo,
+} from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { Document } from 'mongoose';
@@ -6,17 +16,6 @@ import { BALANCE_SYM, MetricName, UNIT_SHANNON } from '../const';
 import { Token } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { extractPageAndLimitQueryParam, fromWei } from '../utils/utils';
-
-import {
-  BlockRepo,
-  BucketRepo,
-  EpochRewardRepo,
-  EpochRewardSummaryRepo,
-  MetricRepo,
-  ValidatorRepo,
-  BigNumber,
-  Validator
-} from '@meterio/scan-db';
 
 const MissingLeaderPenalty = 1000;
 const MissingProposerPenalty = 20;
@@ -379,7 +378,10 @@ class ValidatorController implements Controller {
   private getEpochRewards = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
-    const rewards = await this.epochRewardSummaryRepo.findAllWithPage(page, limit);
+    const rewards = await this.epochRewardSummaryRepo.findAllWithPage(
+      page,
+      limit
+    );
     const count = await this.epochRewardSummaryRepo.countAll();
     if (!rewards) {
       return res.json({ totalRows: 0, rewards: [] });

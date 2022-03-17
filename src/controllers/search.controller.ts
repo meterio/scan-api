@@ -1,14 +1,9 @@
 import { isAddress } from '@meterio/devkit/dist/cry';
+import { AccountRepo, BlockRepo, TxRepo } from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
 import Controller from '../interfaces/controller.interface';
-
-import {
-  AccountRepo,
-  BlockRepo,
-  TxRepo
-} from '@meterio/scan-db';
 
 class SearchController implements Controller {
   public path = '/api/search';

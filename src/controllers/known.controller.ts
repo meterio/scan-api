@@ -1,3 +1,9 @@
+import {
+  KnownEventRepo,
+  KnownMethodRepo,
+  KnownRepo,
+  TokenProfileRepo,
+} from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
@@ -13,13 +19,6 @@ import {
   ValidatorBenefitAddress,
 } from '../const';
 import Controller from '../interfaces/controller.interface';
-
-import {
-  KnownRepo,
-  TokenProfileRepo,
-  KnownEventRepo,
-  KnownMethodRepo
-} from '@meterio/scan-db';
 
 class KnownController implements Controller {
   public path = '/api/knowns';
@@ -38,8 +37,14 @@ class KnownController implements Controller {
   private initializeRoutes() {
     this.router.get(`${this.path}/address`, try$(this.getKnownAddresses));
     this.router.get(`${this.path}/token`, try$(this.getKnownTokens));
-    this.router.post(`${this.path}/saveMethodAndEvent`, try$(this.saveMethodAndEvent));
-    this.router.get(`${this.path}/getAllMethodAndEvent`, try$(this.getAllMethodAndEvent));
+    this.router.post(
+      `${this.path}/saveMethodAndEvent`,
+      try$(this.saveMethodAndEvent)
+    );
+    this.router.get(
+      `${this.path}/getAllMethodAndEvent`,
+      try$(this.getAllMethodAndEvent)
+    );
   }
 
   private getAllMethodAndEvent = async (req: Request, res: Response) => {
@@ -50,15 +55,15 @@ class KnownController implements Controller {
       res.json({
         status: true,
         events,
-        methods
-      })
+        methods,
+      });
     } catch (e) {
       return res.json({
         status: false,
-        message: e.message
-      })
+        message: e.message,
+      });
     }
-  }
+  };
 
   private saveMethodAndEvent = async (req: Request, res: Response) => {
     const { events, methods } = req.body;
@@ -80,13 +85,13 @@ class KnownController implements Controller {
     if (err.length > 0) {
       return res.json({
         status: false,
-        message: err.join(',')
-      })
+        message: err.join(','),
+      });
     }
     res.json({
-      status: true
-    })
-  }
+      status: true,
+    });
+  };
 
   private getKnownAddresses = async (req: Request, res: Response) => {
     const knowns = await this.knownRepo.findAll();

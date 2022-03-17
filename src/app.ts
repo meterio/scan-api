@@ -1,5 +1,7 @@
 import * as path from 'path';
 
+import { Network, connectDB } from '@meterio/scan-db/dist';
+
 import Controller from './interfaces/controller.interface';
 import errorMiddleware from './middleware/error.middleware';
 
@@ -60,40 +62,10 @@ class App {
     });
   }
 
-  private connectToTheDatabase() {
-    const { MONGO_USER, MONGO_PWD, MONGO_PATH, MONGO_SSL_CA } = process.env;
-    let url = `mongodb://${MONGO_USER}:${MONGO_PWD}@${MONGO_PATH}`;
-    let options: mongoose.ConnectionOptions = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useCreateIndex: true,
-      useFindAndModify: false,
-    };
-    let query: { [key: string]: string } = {};
-    query['retryWrites'] = 'false';
-    if (MONGO_SSL_CA != '') {
-      const fs = require('fs');
-      //Specify the Amazon DocumentDB cert
-      var ca = [fs.readFileSync(MONGO_SSL_CA)];
-      query['ssl'] = 'true';
-      query['replicaSet'] = 'rs0';
-      query['readPreference'] = 'secondaryPreferred';
-      // url += '?ssl=true&replicaSet=rs0&readPreference=secondaryPreferred';
-      options = {
-        ...options,
-        sslValidate: true,
-        sslCA: ca,
-        useNewUrlParser: true,
-      };
-    }
-    let queries = [];
-    for (const key in query) {
-      queries.push(`${key}=${query[key]}`);
-    }
-    let queryStr = queries.join('&');
-    console.log('url: ', url);
-    console.log('options: ', options);
-    mongoose.connect(queryStr ? url + '?' + queryStr : url, options);
+  private async connectToTheDatabase() {
+    const network =
+      process.env.NETWORK === 'mainnet' ? Network.MainNet : Network.TestNet;
+    await connectDB(network);
   }
 }
 

@@ -1,3 +1,13 @@
+import {
+  AccountRepo,
+  BlockRepo,
+  HeadRepo,
+  MetricRepo,
+  MovementRepo,
+  TxRepo,
+  Validator,
+  ValidatorRepo,
+} from '@meterio/scan-db/dist';
 import axios from 'axios';
 import BigNumber from 'bignumber.js';
 import { Request, Response, Router } from 'express';
@@ -7,17 +17,6 @@ import { Document } from 'mongoose';
 import { BALANCE_SYM, MetricName, ValidatorStatus, enumVals } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { fromWei } from '../utils/utils';
-
-import {
-  AccountRepo,
-  BlockRepo,
-  HeadRepo,
-  MetricRepo,
-  TxRepo,
-  ValidatorRepo,
-  MovementRepo,
-  Validator
-} from '@meterio/scan-db';
 
 class MetricController implements Controller {
   public path = '/api/metrics';
@@ -127,7 +126,7 @@ class MetricController implements Controller {
           new BigNumber(present.releasedMTRG).dividedBy(1e18).toFixed(0) +
           ' MTRG';
       }
-    } catch (e) { }
+    } catch (e) {}
 
     return {
       mtr: {

@@ -1,17 +1,16 @@
+import {
+  BigNumber,
+  BlockRepo,
+  CommitteeRepo,
+  PowBlockRepo,
+  TxRepo,
+} from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
 import { ENERGY_SYM, ZeroAddress } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { extractPageAndLimitQueryParam, fromWei } from '../utils/utils';
-
-import {
-  BlockRepo,
-  CommitteeRepo,
-  PowBlockRepo,
-  TxRepo,
-  BigNumber
-} from '@meterio/scan-db';
 
 class PowController implements Controller {
   public path = '/api/pow';

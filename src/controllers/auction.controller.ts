@@ -1,11 +1,10 @@
+import { AuctionRepo, BidRepo } from '@meterio/scan-db/dist';
 import BigNumber from 'bignumber.js';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
 import Controller from '../interfaces/controller.interface';
 import { extractPageAndLimitQueryParam, fromWei } from '../utils/utils';
-
-import { AuctionRepo, BidRepo } from '@meterio/scan-db';
 
 class AuctionController implements Controller {
   public path = '/api/auctions';
@@ -106,9 +105,9 @@ class AuctionController implements Controller {
         };
       }
     }
-    const autobidSummaries = Object.values(
-      summariesByEpoch
-    ).sort((a: any, b: any) => (a.epoch < b.epoch ? 1 : -1));
+    const autobidSummaries = Object.values(summariesByEpoch).sort(
+      (a: any, b: any) => (a.epoch < b.epoch ? 1 : -1)
+    );
     return res.json({ autobidSummaries });
   };
 

@@ -1,3 +1,4 @@
+import { MetricRepo } from '@meterio/scan-db/dist';
 import axios from 'axios';
 import BigNumber from 'bignumber.js';
 import { Request, Response, Router } from 'express';
@@ -6,8 +7,6 @@ import { try$ } from 'express-toolbox';
 import * as pkg from '../../package.json';
 import { MetricName } from '../const';
 import Controller from '../interfaces/controller.interface';
-
-import { MetricRepo } from '@meterio/scan-db';
 
 class HomeController implements Controller {
   public path = '';

@@ -1,16 +1,15 @@
+import {
+  KnownEventRepo,
+  KnownMethodRepo,
+  TokenProfileRepo,
+  TxRepo,
+} from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
 import { TransferEvent } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
-
-import {
-  TokenProfileRepo,
-  TxRepo,
-  KnownEventRepo,
-  KnownMethodRepo
-} from '@meterio/scan-db';
 
 class TxController implements Controller {
   public path = '/api/txs';
@@ -65,17 +64,22 @@ class TxController implements Controller {
     ) {
       let knownMethod;
       if (txObj.clauses[clauseIndex].data.length > 10) {
-        const methodNameSignature = txObj.clauses[clauseIndex].data.substring(0, 10);
+        const methodNameSignature = txObj.clauses[clauseIndex].data.substring(
+          0,
+          10
+        );
         // const contractAddress = txObj.clauses[clauseIndex].to;
         // knownMethod = knownMethods.find(item => item.signature === methodNameSignature && item.contractAddress === contractAddress);
-        knownMethod = knownMethods.find(item => item.signature === methodNameSignature);
+        knownMethod = knownMethods.find(
+          (item) => item.signature === methodNameSignature
+        );
         if (!knownMethod) {
           knownMethod = {
-            signature: methodNameSignature
-          }
+            signature: methodNameSignature,
+          };
         }
       }
-      clauses.push({ ...txObj.clauses[clauseIndex], knownMethod })
+      clauses.push({ ...txObj.clauses[clauseIndex], knownMethod });
 
       const o = txObj.outputs[clauseIndex];
       for (let logIndex = 0; logIndex < o.events.length; logIndex++) {
@@ -83,11 +87,13 @@ class TxController implements Controller {
         let knownEvent;
         if (e.topics.length > 0) {
           // knownEvent = knownEvents.find(item => item.signature === e.topics[0] && item.contractAddress === e.address);
-          knownEvent = knownEvents.find(item => item.signature === e.topics[0]);
+          knownEvent = knownEvents.find(
+            (item) => item.signature === e.topics[0]
+          );
           if (!knownEvent) {
             knownEvent = {
-              signature: e.topics[0]
-            }
+              signature: e.topics[0],
+            };
           }
         }
         events.push({ ...e, clauseIndex, logIndex, knownEvent });
