@@ -47,14 +47,10 @@ class AuctionController implements Controller {
 
   private getPastAuctions = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const auctions = await this.auctionRepo.findAllPast(page, limit);
-    const count = await this.auctionRepo.countAll();
-    if (!auctions || auctions.length <= 0) {
-      return res.json({ totalRows: 0, auctions: [] });
-    }
+    const paginate = await this.auctionRepo.paginateAllPast(page, limit);
     return res.json({
-      totalRows: count,
-      auctions: auctions.map((a) => a.toSummary()),
+      totalRows: paginate.count,
+      auctions: paginate.result.map((a) => a.toSummary()),
     });
   };
 
@@ -67,21 +63,19 @@ class AuctionController implements Controller {
   private getAuctionBids = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const bids = await this.bidRepo.findByAuctionID(id, page, limit);
-    const count = await this.bidRepo.countByAuctionID(id);
-    return res.json({ totalRows: count, bids });
+    const paginate = await this.bidRepo.paginateByAuctionID(id, page, limit);
+    return res.json({ totalRows: paginate.count, bids: paginate.result });
   };
 
   private getUserbidsByAuctionID = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const userbids = await this.bidRepo.findUserbidsByAuctionID(
+    const paginate = await this.bidRepo.paginateUserbidsByAuctionID(
       id,
       page,
       limit
     );
-    const count = await this.bidRepo.countUserbidsByAuctionID(id);
-    return res.json({ totalRows: count, userbids });
+    return res.json({ totalRows: paginate.count, userbids: paginate.result });
   };
 
   private getAutobidSummariesByAuctionID = async (
@@ -114,11 +108,12 @@ class AuctionController implements Controller {
   private getAutobidsByEpoch = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const { epoch } = req.params;
-    const autobids = await this.bidRepo.findAutobidsByEpoch(
+    const paginate = await this.bidRepo.paginateAutobidsByEpoch(
       Number(epoch),
       page,
       limit
     );
+    const autobids = paginate.result;
     if (!autobids || autobids.length <= 0) {
       return res.json({ summary: { epoch }, autobids: [] });
     }
@@ -142,7 +137,7 @@ class AuctionController implements Controller {
       totalAutobidAmount: totalAmount.toFixed(),
       totalLotAmount: totalLots.toFixed(),
     };
-    return res.json({ summary, bids });
+    return res.json({ summary, bids, totalRows: paginate.count });
   };
 }
 export default AuctionController;

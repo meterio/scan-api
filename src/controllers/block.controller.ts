@@ -172,14 +172,11 @@ class BlockController implements Controller {
   private getRecentBlocks = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const nameMap = await this.getNameMap();
-    const count = await this.blockRepo.count();
-    if (count <= 0) {
-      return res.json({ totalRows: 0, blocks: [] });
-    }
-    const blocks = await this.blockRepo.findRecentWithPage(page, limit);
+
+    const paginate = await this.blockRepo.paginateAll(page, limit);
     res.json({
-      totalRows: count,
-      blocks: blocks.map((b) => {
+      totalRows: paginate.count,
+      blocks: paginate.result.map((b) => {
         return {
           ...b.toSummary(),
           beneficiaryName: nameMap[b.beneficiary] || '',

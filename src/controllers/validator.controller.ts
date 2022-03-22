@@ -12,7 +12,12 @@ import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { Document } from 'mongoose';
 
-import { BALANCE_SYM, MetricName, UNIT_SHANNON } from '../const';
+import {
+  BALANCE_SYM,
+  MetricName,
+  UNIT_SHANNON,
+  ValidatorStatus,
+} from '../const';
 import { Token } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { extractPageAndLimitQueryParam, fromWei } from '../utils/utils';
@@ -136,9 +141,16 @@ class ValidatorController implements Controller {
       await this.validatorRepo.getCandidateTotalStaked();
     const delegateTotalStaked =
       await this.validatorRepo.getDelegateTotalStaked();
-    const candidates = await this.validatorRepo.countCandidatesByFilter('');
-    const delegates = await this.validatorRepo.countDelegatesByFilter('');
-    const jailed = await this.validatorRepo.countJailedByFilter('');
+    const candidates =
+      (await this.validatorRepo.countByStatus(ValidatorStatus.CANDIDATE)) +
+      (await this.validatorRepo.countByStatus(ValidatorStatus.DELEGATE));
+
+    const delegates = await this.validatorRepo.countByStatus(
+      ValidatorStatus.DELEGATE
+    );
+    const jailed = await this.validatorRepo.countByStatus(
+      ValidatorStatus.JAILED
+    );
     return res.json({
       totalStaked: candidateTotalStaked,
       totalStakedStr: `${fromWei(candidateTotalStaked)} ${BALANCE_SYM}`,
@@ -173,18 +185,14 @@ class ValidatorController implements Controller {
     const { search } = req.query;
     const filter = search ? search.toString() : '';
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const count = await this.validatorRepo.countCandidatesByFilter(filter);
-    if (count <= 0) {
-      return res.json({ totalRows: 0, candidates: [] });
-    }
-    const candidates = await this.validatorRepo.findCandidatesByFilter(
+    const paginate = await this.validatorRepo.paginateCandidatesByFilter(
       filter,
       page,
       limit
     );
     return res.json({
-      totalRows: count,
-      candidates: candidates.map(this.convertCandidate),
+      totalRows: paginate.count,
+      candidates: paginate.result.map(this.convertCandidate),
     });
   };
 
@@ -213,11 +221,7 @@ class ValidatorController implements Controller {
     const { search } = req.query;
     const filter = search ? search.toString() : '';
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const count = await this.validatorRepo.countDelegatesByFilter(filter);
-    if (count <= 0) {
-      return res.json({ totalRows: 0, delegates: [] });
-    }
-    const delegates = await this.validatorRepo.findDelegatesByFilter(
+    const paginate = await this.validatorRepo.paginateDelegatesByFilter(
       filter,
       page,
       limit
@@ -225,8 +229,8 @@ class ValidatorController implements Controller {
     const delegateTotalStaked =
       await this.validatorRepo.getDelegateTotalStaked();
     return res.json({
-      totalRows: count,
-      delegates: delegates.map((d) =>
+      totalRows: paginate.count,
+      delegates: paginate.result.map((d) =>
         this.convertDelegate(d, delegateTotalStaked)
       ),
     });
@@ -250,25 +254,21 @@ class ValidatorController implements Controller {
     const { search } = req.query;
     const filter = search ? search.toString() : '';
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const count = await this.validatorRepo.countJailedByFilter(filter);
-    if (count <= 0) {
-      return res.json({ totalRows: 0, jailed: [] });
-    }
-    const jailed = await this.validatorRepo.findJailedByFilter(
+    const paginate = await this.validatorRepo.paginateJailedByFilter(
       filter,
       page,
       limit
     );
     return res.json({
-      totalRows: count,
-      jailed: jailed.map(this.convertJailed),
+      totalRows: paginate.count,
+      jailed: paginate.result.map(this.convertJailed),
     });
   };
 
   private getStats = async (req: Request, res: Response) => {
     const stats = await this.metricRepo.findByKey(MetricName.STATS);
-    const bests = await this.blockRepo.findRecentWithPage(1, 1);
-    const best = bests[0];
+    const paginate = await this.blockRepo.paginateAll(1, 1);
+    const best = paginate.result[0];
     const epoch = best.epoch;
     const summaries = {};
     const infractions = {};
@@ -378,17 +378,10 @@ class ValidatorController implements Controller {
   private getEpochRewards = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
-    const rewards = await this.epochRewardSummaryRepo.findAllWithPage(
-      page,
-      limit
-    );
-    const count = await this.epochRewardSummaryRepo.countAll();
-    if (!rewards) {
-      return res.json({ totalRows: 0, rewards: [] });
-    }
+    const paginate = await this.epochRewardSummaryRepo.paginateAll(page, limit);
     return res.json({
-      totalRows: count,
-      rewards,
+      totalRows: paginate.count,
+      rewards: paginate.result,
     });
   };
 

@@ -4,12 +4,12 @@ import {
   BigNumber,
   BlockRepo,
   BucketRepo,
+  ContractRepo,
   KnownMethodRepo,
   Movement,
   MovementRepo,
   Token,
   TokenBalanceRepo,
-  TokenProfileRepo,
   TxRepo,
 } from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
@@ -27,7 +27,7 @@ class AccountController implements Controller {
   private movementRepo = new MovementRepo();
   private bucketRepo = new BucketRepo();
   private blockRepo = new BlockRepo();
-  private tokenProfileRepo = new TokenProfileRepo();
+  private contractRepo = new ContractRepo();
   private tokenBalanceRepo = new TokenBalanceRepo();
   private bidRepo = new BidRepo();
   private knownMethod = new KnownMethodRepo();
@@ -63,6 +63,10 @@ class AccountController implements Controller {
       try$(this.getERC20TransfersByAccount)
     );
     this.router.get(
+      `${this.path}/:address/erc721txs`,
+      try$(this.getERC721TransfersByAccount)
+    );
+    this.router.get(
       `${this.path}/:address/buckets`,
       try$(this.getBucketsByAccount)
     );
@@ -78,29 +82,23 @@ class AccountController implements Controller {
 
   private getTopMTRAccounts = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const count = await this.accountRepo.count();
 
-    if (count <= 0) {
-      return res.json({ totalRows: 0, accounts: [] });
-    }
-    const accounts = await this.accountRepo.findTopMTRAccounts(page, limit);
+    const paginate = await this.accountRepo.paginateTopMTRAccounts(page, limit);
     return res.json({
-      totalRows: count,
-      accounts: accounts.map(this.convertAccount),
+      totalRows: paginate.count,
+      accounts: paginate.result.map(this.convertAccount),
     });
   };
 
   private getTopMTRGAccounts = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const count = await this.accountRepo.count();
-
-    if (count <= 0) {
-      return res.json({ totalRows: 0, accounts: [] });
-    }
-    const accounts = await this.accountRepo.findTopMTRGAccounts(page, limit);
+    const paginate = await this.accountRepo.paginateTopMTRGAccounts(
+      page,
+      limit
+    );
     return res.json({
-      totalRows: count,
-      accounts: accounts.map(this.convertAccount),
+      totalRows: paginate.count,
+      accounts: paginate.result.map(this.convertAccount),
     });
   };
 
@@ -129,19 +127,17 @@ class AccountController implements Controller {
         account: { address, mtr: 0, mtrg: 0, mtrBounded: 0, mtrgBounded: 0 },
       });
     }
-    if (account.code) {
-      const tokenProfile = await this.tokenProfileRepo.findByAddress(address);
-      actJson.isContract = true;
-      if (tokenProfile) {
-        actJson.isERC20 = true;
-        actJson.tokenName = tokenProfile.name;
-        actJson.tokenSymbol = tokenProfile.symbol;
-        actJson.tokenDecimals = tokenProfile.decimals;
-        actJson.totalSupply = tokenProfile.totalSupply.toFixed();
-        actJson.holdersCount = tokenProfile.holdersCount.toFixed();
-      }
+    const contract = await this.contractRepo.findByAddress(address);
+    actJson.isContract = true;
+    if (contract) {
+      actJson.type = contract.type;
+      actJson.tokenName = contract.name;
+      actJson.tokenSymbol = contract.symbol;
+      actJson.tokenDecimals = contract.decimals;
+      actJson.totalSupply = contract.totalSupply.toFixed();
+      actJson.holdersCount = contract.holdersCount.toFixed();
     } else {
-      actJson.isContract = false;
+      actJson.type = 0;
       actJson.isERC20 = false;
     }
     delete actJson['code'];
@@ -157,23 +153,19 @@ class AccountController implements Controller {
     const { address } = req.params;
     let start = process.hrtime();
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    console.log(`extract cost ${process.hrtime(start)[0]}`);
 
     start = process.hrtime();
-    const txs = await this.txRepo.findByAccount(address, page, limit);
-    console.log(`txs cost ${process.hrtime(start)[0]}`);
 
     start = process.hrtime();
-    const count = await this.txRepo.countByAccount(address);
-    console.log(`count cost ${process.hrtime(start)[0]}`);
+    const paginate = await this.txRepo.paginateByAccount(address, page, limit);
 
-    if (!txs) {
+    if (!paginate.result) {
       return res.json({ totalRows: 0, txSummaries: [] });
     }
     const methods = await this.knownMethod.findAll();
     return res.json({
-      totalRows: count,
-      txSummaries: txs.map((tx) => tx.toSummary(address, methods)),
+      totalRows: paginate.count,
+      txSummaries: paginate.result.map((tx) => tx.toSummary(address, methods)),
     });
   };
 
@@ -216,48 +208,52 @@ class AccountController implements Controller {
   private getBidsByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const bids = await this.bidRepo.findByAddressWithPage(address, page, limit);
-    const count = await this.bidRepo.countByAddress(address);
+    const paginate = await this.bidRepo.paginateByAddress(address, page, limit);
+    const bids = paginate.result;
 
     if (!bids) {
       return res.json({ totalRows: 0, bids: [] });
     }
     return res.json({
-      totalRows: count,
+      totalRows: paginate.count,
       bids: bids.map((b) => b.toSummary()),
     });
   };
 
+  // FIXME: could be wrong for ERC721/1155 for percentage
   private getTokenHoldersByAccount = async (req: Request, res: Response) => {
     const { tokenAddress } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const tokens = await this.tokenBalanceRepo.findByTokenAddressWithPage(
+    const paginate = await this.tokenBalanceRepo.paginateByTokenAddress(
       tokenAddress,
       page,
       limit
     );
     console.log('TOKEN ADDRESS: ', tokenAddress);
-    const profile = await this.tokenProfileRepo.findByAddress(tokenAddress);
-    console.log('PROFILE: ', profile);
+    const contract = await this.contractRepo.findByAddress(tokenAddress);
 
-    if (!tokens) {
+    if (paginate.count <= 0) {
       return res.json({ holders: [] });
     }
+    const tokens = paginate.result;
+
     let total = new BigNumber(0);
     for (const t of tokens) {
       if (t.balance.isGreaterThan(0)) {
         total = total.plus(t.balance);
       }
     }
+    // FIXME: handle ERC721 and 1155
     let sorted = tokens
       .filter((t) => t.balance.isGreaterThan(0))
       .sort((a, b) => (a.balance.isGreaterThan(b.balance) ? -1 : 1));
     return res.json({
-      token: !profile ? {} : profile.toJSON(),
+      token: !contract ? {} : contract.toJSON(),
       holders: sorted.map((t) => ({
         ...t.toJSON(),
         percentage: t.balance.dividedBy(total),
       })),
+      totalRows: paginate.count,
     });
   };
 
@@ -265,121 +261,98 @@ class AccountController implements Controller {
     const { address } = req.params;
     console.log(address);
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const tokens = await this.tokenBalanceRepo.findByAddressWithPageLimit(
+    const paginate = await this.tokenBalanceRepo.paginateByAddress(
       address,
       page,
       limit
     );
 
-    if (!tokens) {
+    if (paginate.count <= 0) {
       return res.json({ totalRows: 0, tokens: [] });
     }
-    let profileMap = {};
-    (
-      await this.tokenProfileRepo.findByAddressList(
-        tokens
-          .filter((t) => t.balance.isGreaterThan(0))
-          .map((t) => t.tokenAddress)
-      )
-    ).forEach((p) => {
-      profileMap[p.address] = p;
+    // FIXME: optimize
+    const tokenAddresses = paginate.result
+      .filter((t) => t.balance.isGreaterThan(0))
+      .map((t) => t.tokenAddress);
+    let contractMap = {};
+    (await this.contractRepo.findByAddressList(tokenAddresses)).forEach((p) => {
+      contractMap[p.address] = p;
     });
-    const count = await this.tokenBalanceRepo.countAllByAddress(address);
 
     return res.json({
-      totalRows: count,
-      tokens: tokens
+      totalRows: paginate.count,
+      tokens: paginate.result
         .filter((t) => t.balance.isGreaterThan(0))
         .map((t) => {
-          const profile = profileMap[t.tokenAddress];
-          let result = t.toJSON();
-          if (profile) {
-            result.symbol = profile.symbol;
-            result.decimals = profile.decimals;
-          }
-          return result;
+          return {
+            ...t.toJSON(),
+            token: contractMap[t.tokenAddress],
+          };
         }),
     });
   };
 
+  // TODO: changed API, will affect UI
   private getTransfersByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
-    const account = await this.accountRepo.findByAddress(address);
+    const contract = await this.contractRepo.findByAddress(address);
 
-    const isContract = !!account && !!account.code;
     let transfers: (Movement & Document)[] = [];
-    let count = 0;
-    if (!isContract) {
-      transfers = await this.movementRepo.findByAccount(address, page, limit);
-      count = await this.movementRepo.countByAccount(address);
-    } else {
-      transfers = await this.movementRepo.findByTokenAddress(
+    if (contract) {
+      const paginate = await this.movementRepo.paginateByTokenAddress(
         address,
         page,
         limit
       );
-      count = await this.movementRepo.countByTokenAddress(address);
-    }
-    if (!transfers) {
-      return res.json({ totalRows: 0, transfers: [] });
-    }
-    let tokenAddresses = transfers.map((tr) => tr.tokenAddress);
-    tokenAddresses = tokenAddresses.filter(
-      (v, index) => tokenAddresses.indexOf(v) === index
-    );
-    const profiles = await this.tokenProfileRepo.findByAddressList(
-      tokenAddresses
-    );
-    let tokens = {};
-    for (const p of profiles) {
-      tokens[p.address] = p;
-    }
-    return res.json({
-      totalRows: count,
-      transfers: transfers.map((tr) => {
-        let erc20 = {
-          symbol: '',
-        };
-        if (tr.token === Token.ERC20) {
-          erc20 = tokens[tr.tokenAddress.toLowerCase()];
-        }
+      return res.json({
+        totalRows: paginate.count,
+        transfers: paginate.result.map((t) => ({
+          ...t,
+          token: contract.toJSON(),
+        })),
+      });
+    } else {
+      const paginate = await this.movementRepo.paginateByAccount(
+        address,
+        page,
+        limit
+      );
+      const tokenAddresses = transfers.map((tr) => tr.tokenAddress);
+      let contractMap = {};
+      (await this.contractRepo.findByAddressList(tokenAddresses)).map((c) => {
+        contractMap[c.address] = c.toJSON();
+      });
 
-        return {
-          ...tr.toJSON(),
-          token: erc20 && erc20.symbol ? erc20.symbol : Token[tr.token],
-          erc20,
-        };
-      }),
-    });
+      return res.json({
+        totalRows: paginate.count,
+        transfers: paginate.result.map((t) => ({
+          ...t.toJSON(),
+          token: contractMap[t.tokenAddress],
+        })),
+      });
+    }
   };
 
+  // TODO: API changed, will affect UI
   private getERC20TransfersByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
-    const transfers = await this.movementRepo.findERC20TransferByAccount(
+    const paginate = await this.movementRepo.paginateERC20TransferByAccount(
       address,
       page,
       limit
     );
-    let tokenAddresses = transfers.map((t) => t.tokenAddress);
-    tokenAddresses = tokenAddresses.filter(
-      (addr, index) => tokenAddresses.indexOf(addr) === index
-    );
+    const transfers = paginate.result;
+    const tokenAddresses = transfers.map((t) => t.tokenAddress);
 
-    let profileMap = {};
-    (await this.tokenProfileRepo.findByAddressList(tokenAddresses)).forEach(
-      (p) => {
-        profileMap[p.address] = p;
-      }
-    );
+    let contractMap = {};
+    (await this.contractRepo.findByAddressList(tokenAddresses)).forEach((p) => {
+      contractMap[p.address] = p.toJSON();
+    });
 
-    const count = await this.movementRepo.countERC20TransferByAccount(address);
-    if (!transfers) {
-      return res.json({ totalRows: 0, transfers: [], tokens: {} });
-    }
     let jTransfers = [];
     // for (let tr of transfers) {
     //   const addr = tr.tokenAddress.toLowerCase();
@@ -394,8 +367,37 @@ class AccountController implements Controller {
     //   jTransfers.push(jTr);
     // }
     return res.json({
-      totalRows: count,
-      transfers: jTransfers,
+      totalRows: paginate.count,
+      transfers: paginate.result.map((t) => ({
+        ...t.toJSON(),
+        token: contractMap[t.tokenAddress],
+      })),
+    });
+  };
+
+  private getERC721TransfersByAccount = async (req: Request, res: Response) => {
+    const { address } = req.params;
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+
+    const paginate = await this.movementRepo.paginateERC721TransferByAccount(
+      address,
+      page,
+      limit
+    );
+    const transfers = paginate.result;
+    const tokenAddresses = transfers.map((t) => t.tokenAddress);
+
+    let contractMap = {};
+    (await this.contractRepo.findByAddressList(tokenAddresses)).forEach((p) => {
+      contractMap[p.address] = p.toJSON();
+    });
+
+    return res.json({
+      totalRows: paginate.count,
+      transfers: paginate.result.map((t) => ({
+        ...t.toJSON(),
+        token: contractMap[t.tokenAddress],
+      })),
     });
   };
 
@@ -418,19 +420,15 @@ class AccountController implements Controller {
   private getProposedByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const count = await this.blockRepo.countByBeneficiary(address);
-    const proposed = await this.blockRepo.findByBeneficiary(
+    const paginate = await this.blockRepo.paginateByBeneficiary(
       address,
       page,
       limit
     );
 
-    if (!proposed) {
-      return res.json({ totalRows: 0, proposed: [] });
-    }
     return res.json({
-      totalRows: count,
-      proposed: proposed.map((b) => b.toSummary()),
+      totalRows: paginate.count,
+      proposed: paginate.result.map((b) => b.toSummary()),
     });
   };
 

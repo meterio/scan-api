@@ -56,14 +56,15 @@ class MetricController implements Controller {
 
   private getPosData = async () => {
     let map = await this.getMetricMap();
-    const recentBlocks = await this.blockRepo.findRecentWithPage(20);
+    const paginate = await this.blockRepo.paginateAll(1, 20);
     let avgBlockTime = 2;
-    if (recentBlocks && recentBlocks.length > 2) {
-      const last = recentBlocks[0];
-      const first = recentBlocks[recentBlocks.length - 1];
+    if (paginate && paginate.count > 2) {
+      const last = paginate.result[0];
+      const first = paginate.result[paginate.result.length - 1];
       avgBlockTime =
         Math.floor(
-          (100 * (last.timestamp - first.timestamp)) / (recentBlocks.length - 1)
+          (100 * (last.timestamp - first.timestamp)) /
+            (paginate.result.length - 1)
         ) / 100;
     }
     const txsCount = await this.movementRepo.count();
@@ -240,7 +241,8 @@ class MetricController implements Controller {
       statusMap[ip] = r.value && r.value.length >= 2 ? Number(r.value[1]) : -1;
       nameMap[ip] = name;
     }
-    const kblocks = await this.blockRepo.findKBlocks(1, 1);
+    const paginate = await this.blockRepo.paginateKBlocks(1, 1);
+    const kblocks = paginate.result;
     if (!roles || !kblocks || kblocks.length <= 0) {
       return emptyResponse;
     }

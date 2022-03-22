@@ -27,12 +27,8 @@ class EpochController implements Controller {
 
   private getRecentEpochs = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const count = await this.committeeRepo.countAll();
-    if (count <= 0) {
-      return res.json({ totalRows: 0, epochs: [] });
-    }
-    const committees = await this.committeeRepo.findAll(page, limit);
-    const snums = committees
+    const paginate = await this.committeeRepo.paginateAll(page, limit);
+    const snums = paginate.result
       .filter((c) => !!c.endBlock)
       .map((c) => c.endBlock.number);
     const kblocks = await this.blockRepo.findByNumberList(snums);
@@ -41,7 +37,7 @@ class EpochController implements Controller {
       blockMap[b.number] = b;
     }
     let epochs = [];
-    for (const c of committees) {
+    for (const c of paginate.result) {
       let powBlockCount = 0;
       if (c.endBlock && c.endBlock.number in blockMap) {
         const b = blockMap[c.endBlock.number];
@@ -58,7 +54,7 @@ class EpochController implements Controller {
         powBlockCount,
       });
     }
-    res.json({ totalRows: count, epochs });
+    res.json({ totalRows: paginate.count, epochs });
   };
 
   private getMembersByEpoch = async (req: Request, res: Response) => {

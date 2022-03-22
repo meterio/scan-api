@@ -38,8 +38,9 @@ class PowController implements Controller {
 
   private getPowRewards = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const committees = await this.committeeRepo.findAll(page, limit);
-    const numbers = committees.map((c) => c.kblockHeight);
+    // TODO: problem ? not quite sure if the result is correct
+    const paginate = await this.committeeRepo.paginateAll(page, limit);
+    const numbers = paginate.result.map((c) => c.kblockHeight);
     let kblocks = await this.blockRepo.findByNumberList(numbers);
     kblocks = kblocks.sort((a, b) => (a.number > b.number ? -1 : 1));
     const count = await this.blockRepo.countKBlocks();

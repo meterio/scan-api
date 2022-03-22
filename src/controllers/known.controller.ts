@@ -1,8 +1,9 @@
 import {
+  ContractRepo,
+  ContractType,
   KnownEventRepo,
   KnownMethodRepo,
   KnownRepo,
-  TokenProfileRepo,
 } from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
@@ -24,7 +25,7 @@ class KnownController implements Controller {
   public path = '/api/knowns';
   public router = Router();
   private knownRepo = new KnownRepo();
-  private tokenProfileRepo = new TokenProfileRepo();
+  private contractRepo = new ContractRepo();
   private knownEventRepo = new KnownEventRepo();
   private knownMethodRepo = new KnownMethodRepo();
   private knownMap = {};
@@ -116,12 +117,13 @@ class KnownController implements Controller {
   };
 
   private getKnownTokens = async (req: Request, res: Response) => {
-    const tokens = await this.tokenProfileRepo.findAll();
+    const tokens = await this.contractRepo.findAllTokens();
     if (!tokens) {
       return res.json({ tokens: [] });
     }
     return res.json({
       tokens: tokens.map((t) => ({
+        type: ContractType[t.type],
         address: t.address,
         symbol: t.symbol,
         decimals: t.decimals,

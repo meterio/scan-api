@@ -1,7 +1,7 @@
 import {
+  ContractRepo,
   KnownEventRepo,
   KnownMethodRepo,
-  TokenProfileRepo,
   TxRepo,
 } from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
@@ -15,7 +15,7 @@ class TxController implements Controller {
   public path = '/api/txs';
   public router = Router();
   private txRepo = new TxRepo();
-  private tokenProfileRepo = new TokenProfileRepo();
+  private contractRepo = new ContractRepo();
   private knownEventRepo = new KnownEventRepo();
   private knownMethodRepo = new KnownMethodRepo();
 
@@ -30,15 +30,11 @@ class TxController implements Controller {
 
   private getRecent = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const count = await this.txRepo.count();
-    if (count <= 0) {
-      return res.json({ totalRows: 0, txs: [] });
-    }
-    const txs = await this.txRepo.findRecent(page, limit);
+    const paginate = await this.txRepo.paginateAll(page, limit);
     const methods = await this.knownMethodRepo.findAll();
     return res.json({
-      totalRows: count,
-      txs: txs.map((tx) => tx.toSummary(undefined, methods)),
+      totalRows: paginate.count,
+      txs: paginate.result.map((tx) => tx.toSummary(undefined, methods)),
     });
   };
 
@@ -96,9 +92,10 @@ class TxController implements Controller {
             };
           }
         }
+        // FIXME: optimize
         events.push({ ...e, clauseIndex, logIndex, knownEvent });
         if (e.topics && e.topics[0] === TransferEvent.signature) {
-          const token = await this.tokenProfileRepo.findByAddress(e.address);
+          const token = await this.contractRepo.findByAddress(e.address);
           if (token) {
             tokens[token.address.toLowerCase()] = token.toJSON();
           }
