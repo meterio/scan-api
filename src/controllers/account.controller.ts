@@ -14,7 +14,6 @@ import {
 } from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
-import { Document } from 'mongoose';
 
 import Controller from '../interfaces/controller.interface';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
@@ -299,7 +298,6 @@ class AccountController implements Controller {
 
     const contract = await this.contractRepo.findByAddress(address);
 
-    let transfers: (Movement & Document)[] = [];
     if (contract) {
       const paginate = await this.movementRepo.paginateByTokenAddress(
         address,
@@ -309,7 +307,7 @@ class AccountController implements Controller {
       return res.json({
         totalRows: paginate.count,
         transfers: paginate.result.map((t) => ({
-          ...t,
+          ...t.toJSON(),
           token: contract.toJSON(),
         })),
       });
@@ -319,7 +317,7 @@ class AccountController implements Controller {
         page,
         limit
       );
-      const tokenAddresses = transfers.map((tr) => tr.tokenAddress);
+      const tokenAddresses = paginate.result.map((tr) => tr.tokenAddress);
       let contractMap = {};
       (await this.contractRepo.findByAddressList(tokenAddresses)).map((c) => {
         contractMap[c.address] = c.toJSON();

@@ -10,7 +10,6 @@ import {
 } from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
-import { Document } from 'mongoose';
 
 import {
   BALANCE_SYM,
@@ -164,7 +163,7 @@ class ValidatorController implements Controller {
     });
   };
 
-  private convertCandidate = (v: Validator & Document) => {
+  private convertCandidate = (v: Validator) => {
     return {
       name: v.name,
       address: v.address,
@@ -196,7 +195,7 @@ class ValidatorController implements Controller {
     });
   };
 
-  private convertDelegate = (v: Validator & Document, totalStaked: string) => {
+  private convertDelegate = (v: Validator, totalStaked: string) => {
     return {
       name: v.name,
       address: v.address,
@@ -236,7 +235,7 @@ class ValidatorController implements Controller {
     });
   };
 
-  private convertJailed = (v: Validator & Document) => {
+  private convertJailed = (v: Validator ) => {
     return {
       name: v.name,
       address: v.address,

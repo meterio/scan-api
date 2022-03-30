@@ -1,6 +1,5 @@
-import { MetricRepo } from '@meterio/scan-db/dist';
+import { BigNumber, MetricRepo } from '@meterio/scan-db/dist';
 import axios from 'axios';
-import BigNumber from 'bignumber.js';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 

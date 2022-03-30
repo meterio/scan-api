@@ -1,5 +1,4 @@
-import { AuctionRepo, BidRepo } from '@meterio/scan-db/dist';
-import BigNumber from 'bignumber.js';
+import { AuctionRepo, BidRepo, BigNumber } from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 

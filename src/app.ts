@@ -5,11 +5,9 @@ import { Network, connectDB } from '@meterio/scan-db/dist';
 import Controller from './interfaces/controller.interface';
 import errorMiddleware from './middleware/error.middleware';
 
-import mongoose = require('mongoose');
 import express = require('express');
 import cors = require('cors');
 import cookieParser = require('cookie-parser');
-import bodyParser = require('body-parser');
 
 function loggerMiddleware(
   request: express.Request,
@@ -46,8 +44,8 @@ class App {
     this.app.set('view engine', 'ejs');
     this.app.use(loggerMiddleware);
     this.app.use(cors());
-    this.app.use(bodyParser.urlencoded({ extended: false }));
-    this.app.use(bodyParser.json());
+    this.app.use(express.urlencoded({ extended: false }));
+    this.app.use(express.json());
     this.app.use(cookieParser());
     this.app.use(express.static(path.join(__dirname, 'public')));
   }

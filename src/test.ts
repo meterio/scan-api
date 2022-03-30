@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import axios from 'axios';
-import BigNumber from 'bignumber.js';
 
 import { downloadBinary, getVersionList } from './utils/downloader';
 

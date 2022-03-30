@@ -1,5 +1,6 @@
 import {
   AccountRepo,
+  BigNumber,
   BlockRepo,
   HeadRepo,
   MetricRepo,
@@ -9,10 +10,8 @@ import {
   ValidatorRepo,
 } from '@meterio/scan-db/dist';
 import axios from 'axios';
-import BigNumber from 'bignumber.js';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
-import { Document } from 'mongoose';
 
 import { BALANCE_SYM, MetricName, ValidatorStatus, enumVals } from '../const';
 import Controller from '../interfaces/controller.interface';
@@ -253,7 +252,7 @@ class MetricController implements Controller {
     }
 
     const validators = await this.validatorRepo.findAll();
-    let vMap: { [key: string]: Validator & Document } = {}; // validator map [ip -> validator obj]
+    let vMap: { [key: string]: Validator } = {}; // validator map [ip -> validator obj]
     validators.forEach((v) => {
       const ecdsaKey = v.pubKey.split(':::')[0];
       vMap[ecdsaKey] = v;
