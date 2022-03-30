@@ -61,8 +61,21 @@ class App {
   }
 
   private async connectToTheDatabase() {
-    const network =
-      process.env.NETWORK === 'mainnet' ? Network.MainNet : Network.TestNet;
+    let network:Network;
+    switch(process.env.NETWORK){
+      case 'mainnet':
+        network = Network.MainNet;
+        break;
+      case 'testnet':
+        network = Network.TestNet;
+        break;
+      case "main-standby":
+        network = Network.MainNetStandBy;
+        break;
+      case "test-standby":
+        network = Network.TestNetStandBy;
+        break;
+    }
     await connectDB(network);
   }
 }
