@@ -33,4 +33,6 @@ const app = new App([
   new TokenController(),
 ]);
 
-app.listen();
+(async () => {
+  app.listen();
+})();

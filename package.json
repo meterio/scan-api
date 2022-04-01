@@ -22,8 +22,8 @@
     "api"
   ],
   "dependencies": {
-    "@meterio/devkit": "^1.6.1",
-    "@meterio/scan-db": "^0.1.32",
+    "@meterio/devkit": "^1.6.5",
+    "@meterio/scan-db": "^0.1.35",
     "axios": "^0.26.1",
     "bunyan": "^1.8.14",
     "cookie-parser": "^1.4.6",

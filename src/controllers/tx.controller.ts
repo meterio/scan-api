@@ -1,10 +1,11 @@
 import {
+  TxDigestRepo,
   ContractRepo,
   KnownEventRepo,
   KnownMethodRepo,
   TxRepo,
 } from '@meterio/scan-db/dist';
-import { Request, Response, Router } from 'express';
+import e, { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
 import { TransferEvent } from '../const';
@@ -15,6 +16,7 @@ class TxController implements Controller {
   public path = '/api/txs';
   public router = Router();
   private txRepo = new TxRepo();
+  private txDigestRepo = new TxDigestRepo();
   private contractRepo = new ContractRepo();
   private knownEventRepo = new KnownEventRepo();
   private knownMethodRepo = new KnownMethodRepo();
@@ -24,17 +26,24 @@ class TxController implements Controller {
   }
 
   private initializeRoutes() {
-    this.router.get(`${this.path}/recent`, try$(this.getRecent));
+    this.router.get(`${this.path}/recent`, this.getRecent);
     this.router.get(`${this.path}/:hash`, try$(this.getTxByHash));
   }
 
   private getRecent = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const paginate = await this.txRepo.paginateAll(page, limit);
+    const paginate = await this.txDigestRepo.paginateAll(page, limit);
     const methods = await this.knownMethodRepo.findAll();
+    let methodMap = {};
+    methods.forEach((m) => (methodMap[m.signature] = m.name));
     return res.json({
       totalRows: paginate.count,
-      txs: paginate.result.map((tx) => tx.toSummary(undefined, methods)),
+      txs: paginate.result
+        .map((tx) => tx.toJSON())
+        .map((tx) => ({
+          ...tx,
+          method: tx.method in methodMap ? methodMap[tx.method] : tx.method,
+        })),
     });
   };
 
@@ -45,73 +54,57 @@ class TxController implements Controller {
       return res.json({ tx: {}, summary: {} });
     }
     let txObj = tx.toJSON();
-    let events = [];
-    let clauses = [];
+
     let transfers = [];
     let tokens = {};
+    let events = [];
 
     const knownEvents = await this.knownEventRepo.findAll();
     const knownMethods = await this.knownMethodRepo.findAll();
+    let methodMap = {};
+    knownMethods.forEach((m) => {
+      methodMap[m.signature] = m.name;
+    });
+    let eventMap = {};
+    knownEvents.forEach((e) => {
+      eventMap[e.signature] = e.name;
+    });
 
-    for (
-      let clauseIndex = 0;
-      clauseIndex < txObj.outputs.length;
-      clauseIndex++
-    ) {
-      let knownMethod;
-      if (txObj.clauses[clauseIndex].data.length > 10) {
-        const methodNameSignature = txObj.clauses[clauseIndex].data.substring(
-          0,
-          10
-        );
-        // const contractAddress = txObj.clauses[clauseIndex].to;
-        // knownMethod = knownMethods.find(item => item.signature === methodNameSignature && item.contractAddress === contractAddress);
-        knownMethod = knownMethods.find(
-          (item) => item.signature === methodNameSignature
-        );
-        if (!knownMethod) {
-          knownMethod = {
-            signature: methodNameSignature,
-          };
-        }
-      }
-      clauses.push({ ...txObj.clauses[clauseIndex], knownMethod });
-
-      const o = txObj.outputs[clauseIndex];
-      for (let logIndex = 0; logIndex < o.events.length; logIndex++) {
-        const e = o.events[logIndex];
-        let knownEvent;
-        if (e.topics.length > 0) {
-          // knownEvent = knownEvents.find(item => item.signature === e.topics[0] && item.contractAddress === e.address);
-          knownEvent = knownEvents.find(
-            (item) => item.signature === e.topics[0]
-          );
-          if (!knownEvent) {
-            knownEvent = {
-              signature: e.topics[0],
-            };
-          }
-        }
-        // FIXME: optimize
-        events.push({ ...e, clauseIndex, logIndex, knownEvent });
-        if (e.topics && e.topics[0] === TransferEvent.signature) {
-          const token = await this.contractRepo.findByAddress(e.address);
-          if (token) {
-            tokens[token.address.toLowerCase()] = token.toJSON();
+    const clauses = txObj.clauses.map((c) => {
+      let sig = c.data.substring(0, 10);
+      const method = methodMap[sig] || sig;
+      return { ...c, method };
+    });
+    for (const [clauseIndex, o] of txObj.outputs.entries()) {
+      for (const [logIndex, e] of o.events.entries()) {
+        if (e.topics && e.topics.length >= 1) {
+          events.push({
+            ...e,
+            clauseIndex,
+            logIndex,
+            event: eventMap[e.topics[0]] || '',
+          });
+          if (e.topics && e.topics[0] === TransferEvent.signature) {
+            const token = await this.contractRepo.findByAddress(e.address);
+            if (token) {
+              tokens[token.address.toLowerCase()] = token.toJSON();
+            }
           }
         }
       }
-      for (let logIndex = 0; logIndex < o.transfers.length; logIndex++) {
-        const t = o.transfers[logIndex];
+      for (const [logIndex, t] of o.transfers.entries()) {
         transfers.push({ ...t, clauseIndex, logIndex });
       }
     }
+
     let txNewObj = { ...txObj, events, transfers, clauses };
     // txObj.events = events;
     // txObj.transfers = transfers;
-    const methods = await this.knownMethodRepo.findAll();
+
     return res.json({
-      summary: tx.toSummary(undefined, methods),
+      summary: {
+        ...tx.toJSON(),
+      },
       tx: txNewObj,
       tokens,
     });

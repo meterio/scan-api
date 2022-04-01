@@ -24,13 +24,14 @@ class App {
   constructor(controllers: Controller[]) {
     this.app = express();
 
-    this.connectToTheDatabase();
     this.initializeMiddlewares();
     this.initializeControllers(controllers);
     this.initializeErrorHandling();
   }
 
-  public listen() {
+  public async listen() {
+    const res = await this.connectToTheDatabase();
+    console.log(res)
     this.app.listen(process.env.PORT, () => {
       console.log(`App listening on the port ${process.env.PORT}`);
     });

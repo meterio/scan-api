@@ -31,6 +31,7 @@ class EpochController implements Controller {
     const snums = paginate.result
       .filter((c) => !!c.endBlock)
       .map((c) => c.endBlock.number);
+    console.log(snums);
     const kblocks = await this.blockRepo.findByNumberList(snums);
     let blockMap = {};
     for (const b of kblocks) {

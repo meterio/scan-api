@@ -10,6 +10,7 @@ import {
   MovementRepo,
   Token,
   TokenBalanceRepo,
+  TxDigestRepo,
   TxRepo,
 } from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
@@ -30,6 +31,7 @@ class AccountController implements Controller {
   private tokenBalanceRepo = new TokenBalanceRepo();
   private bidRepo = new BidRepo();
   private knownMethod = new KnownMethodRepo();
+  private txDigestRepo = new TxDigestRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -59,7 +61,7 @@ class AccountController implements Controller {
     );
     this.router.get(
       `${this.path}/:address/erc20txs`,
-      try$(this.getERC20TransfersByAccount)
+      try$(this.getERC20TxsByAccount)
     );
     this.router.get(
       `${this.path}/:address/erc721txs`,
@@ -127,7 +129,6 @@ class AccountController implements Controller {
       });
     }
     const contract = await this.contractRepo.findByAddress(address);
-    actJson.isContract = true;
     if (contract) {
       actJson.type = contract.type;
       actJson.tokenName = contract.name;
@@ -135,11 +136,8 @@ class AccountController implements Controller {
       actJson.tokenDecimals = contract.decimals;
       actJson.totalSupply = contract.totalSupply.toFixed();
       actJson.holdersCount = contract.holdersCount.toFixed();
-    } else {
-      actJson.type = 0;
-      actJson.isERC20 = false;
+      actJson.master = contract.master;
     }
-    delete actJson['code'];
     return res.json({
       account: {
         address,
@@ -156,15 +154,25 @@ class AccountController implements Controller {
     start = process.hrtime();
 
     start = process.hrtime();
-    const paginate = await this.txRepo.paginateByAccount(address, page, limit);
+    const paginate = await this.txDigestRepo.paginateByAccount(
+      address,
+      page,
+      limit
+    );
 
     if (!paginate.result) {
       return res.json({ totalRows: 0, txSummaries: [] });
     }
     const methods = await this.knownMethod.findAll();
+    let methodMap = {};
+    methods.forEach((m) => {
+      methodMap[m.signature] = m.name;
+    });
     return res.json({
       totalRows: paginate.count,
-      txSummaries: paginate.result.map((tx) => tx.toSummary(address, methods)),
+      txs: paginate.result
+        .map((tx) => tx.toJSON())
+        .map((tx) => ({ ...tx, method: methodMap[tx.method] || tx.method })),
     });
   };
 
@@ -200,7 +208,7 @@ class AccountController implements Controller {
     }
     const methods = await this.knownMethod.findAll();
     return res.json({
-      txSummaries: txs.map((tx) => tx.toSummary(address, methods)),
+      txSummaries: txs.map((tx) => tx.toSummary()),
     });
   };
 
@@ -334,7 +342,7 @@ class AccountController implements Controller {
   };
 
   // TODO: API changed, will affect UI
-  private getERC20TransfersByAccount = async (req: Request, res: Response) => {
+  private getERC20TxsByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
@@ -351,24 +359,11 @@ class AccountController implements Controller {
       contractMap[p.address] = p.toJSON();
     });
 
-    let jTransfers = [];
-    // for (let tr of transfers) {
-    //   const addr = tr.tokenAddress.toLowerCase();
-    //   let jTr = tr.toJSON();
-    //   if (addr in profileMap) {
-    //     jTr.symbol = profileMap[addr].symbol;
-    //     jTr.decimals = profileMap[addr].decimals || 18;
-    //   } else {
-    //     jTr.symbol = 'ERC20';
-    //     jTr.decimals = 18;
-    //   }
-    //   jTransfers.push(jTr);
-    // }
     return res.json({
       totalRows: paginate.count,
-      transfers: paginate.result.map((t) => ({
-        ...t.toJSON(),
-        token: contractMap[t.tokenAddress],
+      txs: paginate.result.map((m) => ({
+        ...m.toJSON(),
+        token: contractMap[m.tokenAddress],
       })),
     });
   };
