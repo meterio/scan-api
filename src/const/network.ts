@@ -1,5 +1,20 @@
-export enum Network {
-  MainNet = '0x00000000733c970e6a7d68c7db54e3705eee865a97a07bf7e695c63b238f5e52', // mainnet
-  TestNet = '0x00000000ed77a5a4cc2cb585ed7fba4200b89751142cd6fe124aecc3d3350e58', // warringstakes
-  DevNet = '0x00000000ed77a5a4cc2cb585ed7fba4200b89751142cd6fe124aecc3d3350e58', // tetra
-}
+import { Network } from '@meterio/scan-db/dist';
+
+export const getEnvNetwork = () => {
+  let network: Network;
+  switch (process.env.NETWORK) {
+    case 'mainnet':
+      network = Network.MainNet;
+      break;
+    case 'testnet':
+      network = Network.TestNet;
+      break;
+    case 'main-standby':
+      network = Network.MainNetStandBy;
+      break;
+    case 'test-standby':
+      network = Network.TestNetStandBy;
+      break;
+  }
+  return network;
+};

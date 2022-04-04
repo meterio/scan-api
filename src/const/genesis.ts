@@ -4,7 +4,7 @@ import {
   PrototypeAddress,
   ExtensionAddress,
 } from './address';
-import { Network } from './network';
+import { Network } from '@meterio/scan-db/dist';
 
 const uint8ToAddress = (input: number) =>
   '0x' + Buffer.alloc(1).fill(input).toString('hex').padStart(40, '0');
@@ -21,7 +21,7 @@ const preCompiledContract = [
 ];
 
 export const getPreAllocAccount = (net: Network) => {
-  if (net === Network.MainNet) {
+  if (net === Network.MainNet || net === Network.MainNetStandBy) {
     return [
       ParamsAddress,
       ExecutorAddress,
@@ -30,7 +30,7 @@ export const getPreAllocAccount = (net: Network) => {
       ...preCompiledContract,
       ...mainnet,
     ];
-  } else if (net === Network.TestNet) {
+  } else if (net === Network.TestNet || net === Network.TestNetStandBy) {
     return [
       ParamsAddress,
       PrototypeAddress,

@@ -4,6 +4,7 @@ export * from './network';
 export * from './token';
 export * from './abi';
 export * from './model';
+export * from './presets';
 
 export const enumVals = (es: any) => {
   return Object.keys(es).map((key) => es[key] as string);

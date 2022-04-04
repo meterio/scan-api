@@ -8,6 +8,7 @@ import errorMiddleware from './middleware/error.middleware';
 import express = require('express');
 import cors = require('cors');
 import cookieParser = require('cookie-parser');
+import { getEnvNetwork } from './const';
 
 function loggerMiddleware(
   request: express.Request,
@@ -31,7 +32,7 @@ class App {
 
   public async listen() {
     const res = await this.connectToTheDatabase();
-    console.log(res)
+    // console.log(res);
     this.app.listen(process.env.PORT, () => {
       console.log(`App listening on the port ${process.env.PORT}`);
     });
@@ -62,21 +63,7 @@ class App {
   }
 
   private async connectToTheDatabase() {
-    let network:Network;
-    switch(process.env.NETWORK){
-      case 'mainnet':
-        network = Network.MainNet;
-        break;
-      case 'testnet':
-        network = Network.TestNet;
-        break;
-      case "main-standby":
-        network = Network.MainNetStandBy;
-        break;
-      case "test-standby":
-        network = Network.TestNetStandBy;
-        break;
-    }
+    const network = getEnvNetwork();
     await connectDB(network);
   }
 }
