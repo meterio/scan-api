@@ -163,6 +163,25 @@ class ValidatorController implements Controller {
     });
   };
 
+  private getSort = (sortBy: string, sortDesc: string) => {
+    const validator = ['votingPower', 'commission%', 'totalPoints', 'totalVotes', 'jailedTime', 'bailAmount']
+    if (validator.includes(sortBy)) {
+      const sd = sortDesc === 'asc' ? 1 : (sortDesc === 'desc' ? -1 : 0)
+      if (sortBy === 'commission%') {
+        return {
+          commission: sd
+        }
+      }
+      return {
+        [sortBy]: sd
+      }
+    } else {
+      return {
+        votingPower: 1
+      }
+    }
+  }
+
   private convertCandidate = (v: Validator) => {
     return {
       name: v.name,
@@ -181,13 +200,17 @@ class ValidatorController implements Controller {
   };
 
   private getCandidates = async (req: Request, res: Response) => {
-    const { search } = req.query;
+    const { search, sortBy, sortDesc } = req.query;
+
+    const sort = this.getSort(String(sortBy), String(sortDesc))
+
     const filter = search ? search.toString() : '';
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const paginate = await this.validatorRepo.paginateCandidatesByFilter(
       filter,
       page,
-      limit
+      limit,
+      sort
     );
     return res.json({
       totalRows: paginate.count,
@@ -217,13 +240,17 @@ class ValidatorController implements Controller {
   };
 
   private getDelegates = async (req: Request, res: Response) => {
-    const { search } = req.query;
+    const { search, sortBy, sortDesc } = req.query;
+
+    const sort = this.getSort(String(sortBy), String(sortDesc))
+
     const filter = search ? search.toString() : '';
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const paginate = await this.validatorRepo.paginateDelegatesByFilter(
       filter,
       page,
-      limit
+      limit,
+      sort
     );
     const delegateTotalStaked =
       await this.validatorRepo.getDelegateTotalStaked();
@@ -235,7 +262,7 @@ class ValidatorController implements Controller {
     });
   };
 
-  private convertJailed = (v: Validator ) => {
+  private convertJailed = (v: Validator) => {
     return {
       name: v.name,
       address: v.address,
@@ -250,13 +277,17 @@ class ValidatorController implements Controller {
   };
 
   private getJailed = async (req: Request, res: Response) => {
-    const { search } = req.query;
+    const { search, sortBy, sortDesc } = req.query;
+
+    const sort = this.getSort(String(sortBy), String(sortDesc))
+
     const filter = search ? search.toString() : '';
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const paginate = await this.validatorRepo.paginateJailedByFilter(
       filter,
       page,
-      limit
+      limit,
+      sort
     );
     return res.json({
       totalRows: paginate.count,
