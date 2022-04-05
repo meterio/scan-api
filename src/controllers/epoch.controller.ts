@@ -1,7 +1,13 @@
-import { BlockRepo, CommitteeRepo, KnownRepo } from '@meterio/scan-db/dist';
+import {
+  BlockRepo,
+  CommitteeRepo,
+  KnownRepo,
+  Network,
+  Block,
+} from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
-
+import { getDelegates, getEnvNetwork } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
 
@@ -23,6 +29,7 @@ class EpochController implements Controller {
       try$(this.getMembersByEpoch)
     );
     this.router.get(`${this.path}/:epoch`, try$(this.getEpochDetail));
+    this.router.get(`${this.path}/:epoch/stats`, try$(this.getStatsByEpoch));
   }
 
   private getRecentEpochs = async (req: Request, res: Response) => {
@@ -65,6 +72,9 @@ class EpochController implements Controller {
     if (!committee) {
       return res.json({
         totalRows: 0,
+        startBlock: 0,
+        endBlock: 0,
+        kblockHeight: 0,
         members: [],
       });
     }
@@ -75,36 +85,167 @@ class EpochController implements Controller {
     for (const k of knowns) {
       knownMap[k.ecdsaPK] = k;
     }
-    const members = committee.members.map((m) => {
-      if (m.pubKey in knownMap) {
+    const network = getEnvNetwork();
+    const delegates = getDelegates(network);
+    if (delegates) {
+      for (const d of delegates) {
+        knownMap[d.pub_key] = d;
+      }
+    }
+    let visited = {};
+    const members = committee.members
+      .map((m) => {
+        if (visited[m.pubKey]) {
+          return;
+        }
+        visited[m.pubKey] = true;
         const k = knownMap[m.pubKey];
         return {
           index: m.index,
           pubKey: m.pubKey,
           netAddr: m.netAddr,
-          name: k.name,
-          description: k.description,
-          address: k.address,
+          name: k ? k.name : '',
+          description: k ? k.description || '' : '',
+          address: k ? k.address : '',
         };
-      } else {
-        return {
-          index: m.index,
-          pubKey: m.pubKey,
-          netAddr: m.netAddr,
-          name: '',
-          description: '',
-          address: '',
-        };
-      }
-    });
+      })
+      .filter((v) => !!v);
 
     if (members.length >= (page - 1) * limit) {
       return res.json({
         totalRows: members.length,
         members: members.slice((page - 1) * limit, page * limit),
+        startBlock: committee.startBlock,
+        endBlock: committee.endBlock,
+        kblockHeight: committee.kblockHeight,
       });
     } else {
-      return res.json({ totalRows: members.length, members: [] });
+      return res.json({
+        totalRows: members.length,
+        members: [],
+        startBlock: committee.startBlock,
+        endBlock: committee.endBlock,
+        kblockHeight: committee.kblockHeight,
+      });
+    }
+  };
+
+  private getStatsByEpoch = async (req: Request, res: Response) => {
+    const { epoch } = req.params;
+    const committee = await this.committeeRepo.findByEpoch(parseInt(epoch));
+    if (!committee || !committee.endBlock || committee.endBlock.number == 0) {
+      return res.json({
+        startBlock: 0,
+        endBlock: 0,
+        members: [],
+        stats: [],
+      });
+    }
+    const knowns = await this.knownRepo.findByKeyList(
+      committee.members.map((m) => m.pubKey)
+    );
+    let knownMap = {};
+    for (const k of knowns) {
+      knownMap[k.ecdsaPK] = k;
+    }
+
+    const network = getEnvNetwork();
+    const delegates = getDelegates(network);
+    if (delegates) {
+      for (const d of delegates) {
+        const ecdsaKey = d.pub_key.split(':::')[0];
+        knownMap[ecdsaKey] = d;
+      }
+    }
+    let visited = {};
+    const members = committee.members
+      .map((m) => {
+        if (m.pubKey in visited) {
+          return undefined;
+        }
+        visited[m.pubKey] = true;
+        const k = knownMap[m.pubKey];
+        return {
+          index: m.index,
+          netAddr: m.netAddr,
+          name: k ? k.name : '',
+          address: k ? k.address : '',
+        };
+      })
+      .filter((v) => !!v);
+    const memberMap = {};
+    members.forEach((m) => {
+      memberMap[m.index] = m;
+    });
+
+    const blocks = await this.blockRepo.findByNumberInRange(
+      committee.startBlock.number,
+      committee.endBlock.number
+    );
+
+    const lastBlock = blocks[blocks.length - 1];
+    const lastRound = lastBlock.qc.qcRound;
+
+    const stats = this.calcStats(blocks, memberMap, lastRound);
+
+    return res.json({
+      startBlock: committee.startBlock,
+      endBlock: committee.endBlock,
+      members,
+      stats,
+    });
+  };
+
+  private calcStats = (
+    blocks: Block[],
+    memberMap: { [key: number]: any },
+    lastRound: number
+  ) => {
+    let curIndex = 0;
+    let stats: number[][] = [];
+    const size = Object.keys(memberMap).length;
+
+    for (var i: number = 0; i < lastRound / size + 1; i++) {
+      stats[i] = [];
+      for (var j: number = 0; j < size; j++) {
+        stats[i][j] = 0;
+      }
+    }
+    // console.log(`last round: `, lastRound, 'size:', size);
+
+    try {
+      for (const b of blocks) {
+        // console.log('block beneficary:', b.beneficiary, ', number:', b.number);
+        let foundInLoop = false;
+        for (let k = 0; k < size; k++) {
+          const v = memberMap[curIndex % size];
+          const row = Math.floor(curIndex / size);
+          const col = curIndex % size;
+          // console.log(`row: `, row);
+          // console.log(`col: `, curIndex % size);
+          // console.log(
+          //   'validator: ',
+          //   v.address.toLowerCase(),
+          //   v.address.toLowerCase() === b.beneficiary.toLowerCase()
+          // );
+          if (v.address.toLowerCase() === b.beneficiary.toLowerCase()) {
+            foundInLoop = true;
+            stats[row][col] = 1; // correct proposer
+            curIndex++;
+            break;
+          } else {
+            stats[row][col] = 2; // incorrect proposer
+          }
+          curIndex++;
+        }
+        if (foundInLoop === false) {
+          return stats;
+        }
+      }
+      return stats;
+    } catch (e) {
+      console.log(e);
+      return '';
     }
   };
 
