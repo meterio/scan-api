@@ -6,12 +6,11 @@ import {
   BucketRepo,
   ContractRepo,
   KnownMethodRepo,
-  Movement,
   MovementRepo,
-  Token,
   TokenBalanceRepo,
   TxDigestRepo,
   TxRepo,
+  ContractType,
 } from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
@@ -99,18 +98,18 @@ class AccountController implements Controller {
     const { address } = req.params;
     const account = await this.accountRepo.findByAddress(address);
     const actJson = this.convertAccount(account);
-    if (!account) {
-      const contract = await this.contractRepo.findByAddress(address);
-      if (contract) {
-        actJson.type = contract.type;
-        actJson.tokenName = contract.name;
-        actJson.tokenSymbol = contract.symbol;
-        actJson.tokenDecimals = contract.decimals;
-        actJson.totalSupply = contract.totalSupply.toFixed();
-        actJson.holdersCount = contract.holdersCount.toFixed();
-        actJson.transfersCount = contract.transfersCount.toFixed();
-        actJson.master = contract.master;
-      }
+    const contract = await this.contractRepo.findByAddress(address);
+    if (contract) {
+      actJson.type = ContractType[contract.type];
+      actJson.tokenName = contract.name;
+      actJson.tokenSymbol = contract.symbol;
+      actJson.tokenDecimals = contract.decimals;
+      actJson.totalSupply = contract.totalSupply.toFixed();
+      const holderCount = await this.tokenBalanceRepo.countByTokenAddress(address);
+      const transferCount = await this.movementRepo.countByTokenAddress(address);
+      actJson.holdersCount = holderCount;
+      actJson.transfersCount = transferCount;
+      actJson.master = contract.master;
     }
 
     return res.json({
@@ -242,8 +241,26 @@ class AccountController implements Controller {
     return res.json({
       totalRows: paginate.count,
       tokens: paginate.result
-        .filter((t) => t.balance.isGreaterThan(0) || t.nftCount.isGreaterThan(0))
-        .map((t) => t.toJSON()),
+        .filter((t) => {
+          const balGT0 = new BigNumber(t.balance).isGreaterThan(0);
+          let nftCount = new BigNumber(0);
+          for (const { value } of t.nftBalances) {
+            nftCount = nftCount.plus(value);
+          }
+          const nftGT0 = nftCount.isGreaterThan(0);
+
+          return balGT0 || nftGT0;
+        })
+        .map((t) => {
+          delete t.__v;
+          delete t._id;
+          t.tokenType = t.token.type;
+          t.tokenName = t.token.name;
+          t.tokenSymbol = t.token.symbol;
+          t.tokenDecimals = t.token.decimals;
+          delete t.token;
+          return t;
+        }),
     });
   };
 
@@ -278,9 +295,16 @@ class AccountController implements Controller {
 
     return res.json({
       totalRows: paginate.count,
-      txs: paginate.result.map((m) => ({
-        ...m.toJSON(),
-      })),
+      txs: paginate.result.map((m) => {
+        delete m.__v;
+        delete m._id;
+        m.name = m.contract.name;
+        m.symbol = m.contract.symbol;
+        m.decimals = m.contract.decimals;
+        m.contractType = m.contract.type;
+        delete m.contract;
+        return m;
+      }),
     });
   };
 
@@ -292,9 +316,16 @@ class AccountController implements Controller {
 
     return res.json({
       totalRows: paginate.count,
-      txs: paginate.result.map((m) => ({
-        ...m.toJSON(),
-      })),
+      txs: paginate.result.map((m) => {
+        delete m.__v;
+        delete m._id;
+        m.name = m.contract.name;
+        m.symbol = m.contract.symbol;
+        m.decimals = m.contract.decimals;
+        m.contractType = m.contract.type;
+        delete m.contract;
+        return m;
+      }),
     });
   };
 
@@ -306,9 +337,16 @@ class AccountController implements Controller {
 
     return res.json({
       totalRows: paginate.count,
-      txs: paginate.result.map((m) => ({
-        ...m.toJSON(),
-      })),
+      txs: paginate.result.map((m) => {
+        delete m.__v;
+        delete m._id;
+        m.name = m.contract.name;
+        m.symbol = m.contract.symbol;
+        m.decimals = m.contract.decimals;
+        m.contractType = m.contract.type;
+        delete m.contract;
+        return m;
+      }),
     });
   };
 

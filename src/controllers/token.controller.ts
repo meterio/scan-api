@@ -23,14 +23,8 @@ class TokenController implements Controller {
     const { address } = req.params;
 
     const contract = await this.contractRepo.findByAddress(address);
-    if (contract.transfersCount.isZero()) {
-      const transfersCount = await this.movementRepo.countTokenTransfer(
-        address
-      );
-      console.log('transfersCount: ', transfersCount);
-      transfersCount > 0 &&
-        (contract.transfersCount = new BigNumber(transfersCount));
-    }
+    const transfersCount = await this.movementRepo.countByTokenAddress(address);
+    console.log('transfersCount: ', transfersCount);
 
     res.json({
       result: contract.toJSON() || {
@@ -42,7 +36,7 @@ class TokenController implements Controller {
         totalSupply: 0,
         circulation: 0,
         holdersCount: 0,
-        transfersCount: 0,
+        transfersCount,
       },
     });
   };
