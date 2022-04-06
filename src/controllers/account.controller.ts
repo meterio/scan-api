@@ -124,20 +124,22 @@ class AccountController implements Controller {
     const account = await this.accountRepo.findByAddress(address);
     const actJson = this.convertAccount(account);
     if (!account) {
-      return res.json({
-        account: { address, mtr: 0, mtrg: 0, mtrBounded: 0, mtrgBounded: 0 },
-      });
+      const contract = await this.contractRepo.findByAddress(address);
+      if (contract) {
+        actJson.type = contract.type;
+        actJson.tokenName = contract.name;
+        actJson.tokenSymbol = contract.symbol;
+        actJson.tokenDecimals = contract.decimals;
+        actJson.totalSupply = contract.totalSupply.toFixed();
+        actJson.holdersCount = contract.holdersCount.toFixed();
+        actJson.master = contract.master;
+      } else {
+        return res.json({
+          account: { address, mtr: 0, mtrg: 0, mtrBounded: 0, mtrgBounded: 0 },
+        });
+      }
     }
-    const contract = await this.contractRepo.findByAddress(address);
-    if (contract) {
-      actJson.type = contract.type;
-      actJson.tokenName = contract.name;
-      actJson.tokenSymbol = contract.symbol;
-      actJson.tokenDecimals = contract.decimals;
-      actJson.totalSupply = contract.totalSupply.toFixed();
-      actJson.holdersCount = contract.holdersCount.toFixed();
-      actJson.master = contract.master;
-    }
+
     return res.json({
       account: {
         address,
