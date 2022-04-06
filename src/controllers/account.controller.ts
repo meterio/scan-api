@@ -40,45 +40,24 @@ class AccountController implements Controller {
   private initializeRoutes() {
     this.router.get(`${this.path}/top/mtr`, try$(this.getTopMTRAccounts));
     this.router.get(`${this.path}/top/mtrg`, try$(this.getTopMTRGAccounts));
+
     this.router.get(`${this.path}/:address`, try$(this.getAccount));
+
+    // token address
+    this.router.get(`${this.path}/:tokenAddress/holders`, try$(this.getTokenHoldersByAccount));
+    this.router.get(`${this.path}/:address/transfers`, try$(this.getTransfersByAccount));
+
+    // user address
     this.router.get(`${this.path}/:address/txs`, try$(this.getTxsByAccount));
-    this.router.get(
-      `${this.path}/:address/txlist`,
-      try$(this.getTxlistByAccount)
-    );
+    this.router.get(`${this.path}/:address/txlist`, try$(this.getTxlistByAccount));
+    this.router.get(`${this.path}/:address/tokens`, try$(this.getTokensByAccount));
+    this.router.get(`${this.path}/:address/erc20txs`, try$(this.getERC20TxsByAccount));
+    this.router.get(`${this.path}/:address/erc721txs`, try$(this.getERC721TxsByAccount));
+    this.router.get(`${this.path}/:address/erc1155txs`, try$(this.getERC1155TxsByAccount));
+    this.router.get(`${this.path}/:address/buckets`, try$(this.getBucketsByAccount));
     this.router.get(`${this.path}/:address/bids`, try$(this.getBidsByAccount));
-    this.router.get(
-      `${this.path}/:address/tokens`,
-      try$(this.getTokensByAccount)
-    );
-    this.router.get(
-      `${this.path}/:tokenAddress/holders`,
-      try$(this.getTokenHoldersByAccount)
-    );
-    this.router.get(
-      `${this.path}/:address/transfers`,
-      try$(this.getTransfersByAccount)
-    );
-    this.router.get(
-      `${this.path}/:address/erc20txs`,
-      try$(this.getERC20TxsByAccount)
-    );
-    this.router.get(
-      `${this.path}/:address/erc721txs`,
-      try$(this.getERC721TransfersByAccount)
-    );
-    this.router.get(
-      `${this.path}/:address/buckets`,
-      try$(this.getBucketsByAccount)
-    );
-    this.router.get(
-      `${this.path}/:address/proposed`,
-      try$(this.getProposedByAccount)
-    );
-    this.router.get(
-      `${this.path}/:address/delegators`,
-      try$(this.getDelegatorsByAccount)
-    );
+    this.router.get(`${this.path}/:address/proposed`, try$(this.getProposedByAccount));
+    this.router.get(`${this.path}/:address/delegators`, try$(this.getDelegatorsByAccount));
   }
 
   private getTopMTRAccounts = async (req: Request, res: Response) => {
@@ -93,10 +72,7 @@ class AccountController implements Controller {
 
   private getTopMTRGAccounts = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const paginate = await this.accountRepo.paginateTopMTRGAccounts(
-      page,
-      limit
-    );
+    const paginate = await this.accountRepo.paginateTopMTRGAccounts(page, limit);
     return res.json({
       totalRows: paginate.count,
       accounts: paginate.result.map(this.convertAccount),
@@ -132,11 +108,8 @@ class AccountController implements Controller {
         actJson.tokenDecimals = contract.decimals;
         actJson.totalSupply = contract.totalSupply.toFixed();
         actJson.holdersCount = contract.holdersCount.toFixed();
+        actJson.transfersCount = contract.transfersCount.toFixed();
         actJson.master = contract.master;
-      } else {
-        return res.json({
-          account: { address, mtr: 0, mtrg: 0, mtrBounded: 0, mtrgBounded: 0 },
-        });
       }
     }
 
@@ -156,11 +129,7 @@ class AccountController implements Controller {
     start = process.hrtime();
 
     start = process.hrtime();
-    const paginate = await this.txDigestRepo.paginateByAccount(
-      address,
-      page,
-      limit
-    );
+    const paginate = await this.txDigestRepo.paginateByAccount(address, page, limit);
 
     if (!paginate.result) {
       return res.json({ totalRows: 0, txSummaries: [] });
@@ -172,9 +141,7 @@ class AccountController implements Controller {
     });
     return res.json({
       totalRows: paginate.count,
-      txs: paginate.result
-        .map((tx) => tx.toJSON())
-        .map((tx) => ({ ...tx, method: methodMap[tx.method] || tx.method })),
+      txs: paginate.result.map((tx) => tx.toJSON()).map((tx) => ({ ...tx, method: methodMap[tx.method] || tx.method })),
     });
   };
 
@@ -198,12 +165,7 @@ class AccountController implements Controller {
       end = Infinity;
     }
 
-    const txs = await this.txRepo.findByAccountInRange(
-      address,
-      start,
-      end,
-      sort.toString()
-    );
+    const txs = await this.txRepo.findByAccountInRange(address, start, end, sort.toString());
 
     if (!txs) {
       return res.json({ totalRows: 0, txSummaries: [] });
@@ -233,34 +195,34 @@ class AccountController implements Controller {
   private getTokenHoldersByAccount = async (req: Request, res: Response) => {
     const { tokenAddress } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const paginate = await this.tokenBalanceRepo.paginateByTokenAddress(
-      tokenAddress,
-      page,
-      limit
-    );
-    console.log('TOKEN ADDRESS: ', tokenAddress);
     const contract = await this.contractRepo.findByAddress(tokenAddress);
+    if (!contract) {
+      return res.json({ holders: [], token: {}, isToken: false });
+    }
 
+    const paginate = await this.tokenBalanceRepo.paginateByTokenAddress(tokenAddress, page, limit);
     if (paginate.count <= 0) {
       return res.json({ holders: [] });
     }
-    const tokens = paginate.result;
+    const bals = paginate.result;
 
     let total = new BigNumber(0);
-    for (const t of tokens) {
+    for (const t of bals) {
       if (t.balance.isGreaterThan(0)) {
         total = total.plus(t.balance);
       }
+      total = total.plus(t.nftCount);
     }
+
     // FIXME: handle ERC721 and 1155
-    let sorted = tokens
-      .filter((t) => t.balance.isGreaterThan(0))
-      .sort((a, b) => (a.balance.isGreaterThan(b.balance) ? -1 : 1));
+    let sorted = bals
+      .filter((t) => t.balance.isGreaterThan(0) || t.nftCount.isGreaterThan(0))
+      .sort((a, b) => (a.balance.isGreaterThan(b.balance) ? -1 : a.nftCount.isGreaterThan(b.nftCount) ? -1 : 1));
+
     return res.json({
       token: !contract ? {} : contract.toJSON(),
       holders: sorted.map((t) => ({
         ...t.toJSON(),
-        percentage: t.balance.dividedBy(total),
       })),
       totalRows: paginate.count,
     });
@@ -270,34 +232,18 @@ class AccountController implements Controller {
     const { address } = req.params;
     console.log(address);
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const paginate = await this.tokenBalanceRepo.paginateByAddress(
-      address,
-      page,
-      limit
-    );
+    const paginate = await this.tokenBalanceRepo.paginateByAddress(address, page, limit);
 
     if (paginate.count <= 0) {
       return res.json({ totalRows: 0, tokens: [] });
     }
-    // FIXME: optimize
-    const tokenAddresses = paginate.result
-      .filter((t) => t.balance.isGreaterThan(0))
-      .map((t) => t.tokenAddress);
-    let contractMap = {};
-    (await this.contractRepo.findByAddressList(tokenAddresses)).forEach((p) => {
-      contractMap[p.address] = p;
-    });
 
+    // FIXME: should do the filtering in database instead of here
     return res.json({
       totalRows: paginate.count,
       tokens: paginate.result
-        .filter((t) => t.balance.isGreaterThan(0))
-        .map((t) => {
-          return {
-            ...t.toJSON(),
-            token: contractMap[t.tokenAddress],
-          };
-        }),
+        .filter((t) => t.balance.isGreaterThan(0) || t.nftCount.isGreaterThan(0))
+        .map((t) => t.toJSON()),
     });
   };
 
@@ -309,38 +255,18 @@ class AccountController implements Controller {
     const contract = await this.contractRepo.findByAddress(address);
 
     if (contract) {
-      const paginate = await this.movementRepo.paginateByTokenAddress(
-        address,
-        page,
-        limit
-      );
+      const paginate = await this.movementRepo.paginateByTokenAddress(address, page, limit);
       return res.json({
         totalRows: paginate.count,
-        transfers: paginate.result.map((t) => ({
-          ...t.toJSON(),
-          token: contract.toJSON(),
-        })),
-      });
-    } else {
-      const paginate = await this.movementRepo.paginateByAccount(
-        address,
-        page,
-        limit
-      );
-      const tokenAddresses = paginate.result.map((tr) => tr.tokenAddress);
-      let contractMap = {};
-      (await this.contractRepo.findByAddressList(tokenAddresses)).map((c) => {
-        contractMap[c.address] = c.toJSON();
-      });
-
-      return res.json({
-        totalRows: paginate.count,
-        transfers: paginate.result.map((t) => ({
-          ...t.toJSON(),
-          token: contractMap[t.tokenAddress],
-        })),
+        contract: contract.toJSON(),
+        transfers: paginate.result.map((t) => t.toJSON()),
       });
     }
+    return res.json({
+      totalRows: 0,
+      contract: {},
+      transfers: [],
+    });
   };
 
   // TODO: API changed, will affect UI
@@ -348,50 +274,40 @@ class AccountController implements Controller {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
-    const paginate = await this.movementRepo.paginateERC20TransferByAccount(
-      address,
-      page,
-      limit
-    );
-    const transfers = paginate.result;
-    const tokenAddresses = transfers.map((t) => t.tokenAddress);
-
-    let contractMap = {};
-    (await this.contractRepo.findByAddressList(tokenAddresses)).forEach((p) => {
-      contractMap[p.address] = p.toJSON();
-    });
+    const paginate = await this.movementRepo.paginateERC20TxsByAccount(address, page, limit);
 
     return res.json({
       totalRows: paginate.count,
       txs: paginate.result.map((m) => ({
         ...m.toJSON(),
-        token: contractMap[m.tokenAddress],
       })),
     });
   };
 
-  private getERC721TransfersByAccount = async (req: Request, res: Response) => {
+  private getERC721TxsByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
 
-    const paginate = await this.movementRepo.paginateERC721TransferByAccount(
-      address,
-      page,
-      limit
-    );
-    const transfers = paginate.result;
-    const tokenAddresses = transfers.map((t) => t.tokenAddress);
-
-    let contractMap = {};
-    (await this.contractRepo.findByAddressList(tokenAddresses)).forEach((p) => {
-      contractMap[p.address] = p.toJSON();
-    });
+    const paginate = await this.movementRepo.paginateERC721TxsByAccount(address, page, limit);
 
     return res.json({
       totalRows: paginate.count,
-      transfers: paginate.result.map((t) => ({
-        ...t.toJSON(),
-        token: contractMap[t.tokenAddress],
+      txs: paginate.result.map((m) => ({
+        ...m.toJSON(),
+      })),
+    });
+  };
+
+  private getERC1155TxsByAccount = async (req: Request, res: Response) => {
+    const { address } = req.params;
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+
+    const paginate = await this.movementRepo.paginateERC1155TxsByAccount(address, page, limit);
+
+    return res.json({
+      totalRows: paginate.count,
+      txs: paginate.result.map((m) => ({
+        ...m.toJSON(),
       })),
     });
   };
@@ -415,11 +331,7 @@ class AccountController implements Controller {
   private getProposedByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const paginate = await this.blockRepo.paginateByBeneficiary(
-      address,
-      page,
-      limit
-    );
+    const paginate = await this.blockRepo.paginateByBeneficiary(address, page, limit);
 
     return res.json({
       totalRows: paginate.count,
