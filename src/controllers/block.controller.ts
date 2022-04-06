@@ -1,10 +1,4 @@
-import {
-  AccountRepo,
-  BlockRepo,
-  KnownMethodRepo,
-  TxRepo,
-  ValidatorRepo,
-} from '@meterio/scan-db/dist';
+import { AccountRepo, BlockRepo, KnownMethodRepo, TxRepo, ValidatorRepo } from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { HttpError, try$ } from 'express-toolbox';
 
@@ -26,14 +20,8 @@ class BlockController implements Controller {
   }
 
   private initializeRoutes() {
-    this.router.get(
-      `${this.path}/bestin/:startTs/:endTs`,
-      try$(this.getBestInTimeRange)
-    );
-    this.router.get(
-      `${this.path}/at/:timestamp`,
-      try$(this.getExactMatchWithTimestamp)
-    );
+    this.router.get(`${this.path}/bestin/:startTs/:endTs`, try$(this.getBestInTimeRange));
+    this.router.get(`${this.path}/at/:timestamp`, try$(this.getExactMatchWithTimestamp));
     this.router.get(`${this.path}/recent`, try$(this.getRecentBlocks));
     this.router.get(`${this.path}/:revision`, try$(this.getBlockByRevision));
     this.router.get(`${this.path}/:revision/txs`, try$(this.getBlockTxs));
@@ -69,10 +57,7 @@ class BlockController implements Controller {
       throw new HttpError(400, 'invalid start or end timestamp');
     }
     if (start > end) {
-      throw new HttpError(
-        400,
-        'start timestamp should be smaller than end timestamp'
-      );
+      throw new HttpError(400, 'start timestamp should be smaller than end timestamp');
     }
 
     const blks = await this.blockRepo.findInTimeRange(start, end);
@@ -105,10 +90,7 @@ class BlockController implements Controller {
     } else {
       const num = parseInt(revision);
       if (isNaN(num) || !isUInt(num)) {
-        throw new HttpError(
-          400,
-          'invalid revision: bytes32 or number or best required'
-        );
+        throw new HttpError(400, 'invalid revision: bytes32 or number or best required');
       }
       blk = await this.blockRepo.findByNumber(num);
     }
@@ -139,10 +121,7 @@ class BlockController implements Controller {
     } else {
       const num = parseInt(revision);
       if (isNaN(num) || !isUInt(num)) {
-        throw new HttpError(
-          400,
-          'invalid revision: bytes32 or number or best required'
-        );
+        throw new HttpError(400, 'invalid revision: bytes32 or number or best required');
       }
       blk = await this.blockRepo.findByNumber(num);
     }
@@ -172,7 +151,6 @@ class BlockController implements Controller {
   private getRecentBlocks = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
     const nameMap = await this.getNameMap();
-
     const paginate = await this.blockRepo.paginateAll(page, limit);
     res.json({
       totalRows: paginate.count,
