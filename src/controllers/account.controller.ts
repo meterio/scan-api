@@ -110,6 +110,8 @@ class AccountController implements Controller {
       actJson.holdersCount = holderCount;
       actJson.transfersCount = transferCount;
       actJson.master = contract.master;
+      actJson.creationTxHash = contract.creationTxHash;
+      actJson.firstSeen = contract.firstSeen;
     }
 
     return res.json({
