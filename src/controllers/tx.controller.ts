@@ -183,8 +183,11 @@ class TxController implements Controller {
     for (const o of tx.outputs) {
       transfers = transfers.concat(o.transfers.map(t => {
         return {
-          ...t,
-          token: Token[t.token]
+          sender: t.sender,
+          recipient: t.recipient,
+          amount: t.amount,
+          token: Token[t.token],
+          overallIndex: t.overallIndex
         }
       }));
     }
@@ -241,11 +244,13 @@ class TxController implements Controller {
         };
         if (c.signature) {
           const known = knownMap[c.signature];
-          return {
-            ...result,
-            method: known.name,
-            abi: JSON.parse(known.abi),
-          };
+          if (known) {
+            return {
+              ...result,
+              method: known.name,
+              abi: JSON.parse(known.abi),
+            };
+          }
         }
         return result;
       }),
