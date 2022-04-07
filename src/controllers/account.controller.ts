@@ -112,6 +112,8 @@ class AccountController implements Controller {
       actJson.master = contract.master;
       actJson.creationTxHash = contract.creationTxHash;
       actJson.firstSeen = contract.firstSeen;
+      actJson.verified = contract.verified;
+      actJson.files = contract.files;
     }
 
     return res.json({

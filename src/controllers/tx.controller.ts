@@ -181,7 +181,12 @@ class TxController implements Controller {
 
     let transfers = [];
     for (const o of tx.outputs) {
-      transfers = transfers.concat(o.transfers);
+      transfers = transfers.concat(o.transfers.map(t => {
+        return {
+          ...t,
+          token: Token[t.token]
+        }
+      }));
     }
     return res.json({ hash, transfers });
   };
