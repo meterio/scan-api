@@ -6,6 +6,7 @@ import {
   TxRepo,
   PosEvent,
   Token,
+  PosTransfer,
 } from '@meterio/scan-db/dist';
 import { sign } from 'crypto';
 import e, { Request, Response, Router } from 'express';
@@ -58,62 +59,33 @@ class TxController implements Controller {
     const { hash } = req.params;
     let tx = await this.txRepo.findByHash(hash);
     if (!tx) {
-      return res.json({ tx: {}, summary: {} });
+      return res.json({ tx: {} });
     }
     let txObj = tx.toJSON();
 
     let transfers = [];
-    let tokens = {};
     let events = [];
 
-    const knownEvents = await this.knownEventRepo.findAll();
-    const knownMethods = await this.knownMethodRepo.findAll();
-    let methodMap = {};
-    knownMethods.forEach((m) => {
-      methodMap[m.signature] = m.name;
-    });
-    let eventMap = {};
-    knownEvents.forEach((e) => {
-      eventMap[e.signature] = e.name;
-    });
-
-    const clauses = txObj.clauses.map((c) => {
-      let sig = c.data.substring(0, 10);
-      const method = methodMap[sig] || sig;
-      return { ...c, method };
-    });
     for (const [clauseIndex, o] of txObj.outputs.entries()) {
       for (const [logIndex, e] of o.events.entries()) {
-        if (e.topics && e.topics.length >= 1) {
-          events.push({
-            ...e,
-            clauseIndex,
-            logIndex,
-            event: eventMap[e.topics[0]] || '',
-          });
-          if (e.topics && e.topics[0] === TransferEvent.signature) {
-            const token = await this.contractRepo.findByAddress(e.address);
-            if (token) {
-              tokens[token.address.toLowerCase()] = token.toJSON();
-            }
-          }
-        }
+        events = events.concat({ ...e, clauseIndex, logIndex });
       }
       for (const [logIndex, t] of o.transfers.entries()) {
-        transfers.push({ ...t, clauseIndex, logIndex });
+        transfers = transfers.concat({ ...t, clauseIndex, logIndex });
       }
     }
 
-    let txNewObj = { ...txObj, events, transfers, clauses };
-    // txObj.events = events;
-    // txObj.transfers = transfers;
+    const summary = {
+      ...txObj,
+      events,
+      transfers,
+      clauseCount: tx.clauses.length,
+      transferCount: transfers.length,
+      eventCount: events.length,
+    };
 
     return res.json({
-      summary: {
-        ...tx.toJSON(),
-      },
-      tx: txNewObj,
-      tokens,
+      tx: summary,
     });
   };
 
@@ -181,15 +153,17 @@ class TxController implements Controller {
 
     let transfers = [];
     for (const o of tx.outputs) {
-      transfers = transfers.concat(o.transfers.map(t => {
-        return {
-          sender: t.sender,
-          recipient: t.recipient,
-          amount: t.amount,
-          token: Token[t.token],
-          overallIndex: t.overallIndex
-        }
-      }));
+      transfers = transfers.concat(
+        o.transfers.map((t) => {
+          return {
+            sender: t.sender,
+            recipient: t.recipient,
+            amount: t.amount,
+            token: Token[t.token],
+            overallIndex: t.overallIndex,
+          };
+        })
+      );
     }
     return res.json({ hash, transfers });
   };
