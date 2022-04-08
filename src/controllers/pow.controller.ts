@@ -43,7 +43,6 @@ class PowController implements Controller {
     const numbers = paginate.result.map((c) => c.kblockHeight);
     let kblocks = await this.blockRepo.findByNumberList(numbers);
     kblocks = kblocks.sort((a, b) => (a.number > b.number ? -1 : 1));
-    const count = await this.blockRepo.countKBlocks();
     if (!kblocks) {
       return res.json({ totalRows: 0, rewards: [] });
     }
@@ -86,7 +85,6 @@ class PowController implements Controller {
           posBlock: kb.number,
           powStart,
           powEnd,
-          powBlock: 1274, // FIXME: fake number
           timestamp: kb.timestamp,
           epoch: kb.epoch,
           totalAmount: total.toFixed(),
@@ -95,7 +93,8 @@ class PowController implements Controller {
         });
       }
     }
-    return res.json({ totalRows: count, rewards });
+
+    return res.json({ totalRows: paginate.count, rewards });
   };
 
   private getPowRewardsByEpoch = async (req: Request, res: Response) => {

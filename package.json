@@ -1,6 +1,6 @@
 {
   "name": "scan-api",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "API for meter scanv2",
   "license": "MIT",
   "readmeFilename": "README.md",
@@ -23,7 +23,7 @@
   ],
   "dependencies": {
     "@meterio/devkit": "^1.6.5",
-    "@meterio/scan-db": "^0.1.48",
+    "@meterio/scan-db": "^0.1.51",
     "axios": "^0.26.1",
     "bunyan": "^1.8.14",
     "cookie-parser": "^1.4.6",
