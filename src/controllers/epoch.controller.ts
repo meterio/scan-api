@@ -228,7 +228,8 @@ class EpochController implements Controller {
           //   v.address.toLowerCase(),
           //   v.address.toLowerCase() === b.beneficiary.toLowerCase()
           // );
-          if (v.address.toLowerCase() === b.beneficiary.toLowerCase()) {
+          const vaddr = v.address.replace('0x0x', '0x').toLowerCase();
+          if (vaddr === b.beneficiary.toLowerCase()) {
             foundInLoop = true;
             stats[row][col] = 1; // correct proposer
             curIndex++;
