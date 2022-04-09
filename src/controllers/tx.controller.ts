@@ -79,7 +79,7 @@ class TxController implements Controller {
     let tokenTransfers = [];
     for (const e of events) {
       if (
-        e.topics ||
+        !e.topics ||
         ![
           ERC20.Transfer.signature,
           ERC721.Transfer.signature,
@@ -93,53 +93,69 @@ class TxController implements Controller {
       let contract = await this.contractRepo.findByAddress(e.address);
       if (e.topics && e.topics[0] === ERC20.Transfer.signature) {
         // Get ERC20 Transfer
-        const decoded = ERC20.Transfer.decode(e.data, e.topics);
-        tokenTransfers.push({
-          from: decoded.from.toLowerCase(),
-          to: decoded.to.toLowerCase(),
-          amount: decoded.value.toLowerCase(),
-          type: 'ERC20',
-          symbol: contract ? contract.symbol : 'ERC20',
-        });
+        try {
+          const decoded = ERC20.Transfer.decode(e.data, e.topics);
+          tokenTransfers.push({
+            from: decoded.from.toLowerCase(),
+            to: decoded.to.toLowerCase(),
+            amount: decoded.value.toLowerCase(),
+            type: 'ERC20',
+            symbol: contract ? contract.symbol : 'ERC20',
+          });
+        } catch (e) {
+          console.log(`ignore error: `, e);
+        }
       }
 
       // Get ERC721 Transfer
       if (e.topics && e.topics[0] === ERC721.Transfer.signature) {
-        const decoded = ERC721.Transfer.decode(e.data, e.topics);
-        tokenTransfers.push({
-          from: decoded.from.toLowerCase(),
-          to: decoded.to.toLowerCase(),
-          ids: [decoded.value.toLowerCase()],
-          values: [1],
-          type: 'ERC721',
-          symbol: contract ? contract.symbol : 'ERC721',
-        });
+        try {
+          const decoded = ERC721.Transfer.decode(e.data, e.topics);
+          tokenTransfers.push({
+            from: decoded.from.toLowerCase(),
+            to: decoded.to.toLowerCase(),
+            ids: [decoded.value.toLowerCase()],
+            values: [1],
+            type: 'ERC721',
+            symbol: contract ? contract.symbol : 'ERC721',
+          });
+        } catch (e) {
+          console.log(`ignore error: `, e);
+        }
       }
 
       // Get ERC1155 TransferSingle
       if (e.topics && e.topics[0] === ERC1155.TransferSingle.signature) {
-        const decoded = ERC1155.TransferSingle.decode(e.data, e.topics);
-        tokenTransfers.push({
-          from: decoded.from.toLowerCase(),
-          to: decoded.to.toLowerCase(),
-          ids: [decoded.id.toString()],
-          values: [decoded.value.toString()],
-          type: 'ERC1155',
-          symbol: contract ? contract.symbol : 'ERC1155',
-        });
+        try {
+          const decoded = ERC1155.TransferSingle.decode(e.data, e.topics);
+          tokenTransfers.push({
+            from: decoded.from.toLowerCase(),
+            to: decoded.to.toLowerCase(),
+            ids: [decoded.id.toString()],
+            values: [decoded.value.toString()],
+            type: 'ERC1155',
+            symbol: contract ? contract.symbol : 'ERC1155',
+          });
+        } catch (e) {
+          console.log(`ignore error: `, e);
+        }
       }
 
       // Get ERC1155 TransferBatch
       if (e.topics && e.topics[0] === ERC1155.TransferBatch.signature) {
-        const decoded = ERC1155.TransferBatch.decode(e.data, e.topics);
-        tokenTransfers.push({
-          from: decoded.from.toLowerCase(),
-          to: decoded.to.toLowerCase(),
-          ids: decoded.ids.map((id) => id.toString()),
-          values: decoded.values.map((v) => v.toString()),
-          type: 'ERC1155',
-          symbol: contract ? contract.symbol : 'ERC1155',
-        });
+        try {
+          const decoded = ERC1155.TransferBatch.decode(e.data, e.topics);
+          tokenTransfers.push({
+            from: decoded.from.toLowerCase(),
+            to: decoded.to.toLowerCase(),
+            ids: decoded.ids.map((id) => id.toString()),
+            values: decoded.values.map((v) => v.toString()),
+            type: 'ERC1155',
+            symbol: contract ? contract.symbol : 'ERC1155',
+          });
+        } catch (e) {
+          console.log(`ignore error: `, e);
+        }
       }
     }
 
