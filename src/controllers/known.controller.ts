@@ -1,10 +1,15 @@
 import {
+  ABIFragmentRepo,
   ContractRepo,
   ContractType,
-  KnownEventRepo,
-  KnownMethodRepo,
   KnownRepo,
+  Network,
+  ContractFile,
+  ABIFragment,
+  ContractFileRepo,
 } from '@meterio/scan-db/dist';
+import { Interface, FormatTypes } from 'ethers/lib/utils';
+import { toChecksumAddress } from '@meterio/devkit/dist/cry';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
@@ -15,19 +20,21 @@ import {
   AuctionModuleAddress,
   BridgePoolAddress,
   ExecutorAddress,
+  getEnvNetwork,
   ParamsAddress,
   StakingModuleAddress,
   ValidatorBenefitAddress,
 } from '../const';
 import Controller from '../interfaces/controller.interface';
+import axios from 'axios';
 
 class KnownController implements Controller {
   public path = '/api/knowns';
   public router = Router();
   private knownRepo = new KnownRepo();
   private contractRepo = new ContractRepo();
-  private knownEventRepo = new KnownEventRepo();
-  private knownMethodRepo = new KnownMethodRepo();
+  private abiFragmentRepo = new ABIFragmentRepo();
+  private contractFileRepo = new ContractFileRepo();
   private knownMap = {};
 
   constructor() {
@@ -38,9 +45,13 @@ class KnownController implements Controller {
   private initializeRoutes() {
     this.router.get(`${this.path}/address`, try$(this.getKnownAddresses));
     this.router.get(`${this.path}/token`, try$(this.getKnownTokens));
-    this.router.post(
-      `${this.path}/saveMethodAndEvent`,
-      try$(this.saveMethodAndEvent)
+    // this.router.post(
+    //   `${this.path}/saveMethodAndEvent`,
+    //   try$(this.saveMethodAndEvent)
+    // );
+    this.router.get(
+      `${this.path}/import/:address`,
+      try$(this.importFromSourcify)
     );
     this.router.get(
       `${this.path}/getAllMethodAndEvent`,
@@ -50,8 +61,8 @@ class KnownController implements Controller {
 
   private getAllMethodAndEvent = async (req: Request, res: Response) => {
     try {
-      const events = await this.knownEventRepo.findAll();
-      const methods = await this.knownMethodRepo.findAll();
+      const events = await this.abiFragmentRepo.findAllEvents();
+      const methods = await this.abiFragmentRepo.findAllFunctions();
 
       res.json({
         status: true,
@@ -66,33 +77,115 @@ class KnownController implements Controller {
     }
   };
 
-  private saveMethodAndEvent = async (req: Request, res: Response) => {
-    const { events, methods } = req.body;
-    const err = [];
-    try {
-      if (events.length > 0) {
-        await this.knownEventRepo.bulkInsert(events);
-      }
-    } catch (e) {
-      err.push(e.message);
+  private importFromSourcify = async (req: Request, res: Response) => {
+    const { address } = req.params;
+    const contract = await this.contractRepo.findByAddress(address);
+    if (contract.verified) {
+      return res.json({ verified: true, address });
     }
-    try {
-      if (methods.length > 0) {
-        await this.knownMethodRepo.bulkInsert(methods);
-      }
-    } catch (e) {
-      err.push(e.message);
+
+    const SOURCIFY_SERVER_API = 'https://sourcify.dev/server';
+    let chainId = 0;
+    const network = getEnvNetwork();
+    if (network === Network.MainNet || network === Network.MainNetStandBy) {
+      chainId = 82;
     }
-    if (err.length > 0) {
+    if (network === Network.TestNet || network === Network.TestNetStandBy) {
+      chainId = 83;
+    }
+    if (chainId === 0) {
       return res.json({
-        status: false,
-        message: err.join(','),
+        verified: false,
+        address,
+        error: 'chainId is not ready',
       });
     }
-    res.json({
-      status: true,
-    });
+
+    const addr = toChecksumAddress(address);
+    const fileRes = await axios.get(
+      `${SOURCIFY_SERVER_API}/files/any/${chainId}/${addr}`
+    );
+
+    const { data } = fileRes;
+    contract.verified = true;
+    contract.status = data.status;
+
+    let contractFiles: ContractFile[] = [];
+    for (const file of data.files) {
+      contractFiles.push({
+        ...file,
+        address,
+      } as ContractFile);
+
+      if (file.name === 'metadata.json') {
+        // decode metadata
+
+        const meta = JSON.parse(file.content);
+        const abis = meta.output.abi;
+
+        let fragments: ABIFragment[] = [];
+        const iface = new Interface(abis);
+        const funcMap = iface.functions;
+        const evtMap = iface.events;
+        for (const key in funcMap) {
+          const funcFragment = funcMap[key];
+          const name = funcFragment.name;
+          const abi = funcFragment.format(FormatTypes.full);
+          const signature = iface.getSighash(funcFragment);
+          fragments.push({ name, signature, abi, type: 'function' });
+        }
+        for (const key in evtMap) {
+          const evtFragment = evtMap[key];
+          const name = evtFragment.name;
+          const abi = evtFragment.format(FormatTypes.full);
+          const signature = iface.getEventTopic(evtFragment);
+          fragments.push({ name, signature, abi, type: 'event' });
+        }
+
+        console.log('fragments: ', fragments);
+
+        await this.abiFragmentRepo.bulkUpsert(...fragments);
+      }
+    }
+    console.log(
+      'contract files: ',
+      contractFiles.map((c) => ({ name: c.name, path: c.path }))
+    );
+    await this.contractFileRepo.bulkUpsert(...contractFiles);
+    await contract.save();
+    res.json({ verified: true, address });
   };
+
+  // problem with previous implementation:
+  // server trusts all of client's input, which is not always true
+  //
+  // private saveMethodAndEvent = async (req: Request, res: Response) => {
+  //   const { events, methods } = req.body;
+  //   const err = [];
+  //   try {
+  //     if (events.length > 0) {
+  //       await this.knownEventRepo.bulkInsert(events);
+  //     }
+  //   } catch (e) {
+  //     err.push(e.message);
+  //   }
+  //   try {
+  //     if (methods.length > 0) {
+  //       await this.knownMethodRepo.bulkInsert(methods);
+  //     }
+  //   } catch (e) {
+  //     err.push(e.message);
+  //   }
+  //   if (err.length > 0) {
+  //     return res.json({
+  //       status: false,
+  //       message: err.join(','),
+  //     });
+  //   }
+  //   res.json({
+  //     status: true,
+  //   });
+  // };
 
   private getKnownAddresses = async (req: Request, res: Response) => {
     const knowns = await this.knownRepo.findAll();

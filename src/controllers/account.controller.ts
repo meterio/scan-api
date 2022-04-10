@@ -5,12 +5,12 @@ import {
   BlockRepo,
   BucketRepo,
   ContractRepo,
-  KnownMethodRepo,
   MovementRepo,
   TokenBalanceRepo,
   TxDigestRepo,
   TxRepo,
   ContractType,
+  ABIFragmentRepo,
 } from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
@@ -29,8 +29,8 @@ class AccountController implements Controller {
   private contractRepo = new ContractRepo();
   private tokenBalanceRepo = new TokenBalanceRepo();
   private bidRepo = new BidRepo();
-  private knownMethod = new KnownMethodRepo();
   private txDigestRepo = new TxDigestRepo();
+  private abiFragmentRepo = new ABIFragmentRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -150,7 +150,7 @@ class AccountController implements Controller {
       actJson.creationTxHash = contract.creationTxHash;
       actJson.firstSeen = contract.firstSeen;
       actJson.verified = contract.verified;
-      actJson.files = contract.files;
+      actJson.status = contract.status;
     }
 
     const txCount = await this.txDigestRepo.countByAddress(address);
@@ -197,7 +197,7 @@ class AccountController implements Controller {
     if (!paginate.result) {
       return res.json({ totalRows: 0, txSummaries: [] });
     }
-    const methods = await this.knownMethod.findAll();
+    const methods = await this.abiFragmentRepo.findAllFunctions();
     let methodMap = {};
     methods.forEach((m) => {
       methodMap[m.signature] = m.name;
@@ -240,7 +240,6 @@ class AccountController implements Controller {
     if (!txs) {
       return res.json({ totalRows: 0, txSummaries: [] });
     }
-    const methods = await this.knownMethod.findAll();
     return res.json({
       txSummaries: txs.map((tx) => tx.toSummary()),
     });
