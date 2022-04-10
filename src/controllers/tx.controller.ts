@@ -17,6 +17,7 @@ import Controller from '../interfaces/controller.interface';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
 import { ERC1155, ERC20, ERC721, ScriptEngine } from '@meterio/devkit';
 import { FormatTypes, Interface } from 'ethers/lib/utils';
+import { BigNumber as EBN } from 'ethers';
 
 class TxController implements Controller {
   public path = '/api/txs';
@@ -210,19 +211,34 @@ class TxController implements Controller {
             data: e.data,
             address: e.address,
             overallIndex: e.overallIndex,
-            name: '',
-            abi: '',
+            name: undefined,
+            abi: undefined,
             decoded: undefined,
           };
           try {
             const decodeRes = iface.parseLog(e);
             result.name = decodeRes.name;
-            result.decoded = decodeRes.args;
-            result.abi = decodeRes.eventFragment.format(FormatTypes.fulll);
+            result.abi = decodeRes.eventFragment.format(FormatTypes.full);
+            const abiJson = JSON.parse(
+              decodeRes.eventFragment.format(FormatTypes.json)
+            );
+            let decoded = {};
+            for (const input of abiJson.inputs) {
+              const val = decodeRes.args[input.name];
+              if (EBN.isBigNumber(val)) {
+                decoded[input.name] = val.toString();
+              } else {
+                decoded[input.name] = val;
+              }
+            }
+            if (result.abi) {
+              result.decoded = decoded;
+            }
           } catch (e) {
             console.log('Error happened during event decoding: ', e);
+          } finally {
+            return result;
           }
-          return result;
         }),
       });
     } catch (e) {
@@ -310,9 +326,23 @@ class TxController implements Controller {
               data: c.data,
               value: c.value.toFixed(),
             });
-            result.decoded = decodeRes.args;
             result.selector = decodeRes.name;
             result.abi = decodeRes.functionFragment.format(FormatTypes.full);
+            const abiJson = JSON.parse(
+              decodeRes.functionFragment.format(FormatTypes.json)
+            );
+            let decoded = {};
+            for (const input of abiJson.inputs) {
+              const val = decodeRes.args[input.name];
+              if (EBN.isBigNumber(val)) {
+                decoded[input.name] = val.toString();
+              } else {
+                decoded[input.name] = val;
+              }
+            }
+            if (result.abi) {
+              result.decoded = decoded;
+            }
           } catch (e) {
             console.log('Error happened during decoding: ', e);
           }
