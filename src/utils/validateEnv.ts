@@ -8,7 +8,16 @@ function validateEnv() {
     MONGO_PWD: str(),
     MONGO_SSL_CA: str(),
 
-    NETWORK: str(),
+    NETWORK: str({
+      choices: [
+        'main',
+        'test',
+        'main-standby',
+        'test-standby',
+        'verse-test',
+        'verse-main',
+      ],
+    }),
     // server
     PORT: port(),
   });

@@ -87,7 +87,7 @@ class ValidatorController implements Controller {
       delegators.push({
         amount: amount.toFixed(),
         address: addr,
-        amountStr: fromWei(amount, 2) + ' MTRG',
+        amountStr: fromWei(amount, 2) + ` ${BALANCE_SYM}`,
         percent: amount.dividedBy(total).times(100).toFixed(2) + '%',
       });
     }
@@ -164,23 +164,30 @@ class ValidatorController implements Controller {
   };
 
   private getSort = (sortBy: string, sortDesc: string) => {
-    const validator = ['votingPower', 'commission%', 'totalPoints', 'totalVotes', 'jailedTime', 'bailAmount']
+    const validator = [
+      'votingPower',
+      'commission%',
+      'totalPoints',
+      'totalVotes',
+      'jailedTime',
+      'bailAmount',
+    ];
     if (validator.includes(sortBy)) {
-      const sd = sortDesc === 'asc' ? 1 : (sortDesc === 'desc' ? -1 : 0)
+      const sd = sortDesc === 'asc' ? 1 : sortDesc === 'desc' ? -1 : 0;
       if (sortBy === 'commission%') {
         return {
-          commission: sd
-        }
+          commission: sd,
+        };
       }
       return {
-        [sortBy]: sd
-      }
+        [sortBy]: sd,
+      };
     } else {
       return {
-        votingPower: 1
-      }
+        votingPower: 1,
+      };
     }
-  }
+  };
 
   private convertCandidate = (v: Validator) => {
     return {
@@ -202,7 +209,7 @@ class ValidatorController implements Controller {
   private getCandidates = async (req: Request, res: Response) => {
     const { search, sortBy, sortDesc } = req.query;
 
-    const sort = this.getSort(String(sortBy), String(sortDesc))
+    const sort = this.getSort(String(sortBy), String(sortDesc));
 
     const filter = search ? search.toString() : '';
     const { page, limit } = extractPageAndLimitQueryParam(req);
@@ -242,7 +249,7 @@ class ValidatorController implements Controller {
   private getDelegates = async (req: Request, res: Response) => {
     const { search, sortBy, sortDesc } = req.query;
 
-    const sort = this.getSort(String(sortBy), String(sortDesc))
+    const sort = this.getSort(String(sortBy), String(sortDesc));
 
     const filter = search ? search.toString() : '';
     const { page, limit } = extractPageAndLimitQueryParam(req);
@@ -279,7 +286,7 @@ class ValidatorController implements Controller {
   private getJailed = async (req: Request, res: Response) => {
     const { search, sortBy, sortDesc } = req.query;
 
-    const sort = this.getSort(String(sortBy), String(sortDesc))
+    const sort = this.getSort(String(sortBy), String(sortDesc));
 
     const filter = search ? search.toString() : '';
     const { page, limit } = extractPageAndLimitQueryParam(req);

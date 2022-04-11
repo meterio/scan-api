@@ -63,8 +63,8 @@ class App {
   }
 
   private async connectToTheDatabase() {
-    const network = getEnvNetwork();
-    await connectDB(network);
+    const { network, standby } = getEnvNetwork();
+    await connectDB(network, standby);
   }
 }
 

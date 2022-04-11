@@ -124,7 +124,7 @@ class MetricController implements Controller {
       if (present.releasedMTRG && Number(present.releasedMTRG)) {
         avgDailyReward =
           new BigNumber(present.releasedMTRG).dividedBy(1e18).toFixed(0) +
-          ' MTRG';
+          ` ${BALANCE_SYM}`;
       }
     } catch (e) {}
 

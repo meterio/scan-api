@@ -85,7 +85,7 @@ class EpochController implements Controller {
     for (const k of knowns) {
       knownMap[k.ecdsaPK] = k;
     }
-    const network = getEnvNetwork();
+    const { network } = getEnvNetwork();
     const delegates = getDelegates(network);
     if (delegates) {
       for (const d of delegates) {
@@ -149,7 +149,7 @@ class EpochController implements Controller {
       knownMap[k.ecdsaPK] = k;
     }
 
-    const network = getEnvNetwork();
+    const { network } = getEnvNetwork();
     const delegates = getDelegates(network);
     if (delegates) {
       for (const d of delegates) {

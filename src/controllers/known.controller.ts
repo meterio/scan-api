@@ -3,7 +3,6 @@ import {
   ContractRepo,
   ContractType,
   KnownRepo,
-  Network,
   ContractFile,
   ABIFragment,
   ContractFileRepo,
@@ -19,8 +18,8 @@ import {
   AuctionLeftOverAddress,
   AuctionModuleAddress,
   BridgePoolAddress,
+  CHAIN_ID,
   ExecutorAddress,
-  getEnvNetwork,
   ParamsAddress,
   StakingModuleAddress,
   ValidatorBenefitAddress,
@@ -85,14 +84,7 @@ class KnownController implements Controller {
     }
 
     const SOURCIFY_SERVER_API = 'https://sourcify.dev/server';
-    let chainId = 0;
-    const network = getEnvNetwork();
-    if (network === Network.MainNet || network === Network.MainNetStandBy) {
-      chainId = 82;
-    }
-    if (network === Network.TestNet || network === Network.TestNetStandBy) {
-      chainId = 83;
-    }
+    const chainId = CHAIN_ID;
     if (chainId === 0) {
       return res.json({
         verified: false,

@@ -161,10 +161,11 @@ const testnetDelegates = [
 ];
 
 export const getDelegates = (network: Network) => {
-  if (network === Network.MainNet || network === Network.MainNetStandBy) {
+  if (network === Network.MainNet) {
     return mainnetDelegates;
   }
-  if (network === Network.TestNet || network === Network.TestNetStandBy) {
+  if (network === Network.TestNet) {
     return testnetDelegates;
   }
+  return [];
 };

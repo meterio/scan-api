@@ -1,11 +1,13 @@
-import { BigNumber, MetricRepo } from '@meterio/scan-db/dist';
-import axios from 'axios';
+import { BigNumber, MetricRepo, Network } from '@meterio/scan-db/dist';
+import axios, { responseEncoding } from 'axios';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
 import * as pkg from '../../package.json';
 import { MetricName } from '../const';
 import Controller from '../interfaces/controller.interface';
+import { ENERGY_SYM, BALANCE_SYM, NETWORK, STANDBY, CHAIN_ID } from '../const';
+import { resolve } from 'path';
 
 class HomeController implements Controller {
   public path = '';
@@ -28,6 +30,7 @@ class HomeController implements Controller {
     );
     this.router.get(`${this.path}/probe/:ip`, try$(this.probe));
     this.router.get(`${this.path}`, try$(this.getHome));
+    this.router.get(`${this.path}/api/network`, try$(this.getNetwork));
   }
 
   private probe = async (req: Request, res: Response) => {
@@ -40,8 +43,29 @@ class HomeController implements Controller {
       res.json({ result: null });
     }
   };
+
   private getHome = async (req: Request, res: Response) => {
-    return res.json({ name: 'scan-api', version: pkg.version });
+    return res.json({
+      name: 'scan-api',
+      version: pkg.version,
+      network: Network[NETWORK].toString().toLowerCase(),
+      networkEnum: Network[NETWORK],
+      standby: STANDBY,
+      chainId: CHAIN_ID,
+      energySym: ENERGY_SYM,
+      balanceSym: BALANCE_SYM,
+    });
+  };
+
+  private getNetwork = async (req: Request, res: Response) => {
+    return res.json({
+      network: Network[NETWORK].toString().toLowerCase(),
+      networkEnum: Network[NETWORK],
+      standby: STANDBY,
+      chainId: CHAIN_ID,
+      energySym: ENERGY_SYM,
+      balanceSym: BALANCE_SYM,
+    });
   };
 
   private getMTRGCirculatingRaw = async (req: Request, res: Response) => {
