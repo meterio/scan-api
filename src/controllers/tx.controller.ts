@@ -98,9 +98,10 @@ class TxController implements Controller {
           tokenTransfers.push({
             from: decoded.from.toLowerCase(),
             to: decoded.to.toLowerCase(),
-            amount: decoded.value.toLowerCase(),
+            amount: decoded.value.toString(),
             type: 'ERC20',
             symbol: contract ? contract.symbol : 'ERC20',
+            decimals: contract ? contract.decimals : 18,
           });
         } catch (e) {
           console.log(`ignore error: `, e);
@@ -114,8 +115,8 @@ class TxController implements Controller {
           tokenTransfers.push({
             from: decoded.from.toLowerCase(),
             to: decoded.to.toLowerCase(),
-            ids: [decoded.tokenId.toLowerCase()],
-            values: [1],
+            ids: [decoded.tokenId.toString()],
+            values: [decoded.value.toString()],
             type: 'ERC721',
             symbol: contract ? contract.symbol : 'ERC721',
           });
