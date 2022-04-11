@@ -204,11 +204,23 @@ class TxController implements Controller {
       return res.json({
         hash,
         events: events.map((e) => {
+        let datas = [];
+        if (e.data && e.data != '0x') {
+          let temp = e.data.substring(2);
+          while (temp.length >= 64) {
+            datas.push('0x' + temp.substring(0, 64));
+            temp = temp.substring(64);
+          }
+          if (temp.length > 0) {
+            datas.push('0x' + temp);
+          }
+        }
           let result = {
             block: tx.block,
             txHash: tx.hash,
             topics: e.topics,
             data: e.data,
+            datas,
             address: e.address,
             overallIndex: e.overallIndex,
             name: undefined,
@@ -281,6 +293,8 @@ class TxController implements Controller {
     let clauses = tx.clauses.map((c) => {
       let selector = '';
       let decoded = undefined;
+      let datas = [];
+      let tail = c.data ? c.data.substring(2) : '';
       if (c.data && c.data.length > 10) {
         const isSE = ScriptEngine.IsScriptEngineData(c.data);
         if (isSE) {
@@ -288,12 +302,20 @@ class TxController implements Controller {
           selector = decoded.action;
         } else {
           selector = c.data.substring(0, 10);
+          tail = c.data.substring(10);
         }
       } else {
         selector = 'Transfer';
       }
       if (selector && selector != '0x00000000') {
         selectors.push(selector);
+      }
+      while (tail.length >= 64) {
+        datas.push('0x' + tail.substring(0, 64));
+        tail = tail.substring(64);
+      }
+      if (tail.length > 0) {
+        datas.push('0x' + tail);
       }
       return {
         to: c.to,
@@ -302,6 +324,7 @@ class TxController implements Controller {
         token: Token[c.token],
         selector,
         decoded,
+        datas,
       };
     });
 
