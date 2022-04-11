@@ -116,7 +116,7 @@ class TxController implements Controller {
             from: decoded.from.toLowerCase(),
             to: decoded.to.toLowerCase(),
             ids: [decoded.tokenId.toString()],
-            values: [decoded.value.toString()],
+            values: [1], // there's no `value` in ERC721 transfer event
             type: 'ERC721',
             symbol: contract ? contract.symbol : 'ERC721',
           });
@@ -205,17 +205,17 @@ class TxController implements Controller {
       return res.json({
         hash,
         events: events.map((e) => {
-        let datas = [];
-        if (e.data && e.data != '0x') {
-          let temp = e.data.substring(2);
-          while (temp.length >= 64) {
-            datas.push('0x' + temp.substring(0, 64));
-            temp = temp.substring(64);
+          let datas = [];
+          if (e.data && e.data != '0x') {
+            let temp = e.data.substring(2);
+            while (temp.length >= 64) {
+              datas.push('0x' + temp.substring(0, 64));
+              temp = temp.substring(64);
+            }
+            if (temp.length > 0) {
+              datas.push('0x' + temp);
+            }
           }
-          if (temp.length > 0) {
-            datas.push('0x' + temp);
-          }
-        }
           let result = {
             block: tx.block,
             txHash: tx.hash,
