@@ -121,7 +121,16 @@ class BlockController implements Controller {
     }
     let ans = blk.toSummary();
     const methods = await this.abiFragmentRepo.findAllFunctions();
-    ans.txSummaries = txs.map((tx) => tx.toSummary(undefined, methods));
+    let methodMap = {};
+    methods.forEach((m) => {
+      methodMap[m.signature] = m.name;
+    });
+    ans.txSummaries = txs.map((tx) => tx.toSummary()).map(tx => {
+      return {
+        ...tx,
+        method: methodMap[tx.signature] || tx.signature
+      }
+    });
 
     const nameMap = await this.getNameMap();
     ans.beneficiaryName = nameMap[ans.beneficiary] || '';
