@@ -326,14 +326,15 @@ class AccountController implements Controller {
       totalRows: paginate.count,
       tokens: paginate.result
         .filter((t) => {
-          const balGT0 = new BigNumber(t.balance).isGreaterThan(0);
-          let nftCount = new BigNumber(0);
-          for (const { value } of t.nftBalances) {
-            nftCount = nftCount.plus(value);
-          }
-          const nftGT0 = nftCount.isGreaterThan(0);
+          // const balGT0 = new BigNumber(t.balance).isGreaterThan(0);
+          // let nftCount = new BigNumber(0);
+          // for (const { value } of t.nftBalances) {
+          //   nftCount = nftCount.plus(value);
+          // }
+          // const nftGT0 = nftCount.isGreaterThan(0);
 
-          return balGT0 || nftGT0;
+          // return balGT0 || nftGT0;
+          return true;
         })
         .map((t) => {
           delete t.__v;
