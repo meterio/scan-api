@@ -15,9 +15,11 @@ import TokenController from './controllers/token.controller';
 import MovementController from './controllers/movement.controller';
 import TxController from './controllers/tx.controller';
 import ValidatorController from './controllers/validator.controller';
+import ContractController from './controllers/contract.controller';
 
 const app = new App([
   new BucketController(),
+  new ContractController(),
   new HomeController(),
   new SearchController(),
   new MetricController(),
