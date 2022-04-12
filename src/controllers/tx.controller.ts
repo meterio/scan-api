@@ -293,10 +293,12 @@ class TxController implements Controller {
     let selectors = [];
     let clauses = tx.clauses.map((c) => {
       let selector = '';
+      let methodId = '';
       let decoded = undefined;
       let datas = [];
       let tail = c.data ? c.data.substring(2) : '';
       if (c.data && c.data.length > 10) {
+        methodId = c.data.substring(0, 10);
         const isSE = ScriptEngine.IsScriptEngineData(c.data);
         if (isSE) {
           decoded = ScriptEngine.decodeScriptData(c.data);
@@ -326,6 +328,7 @@ class TxController implements Controller {
         selector,
         decoded,
         datas,
+        methodId,
       };
     });
 
