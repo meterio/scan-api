@@ -19,8 +19,8 @@ class ContractController implements Controller {
 
   private getContractFiles = async (req: Request, res: Response) => {
     const { address } = req.params;
-    const files = await this.contractFileRepo.findByContract(address);
-    return res.json({ files: files.toJSON() });
+    const files = await this.contractFileRepo.findAllByContract(address);
+    return res.json({ files: files.map(f => f.toJSON()) });
   };
 }
 export default ContractController;
