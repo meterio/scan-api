@@ -1,3 +1,4 @@
+import { ScriptEngine } from '@meterio/devkit';
 import {
   ABIFragmentRepo,
   AccountRepo,
@@ -5,12 +6,14 @@ import {
   TxRepo,
   ValidatorRepo,
 } from '@meterio/scan-db/dist';
+import { Interface, FormatTypes } from 'ethers/lib/utils';
 import { Request, Response, Router } from 'express';
 import { HttpError, try$ } from 'express-toolbox';
 
 import Controller from '../interfaces/controller.interface';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
 import { isHexBytes, isUInt } from '../utils/validator';
+import { BigNumber as EBN } from 'ethers';
 
 class BlockController implements Controller {
   public path = '/api/blocks';
@@ -120,21 +123,79 @@ class BlockController implements Controller {
       txs = await this.txRepo.findByHashs(blk.txHashs);
     }
     let ans = blk.toSummary();
-    const methods = await this.abiFragmentRepo.findAllFunctions();
-    let methodMap = {};
-    methods.forEach((m) => {
-      methodMap[m.signature] = m.name;
-    });
+
+    let selectors = [];
     ans.txSummaries = txs.map((tx) => tx.toSummary()).map(tx => {
+      const c = tx.clauses.length > 0 ? tx.clauses[0].data : null;
+      let selector = '';
+      let decoded = undefined;
+      if (c) {
+        if (c.data && c.data.length > 10) {
+          const isSE = ScriptEngine.IsScriptEngineData(c.data);
+          if (isSE) {
+            decoded = ScriptEngine.decodeScriptData(c.data);
+            selector = decoded.action;
+          } else {
+            selector = c.data.substring(0, 10);
+          }
+        } else {
+          selector = 'Transfer';
+        }
+        if (selector && selector != '0x00000000') {
+          selectors.push(selector);
+        }
+      }
       return {
         ...tx,
-        method: methodMap[tx.signature] || tx.signature
+        selector,
+        decoded,
       }
     });
 
     const nameMap = await this.getNameMap();
     ans.beneficiaryName = nameMap[ans.beneficiary] || '';
     delete ans.txHashs;
+
+    const fragments = await this.abiFragmentRepo.findBySignatureList(
+      ...selectors
+    );
+    const abis = fragments.map((f) => f.abi);
+    const iface = new Interface(abis);
+
+    ans.txSummaries.map(tx => {
+      let result = {
+        ...tx,
+      }
+      if (!tx.decoded) {
+        try {
+          const decodeRes = iface.parseTransaction({
+            data: tx.data,
+            value: tx.value.toFixed(),
+          });
+          result.selector = decodeRes.name;
+          result.abi = decodeRes.functionFragment.format(FormatTypes.full);
+          const abiJson = JSON.parse(
+            decodeRes.functionFragment.format(FormatTypes.json)
+          );
+          let decoded = {};
+          for (const input of abiJson.inputs) {
+            const val = decodeRes.args[input.name];
+            if (EBN.isBigNumber(val)) {
+              decoded[input.name] = val.toString();
+            } else {
+              decoded[input.name] = val;
+            }
+          }
+          if (result.abi) {
+            result.decoded = decoded;
+          }
+        } catch (e) {
+          console.log('Error happened during decoding: ', e);
+        }
+      }
+      return result;
+    })
+
     return res.json({ block: ans });
   };
 
