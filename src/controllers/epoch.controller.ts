@@ -143,13 +143,20 @@ class EpochController implements Controller {
         stats: [],
       });
     }
-    const candidatesRes = await axios.get(
-      RESTFUL_ENDPOINT + `/staking/candidates?revision=${committee.startBlock}`
-    );
+    const url =
+      RESTFUL_ENDPOINT +
+      `/staking/candidates?revision=${committee.startBlock.number}`;
+    console.log(`post to ${url}`);
+    const candidatesRes = await axios.get(url);
     let cmap = {};
     candidatesRes.data.forEach((c) => {
-      cmap[c.pubKey] = c;
+      const keyparts = c.pubKey.split(':::');
+      if (keyparts.length === 2) {
+        cmap[keyparts[0]] = c;
+      }
     });
+    console.log('cmap', cmap);
+    console.log('committee.members', committee.members);
     let visited = {};
     const members = committee.members
       .map((m) => {
@@ -166,6 +173,7 @@ class EpochController implements Controller {
         };
       })
       .filter((v) => !!v);
+    console.log('members:', members);
     const memberMap = {};
     members.forEach((m) => {
       memberMap[m.index] = m;
