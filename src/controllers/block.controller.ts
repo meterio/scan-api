@@ -126,7 +126,7 @@ class BlockController implements Controller {
 
     let selectors = [];
     ans.txSummaries = txs.map((tx) => tx.toSummary()).map(tx => {
-      const c = tx.clauses.length > 0 ? tx.clauses[0].data : null;
+      const c = tx.clauses.length > 0 ? tx.clauses[0] : null;
       let selector = '';
       let decoded = undefined;
       if (c) {
