@@ -5,9 +5,11 @@ import {
   Network,
   Block,
 } from '@meterio/scan-db/dist';
+import axios from 'axios';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
-import { getDelegates, getEnvNetwork } from '../const';
+import { STATUS_CODES } from 'http';
+import { getDelegates, getEnvNetwork, RESTFUL_ENDPOINT } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
 
@@ -141,22 +143,13 @@ class EpochController implements Controller {
         stats: [],
       });
     }
-    const knowns = await this.knownRepo.findByKeyList(
-      committee.members.map((m) => m.pubKey)
+    const candidatesRes = await axios.get(
+      RESTFUL_ENDPOINT + `/staking/candidates?revision=${committee.startBlock}`
     );
-    let knownMap = {};
-    for (const k of knowns) {
-      knownMap[k.ecdsaPK] = k;
-    }
-
-    const { network } = getEnvNetwork();
-    const delegates = getDelegates(network);
-    if (delegates) {
-      for (const d of delegates) {
-        const ecdsaKey = d.pub_key.split(':::')[0];
-        knownMap[ecdsaKey] = d;
-      }
-    }
+    let cmap = {};
+    candidatesRes.data.forEach((c) => {
+      cmap[c.pubKey] = c;
+    });
     let visited = {};
     const members = committee.members
       .map((m) => {
@@ -164,12 +157,12 @@ class EpochController implements Controller {
           return undefined;
         }
         visited[m.pubKey] = true;
-        const k = knownMap[m.pubKey];
+        const c = cmap[m.pubKey];
         return {
           index: m.index,
           netAddr: m.netAddr,
-          name: k ? k.name : '',
-          address: k ? k.address : '',
+          name: c ? c.name : '',
+          address: c ? c.address : '',
         };
       })
       .filter((v) => !!v);
@@ -183,16 +176,21 @@ class EpochController implements Controller {
       committee.endBlock.number
     );
 
+    blocks.sort((a, b) => (a.number < b.number ? -1 : 1));
     const lastBlock = blocks[blocks.length - 1];
     const lastRound = lastBlock.qc.qcRound;
-
     const stats = this.calcStats(blocks, memberMap, lastRound);
+    const committeeSize = Object.keys(memberMap).length;
+    const nloops = Math.ceil(lastRound / committeeSize);
 
     return res.json({
       startBlock: committee.startBlock,
       endBlock: committee.endBlock,
       members,
       stats,
+      committeeSize,
+      lastRound,
+      nloops,
     });
   };
 
@@ -201,53 +199,38 @@ class EpochController implements Controller {
     memberMap: { [key: number]: any },
     lastRound: number
   ) => {
-    let curIndex = 0;
-    let stats: number[][] = [];
+    let stats: { status: number; b: number }[] = [];
     const size = Object.keys(memberMap).length;
 
-    for (var i: number = 0; i < lastRound / size + 1; i++) {
-      stats[i] = [];
-      for (var j: number = 0; j < size; j++) {
-        stats[i][j] = 0;
-      }
-    }
-    // console.log(`last round: `, lastRound, 'size:', size);
+    console.log(
+      `last round: `,
+      lastRound,
+      'rows:',
+      lastRound / size + 1,
+      'cols:',
+      size
+    );
 
+    let curIndex = 0;
     try {
-      for (const b of blocks) {
-        // console.log('block beneficary:', b.beneficiary, ', number:', b.number);
-        let foundInLoop = false;
-        for (let k = 0; k < size; k++) {
-          const v = memberMap[curIndex % size];
-          const row = Math.floor(curIndex / size);
-          const col = curIndex % size;
-          // console.log(`row: `, row);
-          // console.log(`col: `, curIndex % size);
-          // console.log(
-          //   'validator: ',
-          //   v.address.toLowerCase(),
-          //   v.address.toLowerCase() === b.beneficiary.toLowerCase()
-          // );
-          const vaddr = v.address.replace('0x0x', '0x').toLowerCase();
-          if (vaddr === b.beneficiary.toLowerCase()) {
-            foundInLoop = true;
-            stats[row][col] = 1; // correct proposer
-            curIndex++;
-            break;
-          } else {
-            stats[row][col] = 2; // incorrect proposer
-          }
+      for (let round = 0; round <= lastRound; round++) {
+        const expectedProposerAddr = memberMap[round % size].address
+          .replace('0x0x', '0x')
+          .toLowerCase();
+        const curBlock = blocks[curIndex];
+        if (expectedProposerAddr === curBlock.beneficiary.toLowerCase()) {
+          // match
+          stats.push({ status: 1, b: curBlock.number });
           curIndex++;
-        }
-        if (foundInLoop === false) {
-          return stats;
+        } else {
+          // not match
+          stats.push({ status: 2, b: curBlock.number });
         }
       }
-      return stats;
     } catch (e) {
       console.log(e);
-      return '';
     }
+    return stats;
   };
 
   private getEpochDetail = async (req: Request, res: Response) => {
