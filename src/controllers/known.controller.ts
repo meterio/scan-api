@@ -106,7 +106,7 @@ class KnownController implements Controller {
     for (const file of data.files) {
       contractFiles.push({
         ...file,
-        address,
+        address: address.toLowerCase(),
       } as ContractFile);
 
       if (file.name === 'metadata.json') {
