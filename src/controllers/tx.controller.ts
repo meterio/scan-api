@@ -4,21 +4,18 @@ import {
   TxRepo,
   PosEvent,
   Token,
-  PosTransfer,
-  ContractType,
   ABIFragmentRepo,
+  BigNumber,
+  TxDigest,
 } from '@meterio/scan-db/dist';
-import { sign } from 'crypto';
-import e, { Request, Response, Router } from 'express';
+import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
-import { TransferEvent } from '../const';
 import Controller from '../interfaces/controller.interface';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
 import { ERC1155, ERC20, ERC721, ScriptEngine } from '@meterio/devkit';
 import { FormatTypes, Interface } from 'ethers/lib/utils';
 import { BigNumber as EBN } from 'ethers';
-
 class TxController implements Controller {
   public path = '/api/txs';
   public router = Router();
@@ -41,18 +38,30 @@ class TxController implements Controller {
 
   private getRecent = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const paginate = await this.txDigestRepo.paginateAll(page, limit);
+    const paginate = await this.txRepo.paginateAll(page, limit);
+    const txHashs = paginate.result.map((tx) => tx.hash);
+    const txDigests = await this.txDigestRepo.findByTxHashList(...txHashs);
+    let digestMap: { [key: string]: TxDigest } = {};
+    txDigests.forEach((d) => {
+      if (d.txHash in digestMap) {
+        const digest = digestMap[d.txHash];
+        const total = new BigNumber(d.mtr).plus(d.mtrg);
+        const curTotal = new BigNumber(digest.mtr).plus(digest.mtrg);
+        if (curTotal.isGreaterThan(total)) {
+          digestMap[d.txHash] = d.toJSON() as TxDigest;
+        }
+      } else {
+        digestMap[d.txHash] = d.toJSON() as TxDigest;
+      }
+    });
     const methods = await this.abiFragmentRepo.findAllFunctions();
     let methodMap = {};
     methods.forEach((m) => (methodMap[m.signature] = m.name));
     return res.json({
       totalRows: paginate.count,
-      txs: paginate.result
-        .map((tx) => tx.toJSON())
-        .map((tx) => ({
-          ...tx,
-          method: tx.method in methodMap ? methodMap[tx.method] : tx.method,
-        })),
+      txs: Object.values(digestMap).map((tx) => ({
+        ...tx,
+      })),
     });
   };
 

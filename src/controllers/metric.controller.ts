@@ -160,7 +160,6 @@ class MetricController implements Controller {
 
     delete committeeData.committee.invalidMembers;
     delete committeeData.committee.healthyMembers;
-    delete committeeData.committee.downMembers;
     delete committeeData.committee.jailedMembers;
     return res.json({
       ...tokenData,
@@ -216,41 +215,28 @@ class MetricController implements Controller {
       committee: {
         size: 0,
         healthy: 0,
-        down: 0,
         invalid: 0,
         jailed: 0,
         jailedMembers: [],
         healthyMembers: [],
-        downMembers: [],
         invalidMembers: [],
       },
     };
-    let statusMap = {};
-    let nameMap = {};
-    const roles = await axios.get(
-      `http://monitor.meter.io:9090/api/v1/query?query=pacemaker_role`
-    );
-    if (!roles || !roles.data || !roles.data.data) {
-      return emptyResponse;
-    }
-    console.log('roles length:', roles.data.data.result.length);
-    for (const r of roles.data.data.result) {
-      const ip = r.metric.instance;
-      const name = r.metric.name;
-      statusMap[ip] = r.value && r.value.length >= 2 ? Number(r.value[1]) : -1;
-      nameMap[ip] = name;
-    }
+
+    // find last KBlock
     const paginate = await this.blockRepo.paginateKBlocks(1, 1);
     const kblocks = paginate.result;
-    if (!roles || !kblocks || kblocks.length <= 0) {
+    if (!kblocks || kblocks.length <= 0) {
       return emptyResponse;
     }
 
+    // find the latest committee
     const block = await this.blockRepo.findByNumber(kblocks[0].number + 1);
     if (!block || block.committee.length <= 0) {
       return emptyResponse;
     }
 
+    // build validator map
     const validators = await this.validatorRepo.findAll();
     let vMap: { [key: string]: Validator } = {}; // validator map [ip -> validator obj]
     validators.forEach((v) => {
@@ -258,76 +244,84 @@ class MetricController implements Controller {
       vMap[ecdsaKey] = v;
     });
 
-    let jMap: { [key: string]: boolean } = {}; // jailed map [address -> injail]
+    // build jailed map
+    let jailed = 0;
+    let jailedMembers = [];
     const jailedVal = await this.metricRepo.findByKey(MetricName.JAILED);
     if (jailedVal) {
       const injail = JSON.parse(jailedVal.value);
+      jailed = injail.length;
       injail.map((j) => {
-        jMap[j.address] = true;
+        const ecdsaKey = j.pubKey.split(':::')[0];
+        const v = vMap[ecdsaKey];
+        jailedMembers.push({
+          name: !!v ? v.name : j.name,
+          ip: !!v ? v.ipAddress : 'N/A',
+          ecdsa: ecdsaKey,
+        });
       });
     }
 
-    let healthy = 0,
-      invalid = 0,
-      down = 0,
-      jailed = 0;
+    let invalid = 0;
+    let invalidMap: { [key: string]: any } = {};
+    const invalidVal = await this.metricRepo.findByKey(
+      MetricName.INVALID_NODES
+    );
+    if (invalidVal) {
+      const invalids = JSON.parse(invalidVal.value);
+      invalids.map((i) => {
+        const ecdsaKey = i.pubKey.split(':::')[0];
+        invalidMap[ecdsaKey] = i;
+      });
+    }
+
     let healthyMembers = [],
-      invalidMembers = [],
-      downMembers = [],
-      jailedMembers = [];
+      invalidMembers = [];
 
     let visited = {};
     let size = 0;
     console.log('block.committee length:', block.committee.length);
     for (const m of block.committee) {
-      const ip = m.netAddr.toLowerCase().split(':')[0];
-      if (visited[ip]) {
+      const { pubKey, netAddr } = m;
+      const ecdsaKey = pubKey;
+      if (ecdsaKey in visited) {
         continue;
       }
-      size++;
-      visited[ip] = true;
+      visited[ecdsaKey] = true;
 
-      let status = -1;
-      let error = undefined;
-      if (ip in statusMap) {
-        status = Number(statusMap[ip]);
-      }
-      const v = vMap[m.pubKey];
+      size++; // distinct count
+      const ip = netAddr.toLowerCase().split(':')[0];
+      const v = vMap[ecdsaKey];
       if (!v) {
-        error = 'no validator info found (possible key mismatch)';
-      } else if (v.ipAddress !== ip) {
-        error = 'ip address mismatch with validator info';
+        invalid++;
+        invalidMembers.push({
+          name: '',
+          ecdsa: ecdsaKey,
+          ip,
+          reason: 'no validator info found (possible key mismatch)',
+        });
+        continue;
       }
-      const name = v ? v.name : nameMap[ip] || '';
-      const injail = v ? v.status === ValidatorStatus.JAILED : false;
-      const member = {
-        index: m.index,
-        name,
-        memberPubkey: m.pubKey,
-        address: v ? v.address : '0x',
-        ip,
-        status,
-        error,
-      };
-      if (injail) {
-        jailed++;
-        jailedMembers.push(member);
+      const base = { name: v.name, ecdsa: ecdsaKey, ip };
+      if (v.ipAddress != ip) {
+        invalid++;
+        invalidMembers.push({
+          ...base,
+          reason: 'ip address mismatch with validator info',
+        });
+        continue;
       }
-      switch (status) {
-        case 0:
-          invalid++;
-          invalidMembers.push(member);
-          break;
-        case 1: // validator
-        case 2: // proposer
-          healthy++;
-          healthyMembers.push(member);
-          break;
-        case -1:
-          down++;
-          downMembers.push(member);
+      if (ecdsaKey in invalidMap) {
+        invalid++;
+        invalidMembers.push({
+          ...base,
+          reason: invalidMap[ecdsaKey].reason,
+        });
+        continue;
       }
+      healthyMembers.push({ ...base });
     }
+    const healthy = size - invalid;
 
     /*
     size = healthy + down + invalid
@@ -335,13 +329,12 @@ class MetricController implements Controller {
     */
     return {
       committee: {
+        explain: 'healthy+invalid = size',
         size,
         healthy,
-        down,
         invalid,
         jailed,
         healthyMembers,
-        downMembers,
         invalidMembers,
         jailedMembers,
       },
