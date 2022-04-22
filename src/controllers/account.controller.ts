@@ -63,6 +63,14 @@ class AccountController implements Controller {
       try$(this.getTokensByAccount)
     );
     this.router.get(
+      `${this.path}/:address/erc20tokens`,
+      try$(this.getERC20TokensByAccount)
+    );
+    this.router.get(
+      `${this.path}/:address/nfttokens`,
+      try$(this.getNTFTokensByAccount)
+    );
+    this.router.get(
       `${this.path}/:address/erc20txs`,
       try$(this.getERC20TxsByAccount)
     );
@@ -155,6 +163,7 @@ class AccountController implements Controller {
 
     const txCount = await this.txDigestRepo.countByAddress(address);
     const tokenCount = await this.tokenBalanceRepo.countByAddress(address);
+    const nftTokenCount = await this.tokenBalanceRepo.countNFTByAddress(address);
     const erc20TxCount = await this.movementRepo.countERC20TxsByAddress(
       address
     );
@@ -171,6 +180,7 @@ class AccountController implements Controller {
         ...actJson,
         txCount,
         tokenCount,
+        nftTokenCount,
         erc20TxCount,
         erc721TxCount,
         bidCount,
@@ -294,8 +304,8 @@ class AccountController implements Controller {
         a.balance.isGreaterThan(b.balance)
           ? -1
           : a.nftCount.isGreaterThan(b.nftCount)
-          ? -1
-          : 1
+            ? -1
+            : 1
       );
 
     return res.json({
@@ -346,6 +356,66 @@ class AccountController implements Controller {
           delete t.token;
           return t;
         }),
+    });
+  };
+
+  private getERC20TokensByAccount = async (req: Request, res: Response) => {
+    const { address } = req.params;
+    console.log(address);
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+    const paginate = await this.tokenBalanceRepo.paginateERC20ByAddress(
+      address,
+      page,
+      limit
+    );
+
+    if (paginate.count <= 0) {
+      return res.json({ totalRows: 0, tokens: [] });
+    }
+
+    // FIXME: should do the filtering in database instead of here
+    return res.json({
+      totalRows: paginate.count,
+      tokens: paginate.result.map((t) => {
+        delete t.__v;
+        delete t._id;
+        t.tokenType = t.token.type;
+        t.tokenName = t.token.name;
+        t.tokenSymbol = t.token.symbol;
+        t.tokenDecimals = t.token.decimals;
+        delete t.token;
+        return t;
+      }),
+    });
+  };
+
+  private getNTFTokensByAccount = async (req: Request, res: Response) => {
+    const { address } = req.params;
+    console.log(address);
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+    const paginate = await this.tokenBalanceRepo.paginateNFTByAddress(
+      address,
+      page,
+      limit
+    );
+
+    if (paginate.count <= 0) {
+      return res.json({ totalRows: 0, tokens: [] });
+    }
+
+    // FIXME: should do the filtering in database instead of here
+    return res.json({
+      totalRows: paginate.count,
+      tokens: paginate.result.map((t) => {
+        delete t.__v;
+        delete t._id;
+        t.tokenType = t.token.type;
+        t.tokenName = t.token.name;
+        t.tokenSymbol = t.token.symbol;
+        t.tokenDecimals = t.token.decimals;
+        delete t.token;
+        return t;
+      }),
     });
   };
 
