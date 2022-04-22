@@ -63,7 +63,7 @@ class TxController implements Controller {
         .map((tx) => ({
           ...tx,
         }))
-        .sort((a, b) => (a.block.number > b.block.number ? 1 : -1)),
+        .sort((a, b) => (a.block.number > b.block.number ? -1 : 1)),
     });
   };
 
