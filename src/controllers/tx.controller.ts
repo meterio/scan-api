@@ -59,9 +59,11 @@ class TxController implements Controller {
     methods.forEach((m) => (methodMap[m.signature] = m.name));
     return res.json({
       totalRows: paginate.count,
-      txs: Object.values(digestMap).map((tx) => ({
-        ...tx,
-      })),
+      txs: Object.values(digestMap)
+        .map((tx) => ({
+          ...tx,
+        }))
+        .sort((a, b) => (a.block.number > b.block.number ? 1 : -1)),
     });
   };
 
