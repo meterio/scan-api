@@ -163,7 +163,9 @@ class AccountController implements Controller {
 
     const txCount = await this.txDigestRepo.countByAddress(address);
     const tokenCount = await this.tokenBalanceRepo.countByAddress(address);
-    const nftTokenCount = await this.tokenBalanceRepo.countNFTByAddress(address);
+    const nftTokenCount = await this.tokenBalanceRepo.countNFTByAddress(
+      address
+    );
     const erc20TxCount = await this.movementRepo.countERC20TxsByAddress(
       address
     );
@@ -285,34 +287,19 @@ class AccountController implements Controller {
       limit
     );
     if (paginate.count <= 0) {
-      return res.json({ holders: [] });
-    }
-    const bals = paginate.result;
-
-    let total = new BigNumber(0);
-    for (const t of bals) {
-      if (t.balance.isGreaterThan(0)) {
-        total = total.plus(t.balance);
-      }
-      total = total.plus(t.nftCount);
+      return res.json({ holders: [], totalRows: 0 });
     }
 
-    // FIXME: handle ERC721 and 1155
-    let sorted = bals
-      .filter((t) => t.balance.isGreaterThan(0) || t.nftCount.isGreaterThan(0))
-      .sort((a, b) =>
-        a.balance.isGreaterThan(b.balance)
-          ? -1
-          : a.nftCount.isGreaterThan(b.nftCount)
-            ? -1
-            : 1
-      );
+    console.log(paginate.result);
 
     return res.json({
       token: !contract ? {} : contract.toJSON(),
-      holders: sorted.map((t) => ({
-        ...t.toJSON(),
-      })),
+      holders: paginate.result.map((t) => {
+        delete t.__v;
+        delete t._id;
+
+        return t;
+      }),
       totalRows: paginate.count,
     });
   };
