@@ -39,9 +39,23 @@ class PowController implements Controller {
   private getPowRewards = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
     // TODO: problem ? not quite sure if the result is correct
+
+    const startTime1 = Date.now()
+
     const paginate = await this.committeeRepo.paginateAll(page, limit);
+
+    const endTime1 = Date.now()
+    console.log(`find committee repo ${(startTime1 - endTime1) / 1000}s`)
+
     const numbers = paginate.result.map((c) => c.kblockHeight);
+
+    const startTime2 = Date.now()
+
     let kblocks = await this.blockRepo.findByNumberList(numbers);
+
+    const endTime2 = Date.now()
+    console.log(`find block repo ${(startTime2 - endTime2) / 1000}s`)
+
     kblocks = kblocks.sort((a, b) => (a.number > b.number ? -1 : 1));
     if (!kblocks) {
       return res.json({ totalRows: 0, rewards: [] });
@@ -49,7 +63,14 @@ class PowController implements Controller {
     let rewards = [];
     for (const kb of kblocks) {
       const coinbaseTxHash = kb.txHashs[0];
+
+      const startTime3 = Date.now()
+
       const coinbaseTx = await this.txRepo.findByHash(coinbaseTxHash);
+
+      const endTime3 = Date.now()
+      console.log(`find tx repo ${(startTime3 - endTime3) / 1000}s`)
+
       let total = new BigNumber(0);
       let rewardMap: { [key: string]: BigNumber } = {};
       let details = [];
