@@ -200,9 +200,9 @@ class ValidatorController implements Controller {
         .dividedBy(UNIT_SHANNON)
         .times(100)
         .toPrecision(2)}%`,
-      totalVotes: v.totalVotes.toFixed(),
+      totalVotes: new BigNumber(v.totalVotes).toFixed(),
       totalVotesStr: `${fromWei(v.totalVotes, 2)} ${BALANCE_SYM}`,
-      totalPoints: v.totalPoints ? Number(v.totalPoints.toFixed()) : 0,
+      totalPoints: v.totalPoints ? Number(new BigNumber(v.totalPoints).toFixed()) : 0,
     };
   };
 
@@ -232,17 +232,17 @@ class ValidatorController implements Controller {
       netAddr: `${v.ipAddress}:${v.port}`,
       // pubKey: v.pubKey,
 
-      votingPower: v.votingPower.toFixed(),
+      votingPower: new BigNumber(v.votingPower).toFixed(),
       votingPowerStr: `${fromWei(v.votingPower, 2)} ${BALANCE_SYM}`,
       'commission%': `${new BigNumber(v.delegateCommission)
         .dividedBy(UNIT_SHANNON)
         .times(100)
         .toPrecision(2)}%`,
-      'shares%': `${v.votingPower
+      'shares%': `${new BigNumber(v.votingPower)
         .dividedBy(totalStaked)
         .times(100)
         .toPrecision(2)}%`,
-      totalPoints: v.totalPoints ? Number(v.totalPoints.toFixed()) : 0,
+      totalPoints: v.totalPoints ? Number(new BigNumber(v.totalPoints).toFixed()) : 0,
     };
   };
 
@@ -259,6 +259,7 @@ class ValidatorController implements Controller {
       limit,
       sort
     );
+    console.log('delegate paginate', paginate);
     const delegateTotalStaked =
       await this.validatorRepo.getDelegateTotalStaked();
     return res.json({
