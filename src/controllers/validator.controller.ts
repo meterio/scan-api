@@ -163,32 +163,6 @@ class ValidatorController implements Controller {
     });
   };
 
-  private getSort = (sortBy: string, sortDesc: string) => {
-    const validator = [
-      'votingPower',
-      'commission%',
-      'totalPoints',
-      'totalVotes',
-      'jailedTime',
-      'bailAmount',
-    ];
-    if (validator.includes(sortBy)) {
-      const sd = sortDesc === 'asc' ? 1 : sortDesc === 'desc' ? -1 : 0;
-      if (sortBy === 'commission%') {
-        return {
-          commission: sd,
-        };
-      }
-      return {
-        [sortBy]: sd,
-      };
-    } else {
-      return {
-        votingPower: 1,
-      };
-    }
-  };
-
   private convertCandidate = (v: Validator) => {
     return {
       name: v.name,
@@ -209,7 +183,19 @@ class ValidatorController implements Controller {
   private getCandidates = async (req: Request, res: Response) => {
     const { search, sortBy, sortDesc } = req.query;
 
-    const sort = this.getSort(String(sortBy), String(sortDesc));
+    const _sortBy = String(sortBy).includes('%') ? String(sortBy).replace('%', '') : String(sortBy);
+    const _sortDesc = String(sortDesc);
+
+    const sortBys = ["commission", "totalPoints", "totalVotes"];
+    const sortDescs = ["asc", "desc"];
+
+    let sort;
+
+    if (sortBys.includes(_sortBy) && sortDescs.includes(_sortDesc)) {
+      sort = { sortBy: _sortBy, order: _sortDesc }
+    } else {
+      sort = { sortBy: 'totalVotes', order: 'desc' }
+    }
 
     const filter = search ? search.toString() : '';
     const { page, limit } = extractPageAndLimitQueryParam(req);
@@ -249,7 +235,19 @@ class ValidatorController implements Controller {
   private getDelegates = async (req: Request, res: Response) => {
     const { search, sortBy, sortDesc } = req.query;
 
-    const sort = this.getSort(String(sortBy), String(sortDesc));
+    const _sortBy = String(sortBy).includes('%') ? String(sortBy).replace('%', '') : String(sortBy);
+    const _sortDesc = String(sortDesc);
+
+    const sortBys = ["commission", "totalPoints", "votingPower"];
+    const sortDescs = ["asc", "desc"];
+
+    let sort;
+
+    if (sortBys.includes(_sortBy) && sortDescs.includes(_sortDesc)) {
+      sort = { sortBy: _sortBy, order: _sortDesc }
+    } else {
+      sort = { sortBy: 'votingPower', order: 'desc' }
+    }
 
     const filter = search ? search.toString() : '';
     const { page, limit } = extractPageAndLimitQueryParam(req);
@@ -287,7 +285,19 @@ class ValidatorController implements Controller {
   private getJailed = async (req: Request, res: Response) => {
     const { search, sortBy, sortDesc } = req.query;
 
-    const sort = this.getSort(String(sortBy), String(sortDesc));
+    const _sortBy = String(sortBy);
+    const _sortDesc = String(sortDesc);
+
+    const sortBys = ["totalPoints", "jailedTime", "bailAmount"];
+    const sortDescs = ["asc", "desc"];
+
+    let sort;
+
+    if (sortBys.includes(_sortBy) && sortDescs.includes(_sortDesc)) {
+      sort = { sortBy: _sortBy, order: _sortDesc }
+    } else {
+      sort = { sortBy: 'jailedTime', order: 'desc' }
+    }
 
     const filter = search ? search.toString() : '';
     const { page, limit } = extractPageAndLimitQueryParam(req);
