@@ -162,7 +162,7 @@ class AccountController implements Controller {
     }
 
     const txCount = await this.txDigestRepo.countByAddress(address);
-    const tokenCount = await this.tokenBalanceRepo.countByAddress(address);
+    const erc20TokenCount = await this.tokenBalanceRepo.countERC20ByAddress(address);
     const nftTokenCount = await this.tokenBalanceRepo.countNFTByAddress(
       address
     );
@@ -181,7 +181,7 @@ class AccountController implements Controller {
         address,
         ...actJson,
         txCount,
-        tokenCount,
+        erc20TokenCount,
         nftTokenCount,
         erc20TxCount,
         erc721TxCount,
