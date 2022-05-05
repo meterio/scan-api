@@ -68,7 +68,7 @@ class AccountController implements Controller {
     );
     this.router.get(
       `${this.path}/:address/nfttokens`,
-      try$(this.getNTFTokensByAccount)
+      try$(this.getNFTTokensByAccount)
     );
     this.router.get(
       `${this.path}/:address/erc20txs`,
@@ -81,6 +81,10 @@ class AccountController implements Controller {
     this.router.get(
       `${this.path}/:address/erc1155txs`,
       try$(this.getERC1155TxsByAccount)
+    );
+    this.router.get(
+      `${this.path}/:address/nfttxs`,
+      try$(this.getNFTTxsByAccount)
     );
     this.router.get(
       `${this.path}/:address/buckets`,
@@ -169,9 +173,7 @@ class AccountController implements Controller {
     const erc20TxCount = await this.movementRepo.countERC20TxsByAddress(
       address
     );
-    const erc721TxCount = await this.movementRepo.countERC721TxsByAddress(
-      address
-    );
+    const nftTxCount = await this.movementRepo.countNFTTxsByAddress(address);
     const bidCount = await this.bidRepo.countByAddress(address);
     const proposedCount = await this.blockRepo.countByBeneficiary(address);
     const bucketCount = await this.bucketRepo.countByAddress(address);
@@ -184,7 +186,7 @@ class AccountController implements Controller {
         erc20TokenCount,
         nftTokenCount,
         erc20TxCount,
-        erc721TxCount,
+        nftTxCount,
         bidCount,
         proposedCount,
         bucketCount,
@@ -376,7 +378,7 @@ class AccountController implements Controller {
     });
   };
 
-  private getNTFTokensByAccount = async (req: Request, res: Response) => {
+  private getNFTTokensByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     console.log(address);
     const { page, limit } = extractPageAndLimitQueryParam(req);
@@ -507,6 +509,31 @@ class AccountController implements Controller {
       }),
     });
   };
+
+  private getNFTTxsByAccount = async (req: Request, res: Response) => {
+    const { address } = req.params;
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+
+    const paginate = await this.movementRepo.paginateNFTTxsByAccount(
+      address,
+      page,
+      limit
+    );
+
+    return res.json({
+      totalRows: paginate.count,
+      txs: paginate.result.map((m) => {
+        delete m.__v;
+        delete m._id;
+        m.name = m.contract.name;
+        m.symbol = m.contract.symbol;
+        m.decimals = m.contract.decimals;
+        m.contractType = m.contract.type;
+        delete m.contract;
+        return m;
+      }),
+    });
+  }
 
   private getBucketsByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
