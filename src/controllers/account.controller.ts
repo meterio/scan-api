@@ -99,6 +99,10 @@ class AccountController implements Controller {
       `${this.path}/:address/delegators`,
       try$(this.getDelegatorsByAccount)
     );
+    this.router.get(
+      `${this.path}/:address/:id/nfttxs`,
+      try$(this.getNFTTxsByTokenAddrTokenId)
+    )
   }
 
   private getTopMTRAccounts = async (req: Request, res: Response) => {
@@ -532,6 +536,23 @@ class AccountController implements Controller {
         delete m.contract;
         return m;
       }),
+    });
+  }
+
+  private getNFTTxsByTokenAddrTokenId = async (req: Request, res: Response) => {
+    const { address, id } = req.params;
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+
+    const paginate = await this.movementRepo.paginateByTokenAddrTokenId(
+      address,
+      id,
+      page,
+      limit
+    );
+
+    return res.json({
+      totalRows: paginate.count,
+      txs: paginate.result.map(item => item.toJSON()),
     });
   }
 
