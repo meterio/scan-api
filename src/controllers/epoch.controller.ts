@@ -135,7 +135,7 @@ class EpochController implements Controller {
   private getStatsByEpoch = async (req: Request, res: Response) => {
     const { epoch } = req.params;
     const committee = await this.committeeRepo.findByEpoch(parseInt(epoch));
-    if (!committee || !committee.endBlock || committee.endBlock.number == 0) {
+    if (!committee) {
       return res.json({
         startBlock: 0,
         endBlock: 0,
@@ -143,6 +143,20 @@ class EpochController implements Controller {
         stats: [],
       });
     }
+
+    let endBlock = { number: -1, timestamp: -1, hash: '0x00' };
+    if (!committee.endBlock || committee.endBlock.number == 0) {
+      const endBlocks = await this.blockRepo.findRecent();
+      const bestBlock = endBlocks[0];
+      endBlock = {
+        number: bestBlock.number,
+        timestamp: bestBlock.timestamp,
+        hash: bestBlock.hash,
+      };
+    } else {
+      endBlock = committee.endBlock;
+    }
+
     const url =
       RESTFUL_ENDPOINT +
       `/staking/candidates?revision=${committee.startBlock.number}`;
@@ -181,7 +195,7 @@ class EpochController implements Controller {
 
     const blocks = await this.blockRepo.findByNumberInRange(
       committee.startBlock.number,
-      committee.endBlock.number
+      endBlock.number
     );
 
     blocks.sort((a, b) => (a.number < b.number ? -1 : 1));
@@ -193,7 +207,7 @@ class EpochController implements Controller {
 
     return res.json({
       startBlock: committee.startBlock,
-      endBlock: committee.endBlock,
+      endBlock: endBlock,
       members,
       stats,
       committeeSize,
