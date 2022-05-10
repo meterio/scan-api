@@ -16,6 +16,9 @@ import { extractPageAndLimitQueryParam } from '../utils/utils';
 import { ERC1155, ERC20, ERC721, ScriptEngine } from '@meterio/devkit';
 import { FormatTypes, Interface } from 'ethers/lib/utils';
 import { BigNumber as EBN } from 'ethers';
+
+// contract created signature
+const CONTRACT_CREATED_SIGNATURE = '0xb35bf4274d4295009f1ec66ed3f579db287889444366c03d3a695539372e8951';
 class TxController implements Controller {
   public path = '/api/txs';
   public router = Router();
@@ -88,6 +91,7 @@ class TxController implements Controller {
     }
 
     let tokenTransfers = [];
+    let contractAddress = '';
     for (const e of events) {
       if (
         !e.topics ||
@@ -96,9 +100,14 @@ class TxController implements Controller {
           ERC721.Transfer.signature,
           ERC1155.TransferSingle.signature,
           ERC1155.TransferBatch.signature,
+          CONTRACT_CREATED_SIGNATURE,
         ].includes(e.topics[0])
       ) {
         continue;
+      }
+
+      if (e.topics && e.topics[0] === CONTRACT_CREATED_SIGNATURE) {
+        contractAddress = e.address;
       }
 
       let contract = await this.contractRepo.findByAddress(e.address);
@@ -179,6 +188,7 @@ class TxController implements Controller {
       transferCount: transfers.length,
       eventCount: events.length,
       tokenTransfers,
+      contractAddress,
     };
 
     return res.json({
@@ -307,13 +317,14 @@ class TxController implements Controller {
       let methodId = '';
       let decoded = undefined;
       let datas = [];
-      let tail = c.data ? c.data.substring(2) : '';
+      let tail = '';
       if (c.data && c.data.length > 10) {
         methodId = c.data.substring(0, 10);
         const isSE = ScriptEngine.IsScriptEngineData(c.data);
         if (isSE) {
           decoded = ScriptEngine.decodeScriptData(c.data);
           selector = decoded.action;
+          tail = c.data.substring(18);
         } else {
           selector = c.data.substring(0, 10);
           tail = c.data.substring(10);
