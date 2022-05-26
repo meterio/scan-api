@@ -18,6 +18,7 @@ function validateEnv() {
         'verse-main',
       ],
     }),
+    PRIVATE_KEY: str(),
     // server
     PORT: port(),
   });

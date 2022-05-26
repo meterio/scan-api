@@ -6,7 +6,7 @@ export * from './presets';
 export const enumVals = (es: any) => {
   return Object.keys(es).map((key) => es[key] as string);
 };
-import { parseNetwork } from '@meterio/scan-db/dist';
+import { parseNetwork, Network } from '@meterio/scan-db/dist';
 
 export const RECENT_WINDOW = 5;
 export const LIMIT_WINDOW = 10;
@@ -21,3 +21,9 @@ export const CHAIN_ID = consts.chainId;
 export const STANDBY = standby;
 export const NETWORK = network;
 export const RESTFUL_ENDPOINT = consts.restfulEndpoint;
+
+export const SWAP_GAS_NEED = {
+  privateKey: process.env.PRIVATE_KEY,
+  routerAddr: '0x2E3BD493B06e0a4fE60E7824c468D628dec278E9',
+  rpc: Network[network].includes('Main') ? 'https://rpc.meter.io' : 'https://rpctest.meter.io'
+}
