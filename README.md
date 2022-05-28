@@ -1017,7 +1017,7 @@ API service of Meter next generation Scan.
 
 ```shell
 git clone https://github.com/meterio/scan-api.git
-cd powergrid
+cd scan-api
 ```
 
 ### Dependency && Build
