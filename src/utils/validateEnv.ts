@@ -18,7 +18,7 @@ function validateEnv() {
         'verse-main',
       ],
     }),
-    PRIVATE_KEY: json(),
+    SWAPPER_PRIVATE_KEY: str(),
     // server
     PORT: port(),
   });
