@@ -22,8 +22,12 @@ export const STANDBY = standby;
 export const NETWORK = network;
 export const RESTFUL_ENDPOINT = consts.restfulEndpoint;
 
-export const SWAP_GAS_NEED = {
-  privateKey: process.env.PRIVATE_KEY,
-  routerAddr: '0x2E3BD493B06e0a4fE60E7824c468D628dec278E9',
-  rpc: Network[network].includes('Main') ? 'https://rpc.meter.io' : 'https://rpctest.meter.io'
+export const SWAP_GAS_NEED = Network[network].toLowerCase().includes('main') ? {
+  privateKey: JSON.parse(process.env.PRIVATE_KEY).main,
+  routerAddr: '',
+  rpc: 'https://rpc.meter.io'
+} : {
+  privateKey: JSON.parse(process.env.PRIVATE_KEY).test,
+  routerAddr: '0xeB4c6D1287c4c40c7D111130ac3cdC8FbAFEcD71',
+  rpc: 'https://rpctest.meter.io'
 }

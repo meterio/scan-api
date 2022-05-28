@@ -1,4 +1,4 @@
-import { cleanEnv, num, port, str } from 'envalid';
+import { cleanEnv, num, port, str, json } from 'envalid';
 
 function validateEnv() {
   cleanEnv(process.env, {
@@ -18,7 +18,7 @@ function validateEnv() {
         'verse-main',
       ],
     }),
-    PRIVATE_KEY: str(),
+    PRIVATE_KEY: json(),
     // server
     PORT: port(),
   });
