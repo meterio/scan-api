@@ -19,6 +19,8 @@ function validateEnv() {
       ],
     }),
     SWAPPER_PRIVATE_KEY: str(),
+    SWAPPER_ROUTER_ADDR: str(),
+    SWAPPER_RPC_URL: str(),
     // server
     PORT: port(),
   });
