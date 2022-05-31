@@ -322,6 +322,7 @@ class TxController implements Controller {
         methodId = c.data.substring(0, 10);
         const isSE = ScriptEngine.IsScriptEngineData(c.data);
         if (isSE) {
+          methodId = c.data.substring(0, 18);
           decoded = ScriptEngine.decodeScriptData(c.data);
           selector = decoded.action;
           tail = c.data.substring(18);
@@ -336,11 +337,11 @@ class TxController implements Controller {
         selectors.push(selector);
       }
       while (tail.length >= 64) {
-        datas.push('0x' + tail.substring(0, 64));
+        datas.push(tail.substring(0, 64));
         tail = tail.substring(64);
       }
       if (tail.length > 0) {
-        datas.push('0x' + tail);
+        datas.push(tail);
       }
       return {
         to: c.to,

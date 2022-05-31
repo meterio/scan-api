@@ -17,8 +17,6 @@ import { try$ } from 'express-toolbox';
 
 import Controller from '../interfaces/controller.interface';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
-import { PermitRouter__factory } from '../typechain'
-import { ethers } from 'ethers';
 
 class AccountController implements Controller {
   public path = '/api/accounts';
