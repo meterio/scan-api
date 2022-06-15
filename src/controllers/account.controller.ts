@@ -103,6 +103,20 @@ class AccountController implements Controller {
       `${this.path}/:address/:id/nfttxs`,
       try$(this.getNFTTxsByTokenAddrTokenId)
     );
+    this.router.get(`${this.path}/domainnames`, try$(this.getDomainnames));
+  }
+
+  private getDomainnames = async (req: Request, res: Response) => {
+    const name = req.query.domainname || "";
+    const accts = await this.accountRepo.findByName(String(name))
+
+    return res.json({
+      accounts: accts.map(a => {
+        return {
+          ...a.toJSON
+        }
+      })
+    })
   }
 
   private getTopMTRAccounts = async (req: Request, res: Response) => {
