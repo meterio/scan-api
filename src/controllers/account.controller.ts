@@ -113,7 +113,7 @@ class AccountController implements Controller {
     return res.json({
       accounts: accts.map(a => {
         return {
-          ...a.toJSON
+          ...a.toJSON()
         }
       })
     })
