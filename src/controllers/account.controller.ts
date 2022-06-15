@@ -103,7 +103,7 @@ class AccountController implements Controller {
       `${this.path}/:address/:id/nfttxs`,
       try$(this.getNFTTxsByTokenAddrTokenId)
     );
-    this.router.get(`${this.path}/domainnames`, try$(this.getDomainnames));
+    this.router.get(`${this.path}/get/domainnames`, try$(this.getDomainnames));
   }
 
   private getDomainnames = async (req: Request, res: Response) => {
