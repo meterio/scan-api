@@ -108,12 +108,13 @@ class AccountController implements Controller {
 
   private getDomainnames = async (req: Request, res: Response) => {
     const name = req.query.domainname || "";
-    const accts = await this.accountRepo.findByName(String(name))
+    const accts = await this.accountRepo.findByFuzzyName(String(name));
 
     return res.json({
-      accounts: accts.map(a => {
+      accounts: accts.map(a => a.toJSON()).map(a => {
         return {
-          ...a.toJSON()
+          address: a.address,
+          names: a.alias ? [a.name, ...a.alias] : [a.name]
         }
       })
     })
