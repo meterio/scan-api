@@ -5,6 +5,9 @@ import { try$ } from 'express-toolbox';
 
 import Controller from '../interfaces/controller.interface';
 
+const hashPattern = new RegExp('^0x[0-9a-fA-F]{64}$');
+const addrPattern = new RegExp('^0x[0-9a-fA-F]{40}$');
+
 class SearchController implements Controller {
   public path = '/api/search';
   public router = Router();
@@ -33,23 +36,32 @@ class SearchController implements Controller {
     } catch (e) {
       console.log('could not find by number');
     }
-    const block = await this.blockRepo.findByHash(hash);
-    if (block) {
-      return res.json({ type: 'block', data: block });
+    if (hashPattern.test(hash)) {
+      const block = await this.blockRepo.findByHash(hash);
+      if (block) {
+        return res.json({ type: 'block', data: block });
+      }
+
+      const tx = await this.txRepo.findByHash(hash);
+      if (tx) {
+        return res.json({ type: 'tx', data: tx });
+      }
     }
 
-    const tx = await this.txRepo.findByHash(hash);
-    if (tx) {
-      return res.json({ type: 'tx', data: tx });
-    }
-
-    const account = await this.accountRepo.findByAddress(hash);
-    if (account) {
-      return res.json({ type: 'address', data: account });
+    if (addrPattern.test(hash)) {
+      const account = await this.accountRepo.findByAddress(hash);
+      if (account) {
+        return res.json({ type: 'address', data: account });
+      }
     }
 
     if (isAddress(hash)) {
       return res.json({ type: 'address', data: { address: hash } });
+    }
+
+    const account = await this.accountRepo.findByName(hash);
+    if (account) {
+      return res.json({ type: 'address', data: account });
     }
     return res.json({ type: 'unknown', data: {} });
   };
