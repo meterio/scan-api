@@ -26,16 +26,6 @@ class SearchController implements Controller {
   private searchByHash = async (req: Request, res: Response) => {
     const { hash } = req.params;
 
-    let number = -1;
-    try {
-      number = Number(hash);
-      const block = await this.blockRepo.findByNumber(number);
-      if (block) {
-        return res.json({ type: 'block', data: block });
-      }
-    } catch (e) {
-      console.log('could not find by number');
-    }
     if (hashPattern.test(hash)) {
       const block = await this.blockRepo.findByHash(hash);
       if (block) {
@@ -55,13 +45,24 @@ class SearchController implements Controller {
       }
     }
 
-    if (isAddress(hash)) {
-      return res.json({ type: 'address', data: { address: hash } });
+    let number = -1;
+    try {
+      number = Number(hash);
+      const block = await this.blockRepo.findByNumber(number);
+      if (block) {
+        return res.json({ type: 'block', data: block });
+      }
+    } catch (e) {
+      console.log('could not find by number');
     }
 
     const account = await this.accountRepo.findByName(hash);
     if (account) {
       return res.json({ type: 'address', data: account });
+    }
+
+    if (isAddress(hash)) {
+      return res.json({ type: 'address', data: { address: hash } });
     }
     return res.json({ type: 'unknown', data: {} });
   };
