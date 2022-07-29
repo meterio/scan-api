@@ -193,15 +193,18 @@ class EpochController implements Controller {
       memberMap[m.index] = m;
     });
 
+    const lastKBlock = await this.blockRepo.findByNumber(
+      committee.startBlock.number - 1
+    );
     const blocks = await this.blockRepo.findByNumberInRange(
       committee.startBlock.number,
-      endBlock.number
+      endBlock.number + 1
     );
 
     blocks.sort((a, b) => (a.number < b.number ? -1 : 1));
     const lastBlock = blocks[blocks.length - 1];
     const lastRound = lastBlock.qc.qcRound;
-    const stats = this.calcStats(blocks, memberMap, lastRound);
+    const stats = this.calcStats(lastKBlock, blocks, memberMap, lastRound);
     const committeeSize = Object.keys(memberMap).length;
     const nloops = Math.ceil(lastRound / committeeSize);
 
@@ -217,11 +220,12 @@ class EpochController implements Controller {
   };
 
   private calcStats = (
+    lastKBlock: Block,
     blocks: Block[],
     memberMap: { [key: number]: any },
     lastRound: number
   ) => {
-    let stats: { status: number; b: number }[] = [];
+    let stats: { status: number; b: number; intvl: number }[] = [];
     const size = Object.keys(memberMap).length;
 
     console.log(
@@ -242,11 +246,19 @@ class EpochController implements Controller {
         const curBlock = blocks[curIndex];
         if (expectedProposerAddr === curBlock.beneficiary.toLowerCase()) {
           // match
-          stats.push({ status: 1, b: curBlock.number });
+          const lastBlockTS =
+            curIndex == 0
+              ? lastKBlock.timestamp
+              : blocks[curIndex - 1].timestamp;
+          stats.push({
+            status: 1,
+            b: curBlock.number,
+            intvl: curBlock.timestamp - lastBlockTS,
+          });
           curIndex++;
         } else {
           // not match
-          stats.push({ status: 2, b: curBlock.number });
+          stats.push({ status: 2, b: curBlock.number, intvl: 0 });
         }
       }
     } catch (e) {
@@ -266,6 +278,8 @@ class EpochController implements Controller {
       });
     }
     if (!committee.endBlock) {
+      const recent = await this.blockRepo.findRecent();
+      const head = recent[0];
       return res.json({
         summary: {
           epoch: committee.epoch,
@@ -273,7 +287,7 @@ class EpochController implements Controller {
           startKBlock: committee.startBlock.number,
           startTime: committee.startBlock.timestamp,
           committeeSize: committee.members.length,
-          duration: 0,
+          duration: head.timestamp - committee.startBlock.timestamp,
         },
         powBlocks: [],
       });
