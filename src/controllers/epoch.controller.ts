@@ -4,6 +4,7 @@ import {
   KnownRepo,
   Network,
   Block,
+  BlockType,
 } from '@meterio/scan-db/dist';
 import axios from 'axios';
 import { Request, Response, Router } from 'express';
@@ -225,7 +226,12 @@ class EpochController implements Controller {
     memberMap: { [key: number]: any },
     lastRound: number
   ) => {
-    let stats: { status: number; b: number; intvl: number }[] = [];
+    let stats: {
+      status: number; // status code: 1-success, 2-timeout
+      b: number; // expected block number
+      intvl: number; // finalize interval = curBlock.timestamp - prevBlock.timestamp
+      k: boolean; // is kblock
+    }[] = [];
     const size = Object.keys(memberMap).length;
 
     console.log(
@@ -254,11 +260,17 @@ class EpochController implements Controller {
             status: 1,
             b: curBlock.number,
             intvl: curBlock.timestamp - lastBlockTS,
+            k: curBlock.blockType == BlockType.KBlock,
           });
           curIndex++;
         } else {
           // not match
-          stats.push({ status: 2, b: curBlock.number, intvl: 0 });
+          stats.push({
+            status: 2,
+            b: curBlock.number,
+            intvl: 0,
+            k: curBlock.blockType == BlockType.KBlock,
+          });
         }
       }
     } catch (e) {
