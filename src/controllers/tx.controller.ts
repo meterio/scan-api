@@ -16,9 +16,11 @@ import { extractPageAndLimitQueryParam } from '../utils/utils';
 import { ERC1155, ERC20, ERC721, ScriptEngine } from '@meterio/devkit';
 import { FormatTypes, Interface } from 'ethers/lib/utils';
 import { BigNumber as EBN } from 'ethers';
+import internal from 'stream';
 
 // contract created signature
-const CONTRACT_CREATED_SIGNATURE = '0xb35bf4274d4295009f1ec66ed3f579db287889444366c03d3a695539372e8951';
+const CONTRACT_CREATED_SIGNATURE =
+  '0xb35bf4274d4295009f1ec66ed3f579db287889444366c03d3a695539372e8951';
 class TxController implements Controller {
   public path = '/api/txs';
   public router = Router();
@@ -37,6 +39,10 @@ class TxController implements Controller {
     this.router.get(`${this.path}/:hash/clauses`, try$(this.getClauses));
     this.router.get(`${this.path}/:hash/transfers`, try$(this.getTransfers));
     this.router.get(`${this.path}/:hash/events`, try$(this.getEvents));
+    this.router.get(
+      `${this.path}/:hash/internaltxs`,
+      try$(this.getInternalTxs)
+    );
   }
 
   private getRecent = async (req: Request, res: Response) => {
@@ -302,6 +308,49 @@ class TxController implements Controller {
       );
     }
     return res.json({ hash, transfers });
+  };
+
+  private getInternalTxs = async (req: Request, res: Response) => {
+    const { hash } = req.params;
+    let tx = await this.txRepo.findByHash(hash);
+    if (!tx) {
+      return res.json({ hash, internalTxs: [] });
+    }
+
+    const internalTxs = [];
+    if (tx.traces) {
+      for (const t of tx.traces) {
+        const trace = JSON.parse(t.json);
+        let q = [[trace, '0']];
+        while (q) {
+          const item = q.shift();
+          if (!item) {
+            break;
+          }
+
+          const node = item[0];
+          const suffix = item[1];
+
+          const name = node.type.toLowerCase() + '_' + suffix;
+          internalTxs.push({
+            name,
+            from: node.from,
+            to: node.to,
+            value: node.value,
+            gasUsed: node.gasUsed,
+            gasLimit: node.gas,
+          });
+          if (node.calls) {
+            for (const [index, c] of node.calls.entries()) {
+              let childSuffix = suffix + '_' + index;
+              q.push([c, childSuffix]);
+            }
+          }
+        }
+      }
+    }
+
+    return res.json({ hash, internalTxs });
   };
 
   private getClauses = async (req: Request, res: Response) => {
