@@ -27,7 +27,7 @@
     "@ethersproject/contracts": "^5.6.2",
     "@ethersproject/providers": "^5.6.8",
     "@meterio/devkit": "^1.6.5",
-    "@meterio/scan-db": "^0.2.10",
+    "@meterio/scan-db": "^0.2.14",
     "axios": "^0.26.1",
     "bunyan": "^1.8.14",
     "cookie-parser": "^1.4.6",

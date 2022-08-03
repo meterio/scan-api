@@ -17,19 +17,32 @@ class ContractController implements Controller {
 
   private initializeRoutes() {
     this.router.get(`${this.path}/:address`, try$(this.getContractFiles));
-    this.router.get(`${this.path1}/:address`, try$(this.getContractByAddress))
+    this.router.get(`${this.path1}/:address`, try$(this.getContractByAddress));
   }
 
   private getContractByAddress = async (req: Request, res: Response) => {
     const { address } = req.params;
     const contract = await this.contractRepo.findByAddress(address);
-    return res.json({ contract: contract.toJSON() })
-  }
+    return res.json({ contract: contract.toJSON() });
+  };
 
   private getContractFiles = async (req: Request, res: Response) => {
     const { address } = req.params;
-    const files = await this.contractFileRepo.findAllByContract(address);
-    return res.json({ files: files.map(f => f.toJSON()) });
+    const contract = await this.contractRepo.findByAddress(address);
+    let result = {};
+    // code-match verification, use `verifiedFrom` to find files
+    if (contract.verified && contract.status === 'match') {
+      const files = await this.contractFileRepo.findAllByContract(
+        contract.verifiedFrom
+      );
+      result = { files: files.map((f) => f.toJSON()) };
+    }
+    // sourcify verification, use `address` to find files
+    if (contract.verified) {
+      const files = await this.contractFileRepo.findAllByContract(address);
+      result = { files: files.map((f) => f.toJSON()) };
+    }
+    return res.json(result);
   };
 }
 export default ContractController;

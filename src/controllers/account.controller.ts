@@ -107,18 +107,20 @@ class AccountController implements Controller {
   }
 
   private getDomainnames = async (req: Request, res: Response) => {
-    const name = req.query.domainname || "";
+    const name = req.query.domainname || '';
     const accts = await this.accountRepo.findByFuzzyName(String(name));
 
     return res.json({
-      accounts: accts.map(a => a.toJSON()).map(a => {
-        return {
-          address: a.address,
-          names: a.alias ? [a.name, ...a.alias] : [a.name]
-        }
-      })
-    })
-  }
+      accounts: accts
+        .map((a) => a.toJSON())
+        .map((a) => {
+          return {
+            address: a.address,
+            names: a.alias ? [a.name, ...a.alias] : [a.name],
+          };
+        }),
+    });
+  };
 
   private getTopMTRAccounts = async (req: Request, res: Response) => {
     const { page, limit } = extractPageAndLimitQueryParam(req);
@@ -181,11 +183,14 @@ class AccountController implements Controller {
       actJson.creationTxHash = contract.creationTxHash;
       actJson.firstSeen = contract.firstSeen;
       actJson.verified = contract.verified;
+      actJson.verifiedFrom = contract.verifiedFrom;
       actJson.status = contract.status;
     }
 
     const txCount = await this.txDigestRepo.countByAddress(address);
-    const erc20TokenCount = await this.tokenBalanceRepo.countERC20ByAddress(address);
+    const erc20TokenCount = await this.tokenBalanceRepo.countERC20ByAddress(
+      address
+    );
     const nftTokenCount = await this.tokenBalanceRepo.countNFTByAddress(
       address
     );
@@ -552,7 +557,7 @@ class AccountController implements Controller {
         return m;
       }),
     });
-  }
+  };
 
   private getNFTTxsByTokenAddrTokenId = async (req: Request, res: Response) => {
     const { address, id } = req.params;
@@ -567,9 +572,9 @@ class AccountController implements Controller {
 
     return res.json({
       totalRows: paginate.count,
-      txs: paginate.result.map(item => item.toJSON()),
+      txs: paginate.result.map((item) => item.toJSON()),
     });
-  }
+  };
 
   private getBucketsByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
