@@ -336,9 +336,10 @@ class TxController implements Controller {
             name,
             from: node.from,
             to: node.to,
-            value: node.value,
-            gasUsed: node.gasUsed,
-            gasLimit: node.gas,
+            value: node.value ? new BigNumber(node.value).toString() : 0,
+            gasUsed: node.gasUsed ? new BigNumber(node.gasUsed).toNumber() : 0,
+            gasLimit: node.gasLimit ? new BigNumber(node.gas).toNumber() : 0,
+            clauseIndex: t.clauseIndex,
           });
           if (node.calls) {
             for (const [index, c] of node.calls.entries()) {
