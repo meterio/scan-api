@@ -186,6 +186,23 @@ class TxController implements Controller {
       }
     }
 
+    let internaltxsCount = 0;
+    if (tx.traces) {
+      for (const t of tx.traces) {
+        const trace = JSON.parse(t.json);
+        let q = [trace];
+        while (q.length > 0) {
+          const node = q.shift();
+          internaltxsCount++;
+          if (node.calls) {
+            for (const c of node.calls) {
+              q.push(c);
+            }
+          }
+        }
+      }
+    }
+
     const summary = {
       ...txObj,
       events,
@@ -193,6 +210,7 @@ class TxController implements Controller {
       clauseCount: tx.clauses.length,
       transferCount: transfers.length,
       eventCount: events.length,
+      internaltxsCount: internaltxsCount,
       tokenTransfers,
       contractAddress,
     };
