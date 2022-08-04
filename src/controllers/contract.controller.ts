@@ -30,15 +30,14 @@ class ContractController implements Controller {
     const { address } = req.params;
     const contract = await this.contractRepo.findByAddress(address);
     let result = {};
-    // code-match verification, use `verifiedFrom` to find files
     if (contract.verified && contract.status === 'match') {
+      // code-match verification, use `verifiedFrom` to find files
       const files = await this.contractFileRepo.findAllByContract(
         contract.verifiedFrom
       );
       result = { files: files.map((f) => f.toJSON()) };
-    }
-    // sourcify verification, use `address` to find files
-    if (contract.verified) {
+    } else if (contract.verified) {
+      // sourcify verification, use `address` to find files
       const files = await this.contractFileRepo.findAllByContract(address);
       result = { files: files.map((f) => f.toJSON()) };
     }
