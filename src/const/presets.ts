@@ -169,3 +169,22 @@ export const getDelegates = (network: Network) => {
   }
   return [];
 };
+
+export const curatedNFTCollections = {
+  mainnet: [
+    '0x608203020799f9bda8bfcc3ac60fc7d9b0ba3d78', // Meter Punks
+    '0x90bacf98c0d55255306a910da5959dcd72252ce0', // Meter Soldiers
+    '0xea5ad51c9f93642a671f59b1e2955d8983372a51', // Uncle Bob
+  ] as string[],
+  testnet: [] as string[],
+};
+
+export const getCuratedNFTs = (network: Network) => {
+  if (network == Network.MainNet) {
+    return curatedNFTCollections.mainnet;
+  }
+  if (network == Network.TestNet) {
+    return curatedNFTCollections.testnet;
+  }
+  return [];
+};
