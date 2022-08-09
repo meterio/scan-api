@@ -17,6 +17,7 @@ import TxController from './controllers/tx.controller';
 import ValidatorController from './controllers/validator.controller';
 import ContractController from './controllers/contract.controller';
 import SwapController from './controllers/swap.controller';
+import NFTController from './controllers/nft.controller';
 
 const app = new App([
   new BucketController(),
@@ -35,6 +36,7 @@ const app = new App([
   new KnownController(),
   new TokenController(),
   new SwapController(),
+  new NFTController(),
 ]);
 
 (async () => {

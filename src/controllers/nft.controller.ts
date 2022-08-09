@@ -1,5 +1,4 @@
 import { ContractRepo, NFTRepo } from '@meterio/scan-db/dist';
-import { resolveObjectURL } from 'buffer';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { getCuratedNFTs, getEnvNetwork } from '../const';

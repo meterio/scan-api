@@ -176,7 +176,10 @@ export const curatedNFTCollections = {
     '0x90bacf98c0d55255306a910da5959dcd72252ce0', // Meter Soldiers
     '0xea5ad51c9f93642a671f59b1e2955d8983372a51', // Uncle Bob
   ] as string[],
-  testnet: [] as string[],
+  testnet: [
+    '0x0adfa8dff353095f24147afe127ab0ffb9009be4', // Meter Punks
+    '0xc345e76a77c6287df132b3554e8cbbb4d9e91fa4', // Meter Soliders
+  ] as string[],
 };
 
 export const getCuratedNFTs = (network: Network) => {
