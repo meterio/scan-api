@@ -74,25 +74,36 @@ return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftToken
     const paginate = await this.nftRepo.paginateByAddress(address, page, limit);
     return res.json({
       totoalRows: paginate.count,
-      nfts: paginate.result.map((n) => ({
-        address: n.address,
-        tokenId: n.tokenId,
-        type: n.type,
-        tokenURI: n.tokenURI || '',
-        tokenJSON: n.tokenJSON || '{}',
+      nfts: paginate.result.map((n) => {
+        let tokenJSON = {};
+        try {
+          tokenJSON = JSON.parse(n.tokenJSON);
+        } catch (e) {
+          console.log('error parsing json');
+        }
 
-        mediaURI: n.mediaURI || '',
-        mediaType: n.mediaType || '',
-        minter: n.minter,
-        createTxHash: n.creationTxHash,
-        createBlockNum: n.block.number,
-        createTimestamp: n.block.timestamp,
-      })),
+        return {
+          tokenId: n.tokenId,
+          tokenURI: n.tokenURI || '',
+          tokenJSON: tokenJSON,
+
+          mediaURI: n.mediaURI || '',
+          mediaType: n.mediaType || '',
+          minter: n.minter,
+          createTxHash: n.creationTxHash,
+          createBlockNum: n.block.number,
+          createTimestamp: n.block.timestamp,
+        };
+      }),
       collection: {
+        address: contract.address,
         name: contract.name,
         symbol: contract.symbol,
-        creator: contract.master,
         type: contract.type,
+        createTxHash: contract.creationTxHash,
+        createBlockNum: contract.firstSeen.number,
+        createTimestamp: contract.firstSeen.number,
+        creator: contract.master,
       },
     });
   };
