@@ -1,5 +1,11 @@
 import { isAddress } from '@meterio/devkit/dist/cry';
-import { AccountRepo, BlockRepo, TxRepo } from '@meterio/scan-db/dist';
+import {
+  AccountRepo,
+  BlockRepo,
+  ContractRepo,
+  TxRepo,
+  ContractType,
+} from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
@@ -14,6 +20,7 @@ class SearchController implements Controller {
   private blockRepo = new BlockRepo();
   private txRepo = new TxRepo();
   private accountRepo = new AccountRepo();
+  private contractRepo = new ContractRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -30,12 +37,12 @@ class SearchController implements Controller {
     if (hashPattern.test(word)) {
       const block = await this.blockRepo.findByHash(word);
       if (block) {
-        return res.json({ type: 'block', data: block });
+        return res.json({ type: 'block', data: block.toJSON() });
       }
 
       const tx = await this.txRepo.findByHash(word);
       if (tx) {
-        return res.json({ type: 'tx', data: tx });
+        return res.json({ type: 'tx', data: tx.toJSON() });
       }
       return res.json({ type: 'hash' });
     }
@@ -44,7 +51,7 @@ class SearchController implements Controller {
     if (addrPattern.test(word)) {
       const account = await this.accountRepo.findByAddress(word);
       if (account) {
-        return res.json({ type: 'address', data: account });
+        return res.json({ type: 'address', data: account.toJSON() });
       }
       return res.json({ type: 'address', data: { address: word } });
     }
@@ -55,41 +62,52 @@ class SearchController implements Controller {
       number = Number(word);
       const block = await this.blockRepo.findByNumber(number);
       if (block) {
-        return res.json({ type: 'block', data: block });
+        return res.json({ type: 'block', data: block.toJSON() });
       }
     } catch (e) {
       console.log('could not find by number');
     }
 
-    // otherwise, it's a keyword, find in account collection
-    const account = await this.accountRepo.findByName(word);
-    if (account) {
-      return res.json({ type: 'address', data: account });
+    const contract = await this.contractRepo.findBySymbol(word);
+    if (contract) {
+      return res.json({ type: 'address', data: contract.toJSON() });
     }
 
-    // fuzzy search
+    // fuzzy search for account and contracts
+    let suggestions = [];
     const accounts = await this.accountRepo.findByFuzzyName(word);
-    if (accounts) {
-      return res.json({
-        type: 'suggestions',
-        items: accounts.map((a) => ({
-          name: a.name,
-          address: a.address,
-          type: 'address',
-        })),
-      });
+    if (accounts && accounts.length > 0) {
+      if (accounts.length > 1) {
+        for (const a of accounts) {
+          suggestions.push({
+            name: a.name,
+            address: a.address,
+            type: 'address',
+            tag: 'User',
+          });
+        }
+      } else {
+        return res.json({ type: 'address', data: accounts[0].toJSON() });
+      }
     }
 
-    const contracts = await this.accountRepo.findByFuzzyName(word);
-    if (contracts) {
-      return res.json({
-        type: 'suggestions',
-        items: contracts.map((c) => ({
-          name: c.name,
-          address: c.name,
-          type: 'address',
-        })),
-      });
+    const contracts = await this.contractRepo.findByFuzzyName(word);
+    if (contracts && contracts.length > 0) {
+      if (contracts.length > 1) {
+        for (const c of contracts) {
+          suggestions.push({
+            name: c.name,
+            address: c.address,
+            type: 'address',
+            tag: ContractType[c.type],
+          });
+        }
+      } else {
+        return res.json({ type: 'address', data: contracts[0].toJSON() });
+      }
+    }
+    if (suggestions.length > 0) {
+      return res.json({ type: 'suggestions', data: suggestions });
     }
 
     return res.json({ type: 'unknown', data: {} });
