@@ -73,7 +73,17 @@ return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftToken
     delete contract.code;
     const paginate = await this.nftRepo.paginateByAddress(address, page, limit);
     return res.json({
-      totoalRows: paginate.count,
+      collection: {
+        address: contract.address,
+        name: contract.name,
+        symbol: contract.symbol,
+        type: contract.type,
+        createTxHash: contract.creationTxHash,
+        createBlockNum: contract.firstSeen.number,
+        createTimestamp: contract.firstSeen.number,
+        creator: contract.master,
+      },
+      totalRows: paginate.count,
       nfts: paginate.result.map((n) => {
         let tokenJSON = {};
         try {
@@ -93,18 +103,10 @@ return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftToken
           createTxHash: n.creationTxHash,
           createBlockNum: n.block.number,
           createTimestamp: n.block.timestamp,
+          status: n.status,
         };
       }),
-      collection: {
-        address: contract.address,
-        name: contract.name,
-        symbol: contract.symbol,
-        type: contract.type,
-        createTxHash: contract.creationTxHash,
-        createBlockNum: contract.firstSeen.number,
-        createTimestamp: contract.firstSeen.number,
-        creator: contract.master,
-      },
+      // .filter((n) => n.mediaURI !== ''),
     });
   };
 }
