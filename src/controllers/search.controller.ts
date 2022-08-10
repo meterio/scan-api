@@ -83,7 +83,7 @@ class SearchController implements Controller {
         name: contract.name,
         address: contract.address,
         type: 'address',
-        tag: contract.type,
+        tag: ContractType[contract.type],
       });
     }
 
@@ -94,7 +94,7 @@ class SearchController implements Controller {
           name: a.name,
           address: a.address,
           type: 'address',
-          tag: 'User',
+          tag: 'Account',
         });
       }
     }
