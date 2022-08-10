@@ -6,6 +6,7 @@ import {
   TxRepo,
   ContractType,
 } from '@meterio/scan-db/dist';
+import { num } from 'envalid';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
@@ -37,11 +38,13 @@ class SearchController implements Controller {
     if (hashPattern.test(word)) {
       const block = await this.blockRepo.findByHash(word);
       if (block) {
+        console.log(`exact match for block hash: `, word);
         return res.json({ type: 'block', data: block.toJSON() });
       }
 
       const tx = await this.txRepo.findByHash(word);
       if (tx) {
+        console.log(`exact match for tx hash: `, word);
         return res.json({ type: 'tx', data: tx.toJSON() });
       }
       return res.json({ type: 'hash' });
@@ -51,6 +54,7 @@ class SearchController implements Controller {
     if (addrPattern.test(word)) {
       const account = await this.accountRepo.findByAddress(word);
       if (account) {
+        console.log(`exact match for address: `, word);
         return res.json({ type: 'address', data: account.toJSON() });
       }
       return res.json({ type: 'address', data: { address: word } });
@@ -62,6 +66,7 @@ class SearchController implements Controller {
       number = Number(word);
       const block = await this.blockRepo.findByNumber(number);
       if (block) {
+        console.log(`exact match for block number: `, number);
         return res.json({ type: 'block', data: block.toJSON() });
       }
     } catch (e) {
@@ -70,6 +75,7 @@ class SearchController implements Controller {
 
     const contract = await this.contractRepo.findBySymbol(word);
     if (contract) {
+      console.log(`exact match for contract symbol: `, word);
       return res.json({ type: 'address', data: contract.toJSON() });
     }
 
@@ -77,33 +83,25 @@ class SearchController implements Controller {
     let suggestions = [];
     const accounts = await this.accountRepo.findByFuzzyName(word);
     if (accounts && accounts.length > 0) {
-      if (accounts.length > 1) {
-        for (const a of accounts) {
-          suggestions.push({
-            name: a.name,
-            address: a.address,
-            type: 'address',
-            tag: 'User',
-          });
-        }
-      } else {
-        return res.json({ type: 'address', data: accounts[0].toJSON() });
+      for (const a of accounts) {
+        suggestions.push({
+          name: a.name,
+          address: a.address,
+          type: 'address',
+          tag: 'User',
+        });
       }
     }
 
     const contracts = await this.contractRepo.findByFuzzyName(word);
     if (contracts && contracts.length > 0) {
-      if (contracts.length > 1) {
-        for (const c of contracts) {
-          suggestions.push({
-            name: c.name,
-            address: c.address,
-            type: 'address',
-            tag: ContractType[c.type],
-          });
-        }
-      } else {
-        return res.json({ type: 'address', data: contracts[0].toJSON() });
+      for (const c of contracts) {
+        suggestions.push({
+          name: c.name,
+          address: c.address,
+          type: 'address',
+          tag: ContractType[c.type],
+        });
       }
     }
     if (suggestions.length > 0) {
