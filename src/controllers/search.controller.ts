@@ -81,9 +81,14 @@ class SearchController implements Controller {
 
     // fuzzy search for account and contracts
     let suggestions = [];
+    let visitedAddrs = {};
     const accounts = await this.accountRepo.findByFuzzyName(word);
     if (accounts && accounts.length > 0) {
       for (const a of accounts) {
+        if (a.address in visitedAddrs) {
+          continue;
+        }
+        visitedAddrs[a.address] = true;
         suggestions.push({
           name: a.name,
           address: a.address,
@@ -96,6 +101,10 @@ class SearchController implements Controller {
     const contracts = await this.contractRepo.findByFuzzyName(word);
     if (contracts && contracts.length > 0) {
       for (const c of contracts) {
+        if (c.address in visitedAddrs) {
+          continue;
+        }
+        visitedAddrs[c.address] = true;
         suggestions.push({
           name: c.name,
           address: c.address,
