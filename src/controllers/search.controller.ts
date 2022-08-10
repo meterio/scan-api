@@ -73,22 +73,23 @@ class SearchController implements Controller {
       console.log('could not find by number');
     }
 
-    const contract = await this.contractRepo.findBySymbol(word);
-    if (contract) {
-      console.log(`exact match for contract symbol: `, word);
-      return res.json({ type: 'address', data: contract.toJSON() });
-    }
-
     // fuzzy search for account and contracts
     let suggestions = [];
     let visitedAddrs = {};
+    const contract = await this.contractRepo.findBySymbol(word);
+    if (contract) {
+      visitedAddrs[contract.address] = true;
+      suggestions.push({
+        name: contract.name,
+        address: contract.address,
+        type: 'address',
+        tag: contract.type,
+      });
+    }
+
     const accounts = await this.accountRepo.findByFuzzyName(word);
     if (accounts && accounts.length > 0) {
       for (const a of accounts) {
-        if (a.address in visitedAddrs) {
-          continue;
-        }
-        visitedAddrs[a.address] = true;
         suggestions.push({
           name: a.name,
           address: a.address,
@@ -114,7 +115,7 @@ class SearchController implements Controller {
       }
     }
     if (suggestions.length > 0) {
-      return res.json({ type: 'suggestions', data: suggestions });
+      return res.json({ type: 'suggestions', data: suggestions.slice(0, 15) });
     }
 
     return res.json({ type: 'unknown', data: {} });
