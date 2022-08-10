@@ -118,7 +118,7 @@ class SearchController implements Controller {
       return res.json({ type: 'suggestions', data: suggestions.slice(0, 15) });
     }
 
-    return res.json({ type: 'unknown', data: {} });
+    return res.json({ type: 'suggestions', data: [] });
   };
 }
 
