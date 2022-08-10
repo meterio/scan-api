@@ -15,7 +15,7 @@ import Controller from '../interfaces/controller.interface';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
 import { ERC1155, ERC20, ERC721, ScriptEngine } from '@meterio/devkit';
 import { FormatTypes, Interface } from 'ethers/lib/utils';
-import { BigNumber as EBN } from 'ethers';
+import { BigNumber as EBN, ethers } from 'ethers';
 import internal from 'stream';
 
 // contract created signature
@@ -229,23 +229,37 @@ class TxController implements Controller {
       }
 
       let events: PosEvent[] = [];
-      let topics = [];
+      let topic0s = [];
       for (const o of tx.outputs) {
         for (const e of o.events) {
           events.push(e);
           if (e.topics && e.topics.length > 0) {
-            topics.push(e.topics[0]);
+            topic0s.push(e.topics[0]);
           }
         }
       }
 
       // build known map
       let fragments = [];
-      if (topics.length > 0) {
-        fragments = await this.abiFragmentRepo.findBySignatureList(...topics);
+      if (topic0s.length > 0) {
+        fragments = await this.abiFragmentRepo.findBySignatureList(...topic0s);
       }
-      const abis = fragments.map((f) => f.abi);
-      const iface = new Interface(abis);
+
+      // group abi by signature
+      let abiMap = {};
+      for (const frag of fragments) {
+        try {
+          const sig = frag.signature;
+          if (sig in abiMap) {
+            abiMap[sig].push(frag.abi);
+          } else {
+            abiMap[sig] = [frag.abi];
+          }
+        } catch (e) {
+          console.log('ignore error:', e);
+          continue;
+        }
+      }
 
       return res.json({
         hash,
@@ -273,30 +287,41 @@ class TxController implements Controller {
             abi: undefined,
             decoded: undefined,
           };
-          try {
-            const decodeRes = iface.parseLog(e);
-            result.name = decodeRes.name;
-            result.abi = decodeRes.eventFragment.format(FormatTypes.full);
-            const abiJson = JSON.parse(
-              decodeRes.eventFragment.format(FormatTypes.json)
-            );
-            let decoded = {};
-            for (const input of abiJson.inputs) {
-              const val = decodeRes.args[input.name];
-              if (EBN.isBigNumber(val)) {
-                decoded[input.name] = val.toString();
-              } else {
-                decoded[input.name] = val;
+          let selectedAbi = [];
+          if (e.topics && e.topics.length > 0 && e.topics[0] in abiMap) {
+            selectedAbi = abiMap[e.topics[0]];
+          }
+
+          if (selectedAbi.length > 0) {
+            for (const abi of selectedAbi) {
+              try {
+                const iface = new Interface([abi]);
+                const decodeRes = iface.parseLog(e);
+
+                result.name = decodeRes.name;
+                result.abi = decodeRes.eventFragment.format(FormatTypes.full);
+                const abiJson = JSON.parse(
+                  decodeRes.eventFragment.format(FormatTypes.json)
+                );
+                let decoded = {};
+                for (const input of abiJson.inputs) {
+                  const val = decodeRes.args[input.name];
+                  if (EBN.isBigNumber(val)) {
+                    decoded[input.name] = val.toString();
+                  } else {
+                    decoded[input.name] = val;
+                  }
+                }
+                if (result.abi) {
+                  result.decoded = decoded;
+                }
+                break;
+              } catch (e) {
+                console.log('Error happened during event decoding: ', e);
               }
             }
-            if (result.abi) {
-              result.decoded = decoded;
-            }
-          } catch (e) {
-            console.log('Error happened during event decoding: ', e);
-          } finally {
-            return result;
           }
+          return result;
         }),
       });
     } catch (e) {
