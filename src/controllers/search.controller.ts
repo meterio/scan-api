@@ -82,6 +82,7 @@ class SearchController implements Controller {
       suggestions.push({
         name: contract.name,
         address: contract.address,
+        symbol: contract.symbol,
         type: 'address',
         tag: ContractType[contract.type],
       });
@@ -93,6 +94,7 @@ class SearchController implements Controller {
         suggestions.push({
           name: a.name,
           address: a.address,
+          symbol: '',
           type: 'address',
           tag: 'Account',
         });
@@ -109,6 +111,7 @@ class SearchController implements Controller {
         suggestions.push({
           name: c.name,
           address: c.address,
+          symbol: c.symbol,
           type: 'address',
           tag: ContractType[c.type],
         });
