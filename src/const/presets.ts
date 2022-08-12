@@ -179,6 +179,7 @@ export const curatedNFTCollections = {
   testnet: [
     '0x0adfa8dff353095f24147afe127ab0ffb9009be4', // Meter Punks
     '0xc345e76a77c6287df132b3554e8cbbb4d9e91fa4', // Meter Soliders
+    '0xccfa3652294408fe7c98d0a48ce1a6bc71dc37ec', // azuki
   ] as string[],
 };
 
