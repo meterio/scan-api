@@ -11,6 +11,7 @@ import {
   TxRepo,
   ContractType,
   ABIFragmentRepo,
+  NFTRepo,
 } from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
@@ -28,6 +29,7 @@ class AccountController implements Controller {
   private blockRepo = new BlockRepo();
   private contractRepo = new ContractRepo();
   private tokenBalanceRepo = new TokenBalanceRepo();
+  private nftRepo = new NFTRepo();
   private bidRepo = new BidRepo();
   private txDigestRepo = new TxDigestRepo();
   private abiFragmentRepo = new ABIFragmentRepo();
@@ -70,6 +72,7 @@ class AccountController implements Controller {
       `${this.path}/:address/nfttokens`,
       try$(this.getNFTTokensByAccount)
     );
+    this.router.get(`${this.path}/:address/nfts`, try$(this.getNFTsByAccount));
     this.router.get(
       `${this.path}/:address/erc20txs`,
       try$(this.getERC20TxsByAccount)
@@ -171,9 +174,16 @@ class AccountController implements Controller {
       actJson.tokenSymbol = contract.symbol;
       actJson.tokenDecimals = contract.decimals;
       actJson.totalSupply = contract.totalSupply.toFixed();
-      const holderCount = await this.tokenBalanceRepo.countByTokenAddress(
-        address
-      );
+      let holderCount = 0;
+      if (
+        contract.type === ContractType.ERC721 ||
+        contract.type === ContractType.ERC1155
+      ) {
+        holderCount = await this.nftRepo.countByAddress(address);
+      } else {
+        holderCount = await this.tokenBalanceRepo.countByTokenAddress(address);
+      }
+
       const transferCount = await this.movementRepo.countByTokenAddress(
         address
       );
@@ -191,9 +201,7 @@ class AccountController implements Controller {
     const erc20TokenCount = await this.tokenBalanceRepo.countERC20ByAddress(
       address
     );
-    const nftTokenCount = await this.tokenBalanceRepo.countNFTByAddress(
-      address
-    );
+    const nftTokenCount = await this.nftRepo.countByOwner(address);
     const erc20TxCount = await this.movementRepo.countERC20TxsByAddress(
       address
     );
@@ -398,6 +406,28 @@ class AccountController implements Controller {
         t.tokenDecimals = t.token.decimals;
         delete t.token;
         return t;
+      }),
+    });
+  };
+
+  private getNFTsByAccount = async (req: Request, res: Response) => {
+    const { address } = req.params;
+    console.log(address);
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+    const paginate = await this.nftRepo.paginateByOwner(address, page, limit);
+
+    if (paginate.count <= 0) {
+      return res.json({ totalRows: 0, tokens: [] });
+    }
+
+    return res.json({
+      totalRows: paginate.count,
+      nfts: paginate.result.map((r) => {
+        r.tokenName = r.contract.name;
+        r.tokenSymbol = r.contract.symbol;
+        delete r._id;
+        delete r.contract;
+        return r;
       }),
     });
   };
