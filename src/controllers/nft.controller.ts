@@ -23,6 +23,10 @@ class NFTController implements Controller {
       `${this.path}/:address/tokens`,
       try$(this.getTokensInCollection)
     );
+    this.router.get(
+      `${this.path}/:address/:tokenId`,
+      try$(this.getTokenDetail)
+    );
   }
 
   private getCuratedCollections = async (req: Request, res: Response) => {
@@ -107,6 +111,25 @@ return: nft list [nft Address, nftCreator, nftName, nftSymbol, nftType, nftToken
         };
       }),
       // .filter((n) => n.mediaURI !== ''),
+    });
+  };
+
+  private getTokenDetail = async (req: Request, res: Response) => {
+    const { address, tokenId } = req.params;
+
+    const token = await this.nftRepo.findByTokenId(address, tokenId);
+    const contract = await this.contractRepo.findByAddress(address);
+
+    if (!token || token.length <= 0 || !contract) {
+      return res.json({ address, tokenId });
+    }
+
+    delete token[0]._id;
+    delete contract.code;
+    delete contract._id;
+    return res.json({
+      ...token[0].toJSON(),
+      ...contract.toJSON(),
     });
   };
 }
