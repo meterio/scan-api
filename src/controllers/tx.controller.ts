@@ -97,7 +97,7 @@ class TxController implements Controller {
     }
 
     let tokenTransfers = [];
-    let contractAddress = '';
+    let contractAddress = [];
     for (const e of events) {
       if (
         !e.topics ||
@@ -113,7 +113,7 @@ class TxController implements Controller {
       }
 
       if (e.topics && e.topics[0] === CONTRACT_CREATED_SIGNATURE) {
-        contractAddress = e.address;
+        contractAddress.push(e.address);
       }
 
       let contract = await this.contractRepo.findByAddress(e.address);
