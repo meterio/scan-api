@@ -315,22 +315,49 @@ class AccountController implements Controller {
       return res.json({ holders: [], token: {}, isToken: false });
     }
 
-    const paginate = await this.tokenBalanceRepo.paginateByTokenAddress(
-      tokenAddress,
-      page,
-      limit
-    );
+    let paginate: { count: number; result: any[] } = { count: 0, result: [] };
+    if (contract.type === ContractType.ERC20) {
+      paginate = await this.tokenBalanceRepo.paginateByTokenAddress(
+        tokenAddress,
+        page,
+        limit
+      );
+    } else if (
+      contract.type === ContractType.ERC1155 ||
+      contract.type === ContractType.ERC721
+    ) {
+      paginate = await this.nftRepo.paginateByAddress(
+        tokenAddress,
+        page,
+        limit
+      );
+    }
     if (paginate.count <= 0) {
       return res.json({ holders: [], totalRows: 0 });
     }
 
-    console.log(paginate.result);
-
+    let contractJson = contract.toJSON();
+    delete contractJson.code;
+    delete contractJson.holdersCount;
+    delete contractJson.transfersCount;
     return res.json({
-      token: !contract ? {} : contract.toJSON(),
+      token: contractJson,
       holders: paginate.result.map((t) => {
         delete t.__v;
         delete t._id;
+        delete t.nftBalances;
+        delete t.firstSeen;
+        delete t.lastUpdate;
+        if (t.tokens) {
+          t.tokens = t.tokens.map((nft) => {
+            delete nft.type;
+            delete nft.json;
+            delete nft.createTxHash;
+            delete nft.createBlockNum;
+            delete nft.createTime;
+            return nft;
+          });
+        }
 
         return t;
       }),
