@@ -175,6 +175,8 @@ export const curatedNFTCollections = {
     '0x608203020799f9bda8bfcc3ac60fc7d9b0ba3d78', // Meter Punks
     '0x90bacf98c0d55255306a910da5959dcd72252ce0', // Meter Soldiers
     '0xea5ad51c9f93642a671f59b1e2955d8983372a51', // Uncle Bob
+    '0x66b1a3d81b77f15866340c38b69790afaf4f489a', // BusinessBuilders Cities
+    '0x59874f4d819ef52a101f5ab6fa1c465d2b42298e', // Baby Chimp Society
   ] as string[],
   testnet: [
     '0x0adfa8dff353095f24147afe127ab0ffb9009be4', // Meter Punks
