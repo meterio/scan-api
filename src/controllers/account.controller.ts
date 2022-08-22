@@ -326,7 +326,7 @@ class AccountController implements Controller {
       contract.type === ContractType.ERC1155 ||
       contract.type === ContractType.ERC721
     ) {
-      paginate = await this.nftRepo.paginateByAddress(
+      paginate = await this.nftRepo.paginateByAddressGroupByHolder(
         tokenAddress,
         page,
         limit
@@ -441,7 +441,7 @@ class AccountController implements Controller {
     const { address } = req.params;
     console.log(address);
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const paginate = await this.nftRepo.paginateByOwner(address, page, limit);
+    const paginate = await this.nftRepo.paginateByOwnerGroupByToken(address, page, limit);
 
     if (paginate.count <= 0) {
       return res.json({ totalRows: 0, tokens: [] });
