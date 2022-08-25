@@ -122,6 +122,7 @@ class TxController implements Controller {
         try {
           const decoded = ERC20.Transfer.decode(e.data, e.topics);
           tokenTransfers.push({
+            tokenAddress: e.address,
             from: decoded.from.toLowerCase(),
             to: decoded.to.toLowerCase(),
             amount: decoded.value.toString(),
@@ -139,6 +140,7 @@ class TxController implements Controller {
         try {
           const decoded = ERC721.Transfer.decode(e.data, e.topics);
           tokenTransfers.push({
+            tokenAddress: e.address,
             from: decoded.from.toLowerCase(),
             to: decoded.to.toLowerCase(),
             ids: [decoded.tokenId.toString()],
@@ -156,6 +158,7 @@ class TxController implements Controller {
         try {
           const decoded = ERC1155.TransferSingle.decode(e.data, e.topics);
           tokenTransfers.push({
+            tokenAddress: e.address,
             from: decoded.from.toLowerCase(),
             to: decoded.to.toLowerCase(),
             ids: [decoded.id.toString()],
@@ -173,6 +176,7 @@ class TxController implements Controller {
         try {
           const decoded = ERC1155.TransferBatch.decode(e.data, e.topics);
           tokenTransfers.push({
+            tokenAddress: e.address,
             from: decoded.from.toLowerCase(),
             to: decoded.to.toLowerCase(),
             ids: decoded.ids.map((id) => id.toString()),
