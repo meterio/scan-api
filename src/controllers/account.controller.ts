@@ -12,6 +12,7 @@ import {
   ContractType,
   ABIFragmentRepo,
   NFTRepo,
+  InternalTxRepo,
 } from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
@@ -33,6 +34,7 @@ class AccountController implements Controller {
   private bidRepo = new BidRepo();
   private txDigestRepo = new TxDigestRepo();
   private abiFragmentRepo = new ABIFragmentRepo();
+  private internalTxRepo = new InternalTxRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -107,6 +109,10 @@ class AccountController implements Controller {
       try$(this.getNFTTxsByTokenAddrTokenId)
     );
     this.router.get(`${this.path}/get/domainnames`, try$(this.getDomainnames));
+    this.router.get(
+      `${this.path}/:address/internaltxs`,
+      try$(this.getInternalTxs)
+    );
   }
 
   private getDomainnames = async (req: Request, res: Response) => {
@@ -441,7 +447,11 @@ class AccountController implements Controller {
     const { address } = req.params;
     console.log(address);
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const paginate = await this.nftRepo.paginateByOwnerGroupByToken(address, page, limit);
+    const paginate = await this.nftRepo.paginateByOwnerGroupByToken(
+      address,
+      page,
+      limit
+    );
 
     if (paginate.count <= 0) {
       return res.json({ totalRows: 0, tokens: [] });
@@ -696,6 +706,16 @@ class AccountController implements Controller {
     } else {
       return res.json({ delegators: [] });
     }
+  };
+
+  private getInternalTxs = async (req: Request, res: Response) => {
+    const { address } = req.params;
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+    const paginate = await this.internalTxRepo.paginateByAddress(address);
+    if (!paginate) {
+      return res.json({ totalRows: 0, rows: [] });
+    }
+    return res.json({ totalRows: paginate.count, rows: paginate.result });
   };
 }
 export default AccountController;
