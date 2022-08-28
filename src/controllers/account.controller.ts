@@ -14,6 +14,7 @@ import {
   NFTRepo,
   InternalTxRepo,
 } from '@meterio/scan-db/dist';
+import { sign } from 'crypto';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
@@ -715,7 +716,20 @@ class AccountController implements Controller {
     if (!paginate) {
       return res.json({ totalRows: 0, rows: [] });
     }
-    return res.json({ totalRows: paginate.count, rows: paginate.result });
+
+    const methods = await this.abiFragmentRepo.findAllFunctions();
+    let methodMap = {};
+    methods.forEach((m) => {
+      methodMap[m.signature] = m.name;
+    });
+
+    return res.json({
+      totalRows: paginate.count,
+      rows: paginate.result.map((r) => {
+        const method = methodMap[r.signature];
+        return { ...r.toJSON(), method };
+      }),
+    });
   };
 }
 export default AccountController;
