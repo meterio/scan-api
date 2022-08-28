@@ -14,7 +14,6 @@ import {
   NFTRepo,
   InternalTxRepo,
 } from '@meterio/scan-db/dist';
-import { sign } from 'crypto';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 
@@ -386,31 +385,18 @@ class AccountController implements Controller {
       return res.json({ totalRows: 0, tokens: [] });
     }
 
-    // FIXME: should do the filtering in database instead of here
     return res.json({
       totalRows: paginate.count,
-      tokens: paginate.result
-        .filter((t) => {
-          // const balGT0 = new BigNumber(t.balance).isGreaterThan(0);
-          // let nftCount = new BigNumber(0);
-          // for (const { value } of t.nftBalances) {
-          //   nftCount = nftCount.plus(value);
-          // }
-          // const nftGT0 = nftCount.isGreaterThan(0);
-
-          // return balGT0 || nftGT0;
-          return true;
-        })
-        .map((t) => {
-          delete t.__v;
-          delete t._id;
-          t.tokenType = t.token.type;
-          t.tokenName = t.token.name;
-          t.tokenSymbol = t.token.symbol;
-          t.tokenDecimals = t.token.decimals;
-          delete t.token;
-          return t;
-        }),
+      tokens: paginate.result.map((t) => {
+        delete t.__v;
+        delete t._id;
+        t.tokenType = t.token.type;
+        t.tokenName = t.token.name;
+        t.tokenSymbol = t.token.symbol;
+        t.tokenDecimals = t.token.decimals;
+        delete t.token;
+        return t;
+      }),
     });
   };
 
@@ -428,7 +414,6 @@ class AccountController implements Controller {
       return res.json({ totalRows: 0, tokens: [] });
     }
 
-    // FIXME: should do the filtering in database instead of here
     return res.json({
       totalRows: paginate.count,
       tokens: paginate.result.map((t) => {
@@ -484,7 +469,6 @@ class AccountController implements Controller {
       return res.json({ totalRows: 0, tokens: [] });
     }
 
-    // FIXME: should do the filtering in database instead of here
     return res.json({
       totalRows: paginate.count,
       tokens: paginate.result.map((t) => {
@@ -500,7 +484,6 @@ class AccountController implements Controller {
     });
   };
 
-  // TODO: changed API, will affect UI
   private getTransfersByAccount = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
