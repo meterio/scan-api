@@ -215,6 +215,7 @@ class AccountController implements Controller {
     const bidCount = await this.bidRepo.countByAddress(address);
     const proposedCount = await this.blockRepo.countByBeneficiary(address);
     const bucketCount = await this.bucketRepo.countByAddress(address);
+    const internalTxCount = await this.internalTxRepo.countByAddress(address);
 
     return res.json({
       account: {
@@ -228,6 +229,7 @@ class AccountController implements Controller {
         bidCount,
         proposedCount,
         bucketCount,
+        internalTxCount,
       },
     });
   };
@@ -695,7 +697,11 @@ class AccountController implements Controller {
   private getInternalTxs = async (req: Request, res: Response) => {
     const { address } = req.params;
     const { page, limit } = extractPageAndLimitQueryParam(req);
-    const paginate = await this.internalTxRepo.paginateByAddress(address);
+    const paginate = await this.internalTxRepo.paginateByAddress(
+      address,
+      page,
+      limit
+    );
     if (!paginate) {
       return res.json({ totalRows: 0, rows: [] });
     }
@@ -710,7 +716,7 @@ class AccountController implements Controller {
       totalRows: paginate.count,
       rows: paginate.result.map((r) => {
         const method = methodMap[r.signature];
-        return { ...r.toJSON(), method };
+        return { ...r.toJSON(), method: method || r.signature || '' };
       }),
     });
   };
