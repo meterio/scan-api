@@ -80,10 +80,10 @@ class DownloadController implements Controller {
         direct = 'In';
       }
 
-      let amount = tx.mtr
+      let amount = new BigNumber(String(tx.mtr))
       let symbol = 'MTR'
-      if (amount.isZero()) {
-        amount = tx.mtrg
+      if (amount.gt(0)) {
+        amount = new BigNumber(String(tx.mtrg))
         symbol = 'MTRG'
       }
 
@@ -95,7 +95,7 @@ class DownloadController implements Controller {
         from: tx.from,
         direct,
         to: tx.to,
-        amount: amount.gt(0) ? fromWei(amount, 2) : amount.toFixed() + symbol
+        amount: `${amount.gt(0) ? fromWei(String(amount), 2) : 0} ${symbol}`
       }
     }))
   }
@@ -143,7 +143,7 @@ class DownloadController implements Controller {
         from: tx.from,
         direct,
         to: tx.to,
-        amount: amount.gt(0) ? amount.div(`1e${tx.contract.decimals}`).toFixed(2) : 0 + tx.contract.symbol
+        amount: `${amount.gt(0) ? amount.div(`1e${tx.contract.decimals}`).toFixed(2) : 0} ${tx.contract.symbol}`
       }
     }))
   };
