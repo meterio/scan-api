@@ -415,7 +415,7 @@ class TxController implements Controller {
       let decoded = undefined;
       let datas = [];
       let tail = '';
-      if (c.data && c.data.length > 10) {
+      if (c.data && c.data.length >= 10) {
         methodId = c.data.substring(0, 10);
         const isSE = ScriptEngine.IsScriptEngineData(c.data);
         if (isSE) {
