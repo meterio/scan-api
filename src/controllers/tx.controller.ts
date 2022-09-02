@@ -7,6 +7,7 @@ import {
   ABIFragmentRepo,
   BigNumber,
   TxDigest,
+  NFTRepo,
 } from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
@@ -28,6 +29,7 @@ class TxController implements Controller {
   private txDigestRepo = new TxDigestRepo();
   private contractRepo = new ContractRepo();
   private abiFragmentRepo = new ABIFragmentRepo();
+  private nftRepo = new NFTRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -139,12 +141,17 @@ class TxController implements Controller {
       if (e.topics && e.topics[0] === ERC721.Transfer.signature) {
         try {
           const decoded = ERC721.Transfer.decode(e.data, e.topics);
+          const nft = await this.nftRepo.findByTokenId(
+            e.address,
+            decoded.tokenId.toString()
+          );
           tokenTransfers.push({
             tokenAddress: e.address,
             from: decoded.from.toLowerCase(),
             to: decoded.to.toLowerCase(),
             ids: [decoded.tokenId.toString()],
             values: [1], // there's no `value` in ERC721 transfer event
+            mediaUrls: [!!nft && nft.length > 0 ? nft[0].mediaURI : ''],
             type: 'ERC721',
             symbol: contract ? contract.symbol : 'ERC721',
           });
@@ -157,12 +164,17 @@ class TxController implements Controller {
       if (e.topics && e.topics[0] === ERC1155.TransferSingle.signature) {
         try {
           const decoded = ERC1155.TransferSingle.decode(e.data, e.topics);
+          const nft = await this.nftRepo.findByTokenId(
+            e.address,
+            decoded.tokenId.toString()
+          );
           tokenTransfers.push({
             tokenAddress: e.address,
             from: decoded.from.toLowerCase(),
             to: decoded.to.toLowerCase(),
             ids: [decoded.id.toString()],
             values: [decoded.value.toString()],
+            mediaUrls: [!!nft && nft.length > 0 ? nft[0].mediaURI : ''],
             type: 'ERC1155',
             symbol: contract ? contract.symbol : 'ERC1155',
           });
@@ -175,12 +187,20 @@ class TxController implements Controller {
       if (e.topics && e.topics[0] === ERC1155.TransferBatch.signature) {
         try {
           const decoded = ERC1155.TransferBatch.decode(e.data, e.topics);
+          const nfts = await this.nftRepo.findByTokenId(e.address, decoded.ids);
+          let nftMap = {};
+          nfts.map((n) => {
+            nftMap[n.tokenId] = n.mediaURI;
+          });
           tokenTransfers.push({
             tokenAddress: e.address,
             from: decoded.from.toLowerCase(),
             to: decoded.to.toLowerCase(),
             ids: decoded.ids.map((id) => id.toString()),
             values: decoded.values.map((v) => v.toString()),
+            mediaUrls: decoded.ids.map((id) => {
+              nftMap[id] || '';
+            }),
             type: 'ERC1155',
             symbol: contract ? contract.symbol : 'ERC1155',
           });
