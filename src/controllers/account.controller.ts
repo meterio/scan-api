@@ -224,6 +224,7 @@ class AccountController implements Controller {
     const proposedCount = await this.blockRepo.countByBeneficiary(address);
     const bucketCount = await this.bucketRepo.countByAddress(address);
     const internalTxCount = await this.internalTxRepo.countByAddress(address);
+    const eventsCount = await this.logEventRepo.countByAddress(address);
 
     return res.json({
       account: {
@@ -238,6 +239,7 @@ class AccountController implements Controller {
         proposedCount,
         bucketCount,
         internalTxCount,
+        eventsCount,
       },
     });
   };
