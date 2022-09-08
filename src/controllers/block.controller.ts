@@ -125,32 +125,34 @@ class BlockController implements Controller {
     let ans = blk.toSummary();
 
     let selectors = [];
-    ans.txSummaries = txs.map((tx) => tx.toSummary()).map(tx => {
-      const c = tx.clauses.length > 0 ? tx.clauses[0] : null;
-      let selector = '';
-      let decoded = undefined;
-      if (c) {
-        if (c.data && c.data.length > 10) {
-          const isSE = ScriptEngine.IsScriptEngineData(c.data);
-          if (isSE) {
-            decoded = ScriptEngine.decodeScriptData(c.data);
-            selector = decoded.action;
+    ans.txSummaries = txs
+      .map((tx) => tx.toSummary())
+      .map((tx) => {
+        const c = tx.clauses.length > 0 ? tx.clauses[0] : null;
+        let selector = '';
+        let decoded = undefined;
+        if (c) {
+          if (c.data && c.data.length >= 10) {
+            const isSE = ScriptEngine.IsScriptEngineData(c.data);
+            if (isSE) {
+              decoded = ScriptEngine.decodeScriptData(c.data);
+              selector = decoded.action;
+            } else {
+              selector = c.data.substring(0, 10);
+            }
           } else {
-            selector = c.data.substring(0, 10);
+            selector = 'Transfer';
           }
-        } else {
-          selector = 'Transfer';
+          if (selector && selector != '0x00000000') {
+            selectors.push(selector);
+          }
         }
-        if (selector && selector != '0x00000000') {
-          selectors.push(selector);
-        }
-      }
-      return {
-        ...tx,
-        selector,
-        decoded,
-      }
-    });
+        return {
+          ...tx,
+          selector,
+          decoded,
+        };
+      });
 
     const nameMap = await this.getNameMap();
     ans.beneficiaryName = nameMap[ans.beneficiary] || '';
@@ -162,10 +164,10 @@ class BlockController implements Controller {
     const abis = fragments.map((f) => f.abi);
     const iface = new Interface(abis);
 
-    ans.txSummaries.map(tx => {
+    ans.txSummaries.map((tx) => {
       let result = {
         ...tx,
-      }
+      };
       if (!tx.decoded) {
         try {
           const decodeRes = iface.parseTransaction({
@@ -194,7 +196,7 @@ class BlockController implements Controller {
         }
       }
       return result;
-    })
+    });
 
     return res.json({ block: ans });
   };
