@@ -54,7 +54,8 @@ class DownloadController implements Controller {
       { value: 'from', label: 'From' },
       { value: 'direct', label: 'Direct' },
       { value: 'to', label: 'To' },
-      { value: 'amount', label: 'Amount' }
+      { value: 'amount', label: 'Amount' },
+      { value: 'symbol', label: 'Symbol' }
     ]
 
     if (!paginate.result) {
@@ -91,11 +92,12 @@ class DownloadController implements Controller {
         txHash: tx.txHash,
         methodName: tx.method,
         blocknum: tx.block.number,
-        timestamp: new Date(tx.block.timestamp*1000).toLocaleString(),
+        timestamp: new Date(tx.block.timestamp*1000).toLocaleDateString(),
         from: tx.from,
         direct,
         to: tx.to,
-        amount: `${amount.gt(0) ? fromWei(String(amount), 2) : 0} ${symbol}`
+        amount: fromWei(String(amount), 2),
+        symbol
       }
     }))
   }
@@ -121,7 +123,8 @@ class DownloadController implements Controller {
       { value: 'from', label: 'From' },
       { value: 'direct', label: 'Direct' },
       { value: 'to', label: 'To' },
-      { value: 'amount', label: 'Amount' }
+      { value: 'amount', label: 'Amount' },
+      { value: 'symbol', label: 'Symbol' }
     ]
 
     return this.download(res, fileName, fields, paginate.result.map(tx => {
@@ -139,11 +142,12 @@ class DownloadController implements Controller {
       return {
         txHash: tx.txHash,
         blocknum: tx.block.number,
-        timestamp: new Date(tx.timestamp*1000).toLocaleString(),
+        timestamp: new Date(tx.block.timestamp*1000).toLocaleDateString(),
         from: tx.from,
         direct,
         to: tx.to,
-        amount: `${amount.gt(0) ? amount.div(`1e${tx.contract.decimals}`).toFixed(2) : 0} ${tx.contract.symbol}`
+        amount: `${amount.gt(0) ? amount.div(`1e${tx.contract.decimals}`).toFixed(2) : 0}`,
+        symbol: tx.contract.symbol
       }
     }))
   };
@@ -185,7 +189,7 @@ class DownloadController implements Controller {
       return {
         txHash: tx.txHash,
         blocknum: tx.block.number,
-        timestamp: new Date(tx.block.timestamp*1000).toLocaleString(),
+        timestamp: new Date(tx.block.timestamp*1000).toLocaleDateString(),
         from: tx.from,
         direct,
         to: tx.to,
