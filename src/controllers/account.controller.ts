@@ -822,6 +822,7 @@ class AccountController implements Controller {
         }
         let result = {
           ...e,
+          datas,
           method: method || sig || '',
           name: undefined,
           abi: undefined,
