@@ -13,9 +13,15 @@ import {
   ABIFragmentRepo,
   NFTRepo,
   InternalTxRepo,
+  LogEventModel,
+  LogEventRepo,
 } from '@meterio/scan-db/dist';
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
+import { HTML5_FMT } from 'moment';
+import { resourceLimits } from 'worker_threads';
+import { FormatTypes, Interface } from 'ethers/lib/utils';
+import { BigNumber as EBN, ethers } from 'ethers';
 
 import Controller from '../interfaces/controller.interface';
 import { extractPageAndLimitQueryParam } from '../utils/utils';
@@ -35,6 +41,7 @@ class AccountController implements Controller {
   private txDigestRepo = new TxDigestRepo();
   private abiFragmentRepo = new ABIFragmentRepo();
   private internalTxRepo = new InternalTxRepo();
+  private logEventRepo = new LogEventRepo();
 
   constructor() {
     this.initializeRoutes();
@@ -113,6 +120,7 @@ class AccountController implements Controller {
       `${this.path}/:address/internaltxs`,
       try$(this.getInternalTxs)
     );
+    this.router.get(`${this.path}/:address/events`, try$(this.getEvents));
   }
 
   private getDomainnames = async (req: Request, res: Response) => {
@@ -717,6 +725,138 @@ class AccountController implements Controller {
       rows: paginate.result.map((r) => {
         const method = methodMap[r.signature];
         return { ...r.toJSON(), method: method || r.signature || '' };
+      }),
+    });
+  };
+
+  private getEvents = async (req: Request, res: Response) => {
+    const { address } = req.params;
+    const { page, limit } = extractPageAndLimitQueryParam(req);
+    const paginate = await this.logEventRepo.paginateByAddress(
+      address,
+      page,
+      limit
+    );
+    if (!paginate) {
+      return res.json({ totalRows: 0, rows: [] });
+    }
+
+    let topic0s = {};
+    paginate.result.map((r) => {
+      if (r.topics && r.topics.length > 0) {
+        topic0s[r.topics[0]] = true;
+      }
+    });
+
+    // build known map
+    let fragments = [];
+    if (Object.keys(topic0s).length > 0) {
+      fragments = await this.abiFragmentRepo.findBySignatureList(
+        ...Object.keys(topic0s)
+      );
+    }
+
+    let evtMap = {};
+    for (const frag of fragments) {
+      try {
+        const sig = frag.signature;
+        if (sig in evtMap) {
+          evtMap[sig].push(frag.abi);
+        } else {
+          evtMap[sig] = [frag.abi];
+        }
+      } catch (e) {
+        console.log('ignore error:', e);
+        continue;
+      }
+    }
+
+    // list all known abis
+    const methods = await this.abiFragmentRepo.findAllFunctions();
+    let methodMap = {};
+    methods.forEach((m) => {
+      methodMap[m.signature] = m.name;
+    });
+
+    // list realted txhash
+    let txHashs = paginate.result.map((r) => r.txHash);
+    txHashs = txHashs.filter((elem, pos) => {
+      return txHashs.indexOf(elem) == pos;
+    });
+
+    // query related clauses
+    const txs = await this.txRepo.findByHashs(txHashs);
+    let sigMap = {};
+    txs.map((tx) => {
+      tx.clauses.map((c, index) => {
+        const key = `${tx.hash}_${index}`;
+        sigMap[key] = c.data.slice(0, 10);
+      });
+    });
+
+    console.log(paginate.result);
+
+    return res.json({
+      totalRows: paginate.count,
+      rows: paginate.result.map((e) => {
+        delete e.__v;
+        delete e._id;
+        const key = `${e.txHash}_${e.clauseIndex}`;
+        const sig = sigMap[key];
+        const method = methodMap[sig];
+
+        let datas = [];
+        if (e.data && e.data != '0x') {
+          let temp = e.data.substring(2);
+          while (temp.length >= 64) {
+            datas.push('0x' + temp.substring(0, 64));
+            temp = temp.substring(64);
+          }
+          if (temp.length > 0) {
+            datas.push('0x' + temp);
+          }
+        }
+        let selectedAbi = [];
+        if (e.topics && e.topics.length > 0 && e.topics[0] in evtMap) {
+          selectedAbi = evtMap[e.topics[0]];
+        }
+        let result = {
+          ...e,
+          method: method || sig || '',
+          name: undefined,
+          abi: undefined,
+          decoded: undefined,
+        };
+        if (selectedAbi.length > 0) {
+          for (const abi of selectedAbi) {
+            try {
+              const iface = new Interface([abi]);
+              const decodeRes = iface.parseLog(e);
+
+              result.name = decodeRes.name;
+              result.abi = decodeRes.eventFragment.format(FormatTypes.full);
+              const abiJson = JSON.parse(
+                decodeRes.eventFragment.format(FormatTypes.json)
+              );
+              let decoded = {};
+              for (const input of abiJson.inputs) {
+                const val = decodeRes.args[input.name];
+                if (EBN.isBigNumber(val)) {
+                  decoded[input.name] = val.toString();
+                } else {
+                  decoded[input.name] = val;
+                }
+              }
+              if (result.abi) {
+                result.decoded = decoded;
+              }
+              break;
+            } catch (e) {
+              console.log('Error happened during event decoding: ', e);
+            }
+          }
+        }
+        return result;
       }),
     });
   };

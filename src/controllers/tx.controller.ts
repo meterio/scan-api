@@ -263,7 +263,7 @@ class TxController implements Controller {
         }
       }
 
-      // build known map
+      // query known abis map
       let fragments = [];
       if (topic0s.length > 0) {
         fragments = await this.abiFragmentRepo.findBySignatureList(...topic0s);
