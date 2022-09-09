@@ -86,10 +86,13 @@ class AccountController implements Controller {
       `${this.path}/:address/erc20txs`,
       try$(this.getERC20TxsByAccount)
     );
+
+    // deprecated
     this.router.get(
       `${this.path}/:address/erc721txs`,
       try$(this.getERC721TxsByAccount)
     );
+    // deprecated
     this.router.get(
       `${this.path}/:address/erc1155txs`,
       try$(this.getERC1155TxsByAccount)
