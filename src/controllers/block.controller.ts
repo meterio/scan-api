@@ -126,6 +126,9 @@ class BlockController implements Controller {
 
     let selectors = [];
     ans.txSummaries = txs
+      .sort((a, b) => {
+        return a.txIndex < b.txIndex ? -1 : 1;
+      })
       .map((tx) => tx.toSummary())
       .map((tx) => {
         const c = tx.clauses.length > 0 ? tx.clauses[0] : null;
@@ -138,7 +141,7 @@ class BlockController implements Controller {
               decoded = ScriptEngine.decodeScriptData(c.data);
               selector = decoded.action;
             } else {
-              selector = c.data.substring(0, 10);
+              selector = c.data ? c.data.substring(0, 10) : '';
             }
           } else {
             selector = 'Transfer';
@@ -147,11 +150,13 @@ class BlockController implements Controller {
             selectors.push(selector);
           }
         }
-        return {
+        let result = {
           ...tx,
           selector,
           decoded,
         };
+        delete result.clauses;
+        return result;
       });
 
     const nameMap = await this.getNameMap();
@@ -171,8 +176,8 @@ class BlockController implements Controller {
       if (!tx.decoded) {
         try {
           const decodeRes = iface.parseTransaction({
-            data: tx.data,
-            value: tx.value.toFixed(),
+            data: tx.data || '',
+            value: tx.value ? tx.value.toFixed() : 0,
           });
           result.selector = decodeRes.name;
           result.abi = decodeRes.functionFragment.format(FormatTypes.full);
