@@ -535,6 +535,17 @@ class AccountController implements Controller {
       limit
     );
 
+    let txMap = {};
+    paginate.result.map((m) => {
+      txMap[m.txHash] = true;
+    });
+
+    let feeMap = {};
+    const txs = await this.txRepo.findByHashs(Object.keys(txMap));
+    txs.map((tx) => {
+      feeMap[tx.hash] = tx.paid.toFixed(0);
+    });
+
     return res.json({
       totalRows: paginate.count,
       txs: paginate.result.map((m) => {
@@ -544,6 +555,7 @@ class AccountController implements Controller {
         m.symbol = m.contract.symbol;
         m.decimals = m.contract.decimals;
         m.contractType = m.contract.type;
+        m.fee = feeMap[m.txHash];
         delete m.contract;
         return m;
       }),
@@ -609,6 +621,16 @@ class AccountController implements Controller {
       page,
       limit
     );
+    let txMap = {};
+    paginate.result.map((m) => {
+      txMap[m.txHash] = true;
+    });
+
+    let feeMap = {};
+    const txs = await this.txRepo.findByHashs(Object.keys(txMap));
+    txs.map((tx) => {
+      feeMap[tx.hash] = tx.paid.toFixed(0);
+    });
 
     return res.json({
       totalRows: paginate.count,
@@ -619,6 +641,7 @@ class AccountController implements Controller {
         m.symbol = m.contract.symbol;
         m.decimals = m.contract.decimals;
         m.contractType = m.contract.type;
+        m.fee = feeMap[m.txHash];
         delete m.contract;
         return m;
       }),
