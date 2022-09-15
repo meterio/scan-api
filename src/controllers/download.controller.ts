@@ -2,6 +2,7 @@ import { ABIFragmentRepo, MovementRepo, TxDigestRepo, BigNumber } from '@meterio
 import { Request, Response, Router } from 'express';
 import { try$ } from 'express-toolbox';
 import { Parser } from 'json2csv';
+import moment from 'moment';
 
 import Controller from '../interfaces/controller.interface';
 
@@ -92,7 +93,7 @@ class DownloadController implements Controller {
         txHash: tx.txHash,
         methodName: tx.method,
         blocknum: tx.block.number,
-        timestamp: new Date(tx.block.timestamp*1000).toLocaleDateString(),
+        timestamp: moment(tx.block.timestamp*1000).format("YYYY-MM-DD HH:mm:ss"),
         from: tx.from,
         direct,
         to: tx.to,
@@ -142,7 +143,7 @@ class DownloadController implements Controller {
       return {
         txHash: tx.txHash,
         blocknum: tx.block.number,
-        timestamp: new Date(tx.block.timestamp*1000).toLocaleDateString(),
+        timestamp: moment(tx.block.timestamp*1000).format("YYYY-MM-DD HH:mm:ss"),
         from: tx.from,
         direct,
         to: tx.to,
@@ -189,7 +190,7 @@ class DownloadController implements Controller {
       return {
         txHash: tx.txHash,
         blocknum: tx.block.number,
-        timestamp: new Date(tx.block.timestamp*1000).toLocaleDateString(),
+        timestamp: moment(tx.block.timestamp*1000).format("YYYY-MM-DD HH:mm:ss"),
         from: tx.from,
         direct,
         to: tx.to,
