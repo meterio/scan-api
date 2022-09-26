@@ -439,9 +439,9 @@ class TxController implements Controller {
         methodId = c.data.substring(0, 10);
         const isSE = ScriptEngine.IsScriptEngineData(c.data);
         if (isSE) {
-          methodId = c.data.substring(0, 18);
+          methodId = c.data.substring(0, 18) + ` MeterEngine:${decoded.action}`;
           decoded = ScriptEngine.decodeScriptData(c.data);
-          selector = decoded.action;
+          selector = `MeterEngine:${decoded.action}`;
           tail = c.data.substring(18);
         } else {
           selector = c.data.substring(0, 10);

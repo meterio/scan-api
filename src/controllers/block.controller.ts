@@ -139,7 +139,7 @@ class BlockController implements Controller {
             const isSE = ScriptEngine.IsScriptEngineData(c.data);
             if (isSE) {
               decoded = ScriptEngine.decodeScriptData(c.data);
-              selector = decoded.action;
+              selector = `MeterEngine:${decoded.action}`;
             } else {
               selector = c.data ? c.data.substring(0, 10) : '';
             }
